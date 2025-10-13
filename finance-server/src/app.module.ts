@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { User } from './users/user.model';
+import { Budget } from './budget/budget.model';
 
 @Module({
   imports: [
@@ -10,7 +11,7 @@ import { User } from './users/user.model';
       dialect: 'postgres',
       host: 'localhost',
       database: 'postgres',
-      models: [User],
+      models: [User, Budget],
       username: 'postgres',
       password: '2005',
       autoLoadModels: true,
