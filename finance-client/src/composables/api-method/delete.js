@@ -1,5 +1,5 @@
-import axios from 'axios';
-import { Cookies } from 'quasar';
+import axios from 'axios'
+import { Cookies } from 'quasar'
 
 export async function deleteMethod(serverURL, url, id) {
   try {
@@ -9,16 +9,16 @@ export async function deleteMethod(serverURL, url, id) {
         Accept: 'application/json',
         Authorization: `Bearer ${Cookies.get('access_token')}`,
       },
-    });
-    return response.data;
+    })
+    return response.data
   } catch (error) {
-    console.error('Ошибка при удалении турнира:', error);
+    console.error('Ошибка при удалении турнира:', error)
 
     if (error.response) {
-      console.error('Статус:', error.response.status);
-      console.error('Ответ сервера:', error.response.data);
+      console.error('Статус:', error.response.status)
+      console.error('Ответ сервера:', error.response.data)
     }
 
-    throw error;
+    throw error
   }
 }

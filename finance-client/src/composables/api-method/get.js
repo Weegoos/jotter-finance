@@ -1,6 +1,6 @@
-import axios from 'axios';
-import { Cookies } from 'quasar';
-import { errorMessage } from '../notify/errorMessage';
+import axios from 'axios'
+import { Cookies } from 'quasar'
+import { errorMessage } from '../notify/errorMessage'
 
 export async function getMethod(serverURL, url, $q) {
   try {
@@ -11,13 +11,13 @@ export async function getMethod(serverURL, url, $q) {
         Authorization: `Bearer ${Cookies.get('access_token')}`,
       },
       withCredentials: true,
-    });
+    })
 
-    return response.data;
+    return response.data
   } catch (error) {
-    console.error('Ошибка:', error.response?.data);
-    errorMessage($q, `Ошибка: ${error.response?.data.message}`);
+    console.error('Ошибка:', error.response?.data)
+    errorMessage($q, `Ошибка: ${error.response?.data.message}`)
   } finally {
-    $q.loading.hide();
+    $q.loading.hide()
   }
 }
