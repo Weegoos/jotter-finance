@@ -16,6 +16,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document); // документация будет доступна по /api
 
+  app.enableCors();
   await app.listen(3000);
+  console.log('🚀 Swagger UI available at http://localhost:3000/api');
 }
 bootstrap();
