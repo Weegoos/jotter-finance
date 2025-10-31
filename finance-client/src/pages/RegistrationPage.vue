@@ -103,6 +103,7 @@ const register = async () => {
       lastName: lastName.value,
       email: email.value,
       password: password.value,
+      role: 'user'
     })
     successMessage($q, `${response.data.user.firstName} вы успешно зарегистрированы!`);
     console.log(response.data.user.firstName)

@@ -1,24 +1,29 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { User } from './users/user.model';
 import { Budget } from './budget/budget.model';
+import { Account } from './accounts/account.model';
 
 @Module({
   imports: [
-    SequelizeModule.forRoot({
-      dialect: 'postgres',
-      host: 'localhost',
-      database: 'postgres',
-      models: [User, Budget],
-      username: 'postgres',
-      password: '2005',
-      autoLoadModels: true,
-      synchronize: true,
+    ConfigModule.forRoot({ isGlobal: true }),
+    SequelizeModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        return {
+          dialect: 'postgres',
+          host: configService.get<string>('DB_HOST'),
+          username: configService.get<string>('DB_USER'),
+          password: configService.get<string>('DB_PASS'),
+          database: configService.get<string>('DB_NAME'),
+          models: [Budget, Account] as any[],
+          autoLoadModels: true,
+          synchronize: true,
+        };
+      },
     }),
+    SequelizeModule.forFeature([Budget, Account]),
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
