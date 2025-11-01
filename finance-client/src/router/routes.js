@@ -11,6 +11,10 @@ const routes = [
     path: '/register',
     component: () => import('pages/RegistrationPage.vue'),
   },
+  {
+    path: '/profile',
+    component: () => import('pages/ProfilePage.vue'),
+  },
 
   // Always leave this as last one,
   // but you can also remove it

@@ -77,12 +77,12 @@
 <script setup>
 import { ref } from 'vue'
 import { useQuasar } from 'quasar'
-import { successMessage } from 'src/composables/notify/successMessage';
+import { successMessage } from 'src/composables/notify/successMessage'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 import { Input } from 'src/components/atoms'
 import { Form } from 'src/components/molecules'
-import { userServerURL } from 'src/boot/config';
+import { userServerURL } from 'src/boot/config'
 
 // global variables
 const $q = useQuasar()
@@ -106,10 +106,10 @@ const register = async () => {
         general: {
           theme: 'light',
           language: 'en',
-        }
-      }
+        },
+      },
     })
-    successMessage($q, `${response.data.user.firstName} вы успешно зарегистрированы!`);
+    successMessage($q, `${response.data.user.firstName} вы успешно зарегистрированы!`)
     console.log(response.data.user.firstName)
 
     router.push('/')
