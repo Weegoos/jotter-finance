@@ -1,9 +1,9 @@
 <template>
-  <div>Main Layout</div>
+  <DashBoardContainer />
 </template>
 
-<script>
-export default {}
+<script setup>
+import DashBoardContainer from 'src/containers/DashBoardContainer.vue'
 </script>
 
 <style></style>
