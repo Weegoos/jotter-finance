@@ -4,7 +4,6 @@ import { Column, Model, Table } from 'sequelize-typescript';
 export class Account extends Model {
   @Column
   name: string;
-
   @Column
   userId: number;
   @Column

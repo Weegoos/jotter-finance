@@ -75,18 +75,16 @@
 </template>
 
 <script setup>
-import { getCurrentInstance, ref } from 'vue'
+import { ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { successMessage } from 'src/composables/notify/successMessage';
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 import { Input } from 'src/components/atoms'
 import { Form } from 'src/components/molecules'
+import { userServerURL } from 'src/boot/config';
 
 // global variables
-const { proxy } = getCurrentInstance()
-const mobileWidth = proxy.$mobileWidth
-const userServerURL = proxy.$userServerURL
 const $q = useQuasar()
 const router = useRouter()
 
