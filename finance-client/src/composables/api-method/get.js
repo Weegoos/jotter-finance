@@ -15,8 +15,17 @@ export async function getMethod(serverURL, url, $q) {
 
     return response.data
   } catch (error) {
-    console.error('Ошибка:', error.response?.data)
-    errorMessage($q, `Ошибка: ${error.response?.data.message}`)
+    const status = error.response?.status
+    const message = error.response?.data?.message || 'Неизвестная ошибка'
+    console.log(status)
+
+    if (status === 401) {
+      console.warn('Пользователь не авторизован.')
+      return null
+    } else {
+      console.error('Ошибка:', message)
+      errorMessage($q, `Ошибка: ${message}`)
+    }
   } finally {
     $q.loading.hide()
   }

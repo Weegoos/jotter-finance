@@ -1,17 +1,9 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
-    <q-header elevated>
-      <q-toolbar>
-        <q-toolbar-title> Main Layout </q-toolbar-title>
-      </q-toolbar>
-    </q-header>
-
-    <q-page-container>
-      <router-view />
-    </q-page-container>
-  </q-layout>
+  <LayoutContainer />
 </template>
 
-<script setup></script>
+<script setup>
+import LayoutContainer from 'src/containers/LayoutContainer.vue'
+</script>
 
 <style></style>
