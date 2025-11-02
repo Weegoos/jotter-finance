@@ -7,7 +7,7 @@
         :key="index"
         style="border-radius: 10px"
       >
-        <q-card-section class="grid grid-cols-2 grid-rows-1 items-center">
+        <q-card-section class="grid grid-cols-2 grid-rows-1 items-start">
           <div class="text-h6">
             <p class="text-capitalize">{{ item.name }} / {{ item.type }}</p>
           </div>
@@ -19,8 +19,17 @@
             />
           </div>
         </q-card-section>
-        <q-card-section>
-          <span class="text-subtitle1"> Balance: {{ item.balance }} {{ item.currency }}</span>
+        <q-card-section class="grid grid-cols-2 grid-rows-1 items-center">
+          <div>
+            <span class="text-subtitle1"> Balance: {{ item.balance }} {{ item.currency }}</span>
+          </div>
+          <div>
+            <span
+              class="text-subtitle1 p-[8px]"
+              style="border: solid #000 1px; border-radius: 48px"
+              >{{ item.active === true ? 'Активен' : 'Неактивен' }}</span
+            >
+          </div>
         </q-card-section>
         <Dialog :modelValue="openEditAccountDialog">
           <template #content>
@@ -81,6 +90,7 @@ import { financeServerURL } from 'src/boot/config'
 import { Button, Input, Select } from 'src/components/atoms'
 import { Close, Dialog, Dropdown } from 'src/components/molecules'
 import { deleteMethod } from 'src/composables/api-method/delete'
+import { patchMethod } from 'src/composables/api-method/patch'
 import { postMethod } from 'src/composables/api-method/post'
 import { putMethod } from 'src/composables/api-method/put'
 import { accountsApiStore } from 'src/stores/accounts-api'
@@ -97,9 +107,22 @@ const getUserAccounts = async () => {
 }
 
 const openEditAccountDialog = ref(false)
+const accountStatus = ref(null)
 const accountButtons = computed(() => [
   {
-    label: 'Edit',
+    label: 'Изменить статус',
+    icon: 'mdi-credit-card-chip',
+    action: (account) => {
+      accountStatus.value = !account.active
+      const payload = {
+        active: accountStatus.value,
+      }
+
+      patchMethod(financeServerURL, `accounts/${account.id}`, payload, $q, {})
+    },
+  },
+  {
+    label: 'Редактировать',
     icon: 'mdi-pencil',
     action: (account) => {
       openEditAccountDialog.value = true
@@ -110,7 +133,7 @@ const accountButtons = computed(() => [
     },
   },
   {
-    label: 'Delete',
+    label: 'Удалить',
     icon: 'mdi-delete',
     action: (account) => {
       deleteAccount(account)
@@ -153,6 +176,7 @@ const createAccount = async () => {
     type: accountType.value,
     currency: currencyName.value,
     balance: accountBalance.value,
+    active: 'false',
   }
   await postMethod(financeServerURL, 'accounts', payload, $q, 'Счет успешно создан')
 }
