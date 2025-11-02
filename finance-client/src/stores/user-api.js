@@ -15,7 +15,6 @@ export const useApiStore = defineStore('user-api', {
           $q,
           'Информация о пользователе успешно получена',
         )
-        console.log(this.userData)
 
         this.role = this.userData.role
       } catch (error) {

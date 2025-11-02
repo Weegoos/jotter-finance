@@ -3,7 +3,6 @@
     <q-header elevated> </q-header>
     <q-drawer
       side="left"
-      v-if="role"
       v-model="drawerLeft"
       bordered
       :width="200"
@@ -65,12 +64,17 @@ import { onMounted, ref } from 'vue'
 const userApi = useApiStore()
 const $q = useQuasar()
 
-const drawerLeft = ref(true)
+const drawerLeft = ref(false)
 
 const role = ref('')
 const getCurrentUserInfo = async () => {
   await userApi.getUserInfo(userServerURL, $q)
   role.value = userApi.role
+  if (role.value) {
+    drawerLeft.value = true
+  } else {
+    drawerLeft.value = false
+  }
 }
 
 onMounted(() => {
