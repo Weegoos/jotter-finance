@@ -40,6 +40,7 @@
               class="text-black w-full"
               align="left"
               icon="mdi-cog-outline"
+              @emit-click="$router.push('/settings')"
               flat
             />
           </q-card-section>
