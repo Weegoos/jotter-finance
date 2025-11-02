@@ -22,6 +22,22 @@
         flat
       />
       <DottedSeparator />
+      <q-expansion-item label="MANAGEMENT" default-opened>
+        <q-card>
+          <q-card-section>
+            <Button
+              :label="'Accounts'"
+              color="white"
+              class="text-black w-full"
+              align="left"
+              icon="mdi-credit-card"
+              @emit-click="$router.push('/accounts')"
+              flat
+            />
+          </q-card-section>
+        </q-card>
+      </q-expansion-item>
+      <DottedSeparator />
       <q-expansion-item label="SETTINGS" default-opened>
         <q-card>
           <q-card-section>

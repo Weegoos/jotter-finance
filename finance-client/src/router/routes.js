@@ -19,6 +19,10 @@ const routes = [
     path: '/settings',
     component: () => import('pages/AppSettings.vue'),
   },
+  {
+    path: '/accounts',
+    component: () => import('pages/AccountsPage.vue'),
+  },
 
   // Always leave this as last one,
   // but you can also remove it
