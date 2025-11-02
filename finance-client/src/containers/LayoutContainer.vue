@@ -3,7 +3,6 @@
     <q-header elevated> </q-header>
     <q-drawer
       side="left"
-      v-if="role"
       v-model="drawerLeft"
       bordered
       :width="200"
@@ -23,6 +22,22 @@
         flat
       />
       <DottedSeparator />
+      <q-expansion-item label="MANAGEMENT" default-opened>
+        <q-card>
+          <q-card-section>
+            <Button
+              :label="'Accounts'"
+              color="white"
+              class="text-black w-full"
+              align="left"
+              icon="mdi-credit-card"
+              @emit-click="$router.push('/accounts')"
+              flat
+            />
+          </q-card-section>
+        </q-card>
+      </q-expansion-item>
+      <DottedSeparator />
       <q-expansion-item label="SETTINGS" default-opened>
         <q-card>
           <q-card-section>
@@ -41,6 +56,7 @@
               class="text-black w-full"
               align="left"
               icon="mdi-cog-outline"
+              @emit-click="$router.push('/settings')"
               flat
             />
           </q-card-section>
@@ -65,12 +81,17 @@ import { onMounted, ref } from 'vue'
 const userApi = useApiStore()
 const $q = useQuasar()
 
-const drawerLeft = ref(true)
+const drawerLeft = ref(false)
 
 const role = ref('')
 const getCurrentUserInfo = async () => {
   await userApi.getUserInfo(userServerURL, $q)
   role.value = userApi.role
+  if (role.value) {
+    drawerLeft.value = true
+  } else {
+    drawerLeft.value = false
+  }
 }
 
 onMounted(() => {
