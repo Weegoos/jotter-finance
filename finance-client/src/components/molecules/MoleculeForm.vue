@@ -29,7 +29,7 @@
 <script setup>
 import { Button } from '../atoms'
 
-const emit = defineEmits(['submit', 'reset', 'loginButton', 'additionalButtonClick'])
+const emit = defineEmits(['submit', 'reset', 'loginButton', 'additionalButtonClick', 'moveButton'])
 
 defineProps({
   mainButtonLabel: [String, Number],

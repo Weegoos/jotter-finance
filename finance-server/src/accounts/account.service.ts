@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -74,7 +75,7 @@ export class AccountService {
     }
 
     if (account.dataValues.userId !== userId) {
-      throw new UnauthorizedException(
+      throw new ForbiddenException(
         'User not authorized to delete this account',
       );
     }
