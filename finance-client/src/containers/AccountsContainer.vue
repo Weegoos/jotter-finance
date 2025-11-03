@@ -29,7 +29,6 @@
               style="border: solid #000 1px; border-radius: 48px"
               >{{ item.active === true ? 'Активен' : 'Неактивен' }}</span
             >
-            {{ item.active }}
           </div>
         </q-card-section>
         <Dialog :modelValue="openEditAccountDialog">
@@ -65,7 +64,12 @@
           <Close :sectionName="'Добавьте счет'" @emitClick="isCreateAccountDialog = false" />
           <Input class="q-mb-sm" :label="'Название счета'" v-model="accountName"></Input>
           <Input class="q-mb-sm" :label="'Тип счета'" v-model="accountType"></Input>
-          <Input class="q-mb-sm" :label="'Укажите баланс'" v-model="accountBalance"></Input>
+          <Input
+            class="q-mb-sm"
+            :label="'Укажите баланс'"
+            :type="'number'"
+            v-model="accountBalance"
+          ></Input>
           <Select
             :label="'Выберите валюту'"
             v-model="currencyName"
@@ -91,9 +95,10 @@ import { financeServerURL } from 'src/boot/config'
 import { Button, Input, Select } from 'src/components/atoms'
 import { Close, Dialog, Dropdown } from 'src/components/molecules'
 import { deleteMethod } from 'src/composables/api-method/delete'
-import { patchMethod } from 'src/composables/api-method/patch'
+// import { patchMethod } from 'src/composables/api-method/patch'
 import { postMethod } from 'src/composables/api-method/post'
 import { putMethod } from 'src/composables/api-method/put'
+import { useSocketEvents } from 'src/composables/javascript/useSocketEvents'
 import { accountsApiStore } from 'src/stores/accounts-api'
 import { computed, onMounted, ref } from 'vue'
 // global variables
@@ -102,10 +107,19 @@ const $q = useQuasar()
 
 const userAccounts = ref([])
 const currenciesArray = ref(['USD', 'Euro'])
+
 const getUserAccounts = async () => {
   await accountApi.getAllAccounts($q)
   userAccounts.value = accountApi.accounts
 }
+
+const messages = ref([])
+useSocketEvents({
+  accountUpdated: () => {
+    getUserAccounts()
+  },
+  newMessage: (msg) => messages.value.push(msg),
+})
 
 const openEditAccountDialog = ref(false)
 const accountStatus = ref(null)
@@ -119,7 +133,7 @@ const accountButtons = computed(() => [
         active: accountStatus.value,
       }
 
-      patchMethod(financeServerURL, `accounts/${account.id}`, payload, $q, {})
+      putMethod(financeServerURL, `accounts/${account.id}`, payload, $q, {})
     },
   },
   {

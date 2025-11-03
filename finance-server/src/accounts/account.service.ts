@@ -41,10 +41,7 @@ export class AccountService {
 
     return this.accountModel.findAll({
       where,
-      order: [
-        ['active', 'DESC'],
-        ['updatedAt', 'DESC'],
-      ],
+      order: [['createdAt', 'DESC']],
     });
   }
   async destroy(id: number, userId: number): Promise<void> {

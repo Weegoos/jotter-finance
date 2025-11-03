@@ -21,11 +21,15 @@ import { AccountService } from './account.service';
 import { AccountDTO } from './dto/account-create.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { AccountStatusUpdate } from './dto/account-status-update.dto';
+import { ChatGateway } from 'src/chat.gateway';
 
 @ApiTags('accounts')
 @Controller('accounts')
 export class AccountController {
-  constructor(private readonly accountService: AccountService) {}
+  constructor(
+    private readonly accountService: AccountService,
+    private readonly chatGateway: ChatGateway,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -39,7 +43,13 @@ export class AccountController {
     @Req() req: any,
     @Body() account: AccountDTO,
   ): Promise<IAccount> {
-    return this.accountService.create(req.user.id, account);
+    const newAccount = await this.accountService.create(req.user.id, account);
+
+    // теперь берём уже актуальные данные
+    const allAccounts = await this.accountService.findAllByUserId(req.user.id);
+    this.chatGateway.server.emit('accountUpdated', allAccounts);
+
+    return newAccount;
   }
 
   @UseGuards(JwtAuthGuard)
@@ -64,13 +74,15 @@ export class AccountController {
   ): Promise<IAccount[]> {
     const userId = req.user.id;
 
-    // Явно преобразуем строку в boolean
+    // Преобразуем строку в boolean
     let active: boolean | undefined;
     if (activeParam === 'true') active = true;
     else if (activeParam === 'false') active = false;
     else active = undefined;
 
-    return this.accountService.findAllByUserId(userId, active);
+    const accounts = await this.accountService.findAllByUserId(userId, active);
+
+    return accounts;
   }
 
   @UseGuards(JwtAuthGuard)
@@ -80,9 +92,10 @@ export class AccountController {
   @ApiResponse({ status: 200, description: 'Account deleted successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async delete(@Req() req: any, @Param('id') id: number): Promise<void> {
+    const allAccounts = await this.accountService.findAllByUserId(req.user.id);
+    this.chatGateway.server.emit('accountUpdated', allAccounts);
     return this.accountService.destroy(id, req.user.id);
   }
-
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Put(':id')
@@ -96,22 +109,17 @@ export class AccountController {
     @Param('id') id: number,
     @Body() updates: AccountDTO,
   ): Promise<IAccount> {
-    return this.accountService.update(id, req.user.id, updates);
-  }
+    // 1️⃣ обновляем запись
+    const updatedAccount = await this.accountService.update(
+      id,
+      req.user.id,
+      updates,
+    );
 
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update a status by ID' })
-  @ApiResponse({ status: 200, description: 'Status updated successfully' })
-  @ApiResponse({ status: 400, description: 'Bad Request' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'Account not found' })
-  async updateId(
-    @Req() req: any,
-    @Body() updates: AccountStatusUpdate,
-    @Param('id') id: number,
-  ): Promise<IAccount> {
-    return this.accountService.update(id, req.user.id, updates);
+    const allAccounts = await this.accountService.findAllByUserId(req.user.id);
+
+    this.chatGateway.server.emit('accountUpdated', allAccounts);
+
+    return updatedAccount;
   }
 }
