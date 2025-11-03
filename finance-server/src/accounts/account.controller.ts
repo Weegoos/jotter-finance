@@ -62,9 +62,9 @@ export class AccountController {
     @Req() req: any,
     @Param('active') activeParam?: boolean,
   ): Promise<IAccount[]> {
-    const userId = req.user.id; // получаем userId из токена
+    const userId = req.user.id;
     const active: boolean | undefined =
-      activeParam === undefined ? undefined : activeParam === 'true';
+      activeParam === undefined ? undefined : activeParam === true;
 
     return this.accountService.findAllByUserId(userId, active);
   }
