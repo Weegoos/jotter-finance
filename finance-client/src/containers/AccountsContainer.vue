@@ -29,6 +29,7 @@
               style="border: solid #000 1px; border-radius: 48px"
               >{{ item.active === true ? 'Активен' : 'Неактивен' }}</span
             >
+            {{ item.active }}
           </div>
         </q-card-section>
         <Dialog :modelValue="openEditAccountDialog">

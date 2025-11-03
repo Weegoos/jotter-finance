@@ -60,11 +60,15 @@ export class AccountController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async findAllByStatus(
     @Req() req: any,
-    @Param('active') activeParam?: boolean,
+    @Param('active') activeParam: string,
   ): Promise<IAccount[]> {
     const userId = req.user.id;
-    const active: boolean | undefined =
-      activeParam === undefined ? undefined : activeParam === true;
+
+    // Явно преобразуем строку в boolean
+    let active: boolean | undefined;
+    if (activeParam === 'true') active = true;
+    else if (activeParam === 'false') active = false;
+    else active = undefined;
 
     return this.accountService.findAllByUserId(userId, active);
   }
