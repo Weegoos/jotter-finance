@@ -45,12 +45,12 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     const hasToken = document.cookie.includes('access_token')
 
     // ⚠️ Если токена нет и это НЕ страница логина — редиректим
-    if (!hasToken && to.path !== '/login') {
+    if (!hasToken && to.path !== '/login' && to.path !== '/register') {
       return next('/login')
     }
 
-    // Если токена нет, но юзер уже на логине — просто продолжаем
-    if (!hasToken && to.path === '/login') {
+    // Если токена нет, но юзер уже на логине или регистрации — просто продолжаем
+    if (!hasToken && (to.path === '/login' || to.path === '/register')) {
       return next()
     }
 
