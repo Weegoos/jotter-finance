@@ -45,15 +45,15 @@
         </q-card-section>
         <!-- {{ activeAccounts }} -->
         <q-card-section class="col">
-          <div v-for="(items, index) in activeAccounts" :key="index">
-            <div v-if="activeAccounts.length > 0" class="q-pa-md">
+          <div v-if="activeAccounts.length > 0">
+            <div v-for="(items, index) in activeAccounts" :key="index">
               <p>{{ items.name }}</p>
 
               <p class="q-mb-md">{{ items.balance }} {{ items.currency }}</p>
               <q-separator />
             </div>
-            <div v-else>Ничего нету</div>
           </div>
+          <div v-else>Пока нету активных счетов</div>
         </q-card-section>
       </q-card>
     </div>
@@ -63,6 +63,7 @@
 <script setup>
 import { useQuasar } from 'quasar'
 import { Button, Input } from 'src/components/atoms'
+import { useSocketEvents } from 'src/composables/javascript/useSocketEvents'
 import { accountsApiStore } from 'src/stores/accounts-api'
 import { onMounted, ref } from 'vue'
 // globalVariables
@@ -75,6 +76,14 @@ const getAccountByStatus = async () => {
   activeAccounts.value = accountStore.accountsByStatus
   console.log(activeAccounts.value)
 }
+
+const messages = ref([])
+useSocketEvents({
+  accountUpdated: () => {
+    getAccountByStatus()
+  },
+  newMessage: (msg) => messages.value.push(msg),
+})
 
 onMounted(() => {
   getAccountByStatus()

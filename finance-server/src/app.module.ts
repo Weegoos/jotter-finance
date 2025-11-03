@@ -6,6 +6,8 @@ import { Account } from './accounts/account.model';
 import { AccountModule } from './accounts/account.module'; // модуль — отдельно
 import { CategoriesModule } from './categories/categories.module';
 import { Categories } from './categories/categories.model';
+import { AppService } from './app.service';
+import { ChatGateway } from './chat.gateway';
 
 @Module({
   imports: [
@@ -27,5 +29,6 @@ import { Categories } from './categories/categories.model';
     AccountModule,
     CategoriesModule,
   ],
+  providers: [AppService, ChatGateway],
 })
 export class AppModule {}
