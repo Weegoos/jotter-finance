@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Req,
@@ -19,6 +20,7 @@ import { IAccount } from './interface/account.interface';
 import { AccountService } from './account.service';
 import { AccountDTO } from './dto/account-create.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { AccountStatusUpdate } from './dto/account-status-update.dto';
 
 @ApiTags('accounts')
 @Controller('accounts')
@@ -52,6 +54,23 @@ export class AccountController {
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
+  @Get(':active')
+  @ApiOperation({ summary: 'Get all accounts for a user' })
+  @ApiResponse({ status: 200, description: 'Accounts retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async findAllByStatus(
+    @Req() req: any,
+    @Param('active') activeParam?: boolean,
+  ): Promise<IAccount[]> {
+    const userId = req.user.id;
+    const active: boolean | undefined =
+      activeParam === undefined ? undefined : activeParam === true;
+
+    return this.accountService.findAllByUserId(userId, active);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Delete(':id')
   @ApiOperation({ summary: 'Delete an account by ID' })
   @ApiResponse({ status: 200, description: 'Account deleted successfully' })
@@ -72,6 +91,22 @@ export class AccountController {
     @Req() req: any,
     @Param('id') id: number,
     @Body() updates: AccountDTO,
+  ): Promise<IAccount> {
+    return this.accountService.update(id, req.user.id, updates);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update a status by ID' })
+  @ApiResponse({ status: 200, description: 'Status updated successfully' })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Account not found' })
+  async updateId(
+    @Req() req: any,
+    @Body() updates: AccountStatusUpdate,
+    @Param('id') id: number,
   ): Promise<IAccount> {
     return this.accountService.update(id, req.user.id, updates);
   }

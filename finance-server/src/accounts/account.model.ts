@@ -12,4 +12,6 @@ export class Account extends Model {
   currency: string;
   @Column
   type: string;
+  @Column
+  active: boolean;
 }

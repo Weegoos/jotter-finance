@@ -43,9 +43,17 @@
           <div class="text-h6">Graphs</div>
           <!-- <div class="text-subtitle2">$ 3200</div> -->
         </q-card-section>
-        <q-card-section class="">
-          <div class="text-h6">Accounts</div>
-          <!-- <div class="text-subtitle2">$ 3200</div> -->
+        <!-- {{ activeAccounts }} -->
+        <q-card-section class="col">
+          <div v-for="(items, index) in activeAccounts" :key="index">
+            <div v-if="activeAccounts.length > 0" class="q-pa-md">
+              <p>{{ items.name }}</p>
+
+              <p class="q-mb-md">{{ items.balance }} {{ items.currency }}</p>
+              <q-separator />
+            </div>
+            <div v-else>Ничего нету</div>
+          </div>
         </q-card-section>
       </q-card>
     </div>
@@ -53,7 +61,24 @@
 </template>
 
 <script setup>
+import { useQuasar } from 'quasar'
 import { Button, Input } from 'src/components/atoms'
+import { accountsApiStore } from 'src/stores/accounts-api'
+import { onMounted, ref } from 'vue'
+// globalVariables
+const accountStore = accountsApiStore()
+const $q = useQuasar()
+
+const activeAccounts = ref([])
+const getAccountByStatus = async () => {
+  await accountStore.getAccountsByStatus($q, true)
+  activeAccounts.value = accountStore.accountsByStatus
+  console.log(activeAccounts.value)
+}
+
+onMounted(() => {
+  getAccountByStatus()
+})
 </script>
 
 <style></style>

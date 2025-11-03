@@ -26,14 +26,26 @@ export class AccountService {
     return this.accountModel.create(newAccount);
   }
 
-  async findAllByUserId(userId: number): Promise<Account[]> {
+  async findAllByUserId(userId: number, active?: boolean): Promise<Account[]> {
     if (!userId) {
       throw new UnauthorizedException('User not authorized');
     }
 
-    return this.accountModel.findAll({ where: { userId } });
-  }
+    const where: any = { userId };
 
+    // добавляем фильтр только если active задан явно
+    if (typeof active === 'boolean') {
+      where.active = active;
+    }
+
+    return this.accountModel.findAll({
+      where,
+      order: [
+        ['active', 'DESC'],
+        ['updatedAt', 'DESC'],
+      ],
+    });
+  }
   async destroy(id: number, userId: number): Promise<void> {
     const account = await this.accountModel.findByPk(id);
 

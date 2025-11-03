@@ -4,4 +4,5 @@ export interface IAccount {
   balance: number;
   currency: string;
   type: string;
+  active: boolean;
 }
