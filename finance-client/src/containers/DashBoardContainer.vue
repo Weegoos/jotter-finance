@@ -26,13 +26,11 @@
       <q-card class="my-card">
         <q-card-section>
           <div class="text-h6">Payment Types</div>
-          <!-- <div class="text-subtitle2">$ 3200</div> -->
         </q-card-section>
       </q-card>
       <q-card class="my-card">
         <q-card-section>
           <div class="text-h6">Provider Breakdown</div>
-          <!-- <div class="text-subtitle2">$ 3200</div> -->
         </q-card-section>
       </q-card>
     </div>
@@ -41,9 +39,7 @@
       <q-card class="grid grid-cols-2 grid-rows-1">
         <q-card-section class="">
           <div class="text-h6">Graphs</div>
-          <!-- <div class="text-subtitle2">$ 3200</div> -->
         </q-card-section>
-        <!-- {{ activeAccounts }} -->
         <q-card-section class="col">
           <div v-if="activeAccounts.length > 0">
             <div v-for="(items, index) in activeAccounts" :key="index">

@@ -18,7 +18,7 @@ export async function putMethod(serverURL, url, variableRefOrData, $q, params = 
     const response =
       variableRefOrData !== undefined
         ? await axios.put(`${serverURL}${url}`, variableRefOrData, config)
-        : await axios.put(`${serverURL}${url}`, {}, config) // пустой объект — безопасный JSON
+        : await axios.put(`${serverURL}${url}`, {}, config)
 
     console.log('Ответ сервера:', response.data)
   } catch (error) {

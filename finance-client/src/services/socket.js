@@ -1,7 +1,6 @@
 import { io } from 'socket.io-client'
 import { financeServerURL } from 'src/boot/config'
 
-// Подключаемся к серверу NestJS
-const socket = io(financeServerURL) // поменяй на свой адрес
+const socket = io(financeServerURL)
 
 export default socket

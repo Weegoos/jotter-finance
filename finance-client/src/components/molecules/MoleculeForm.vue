@@ -15,13 +15,6 @@
         :label="moveButtonLabel"
         @click="emit('moveButton')"
       />
-      <!-- <Button
-        v-if="additionalButtonLabel"
-        icon="mdi-google"
-        :label="additionalButtonLabel"
-        :class="additionalButtonClass"
-        @click="emit('additionalButtonClick')"
-      /> -->
     </slot>
   </q-form>
 </template>

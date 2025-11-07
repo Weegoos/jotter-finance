@@ -9,7 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
-@WebSocketGateway({ cors: true }) // cors: true — чтобы фронт мог подключиться
+@WebSocketGateway({ cors: true })
 export class ChatGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
@@ -28,9 +28,9 @@ export class ChatGateway
     console.log(`Client disconnected: ${client.id}`);
   }
 
-  @SubscribeMessage('message') // событие от клиента
+  @SubscribeMessage('message')
   handleMessage(@MessageBody() message: string): void {
     console.log('Received message:', message);
-    this.server.emit('message', message); // отправляем всем клиентам
+    this.server.emit('message', message);
   }
 }

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
-import { CategoryType } from '../categories.model'; // убедись, что путь правильный
+import { CategoryType } from '../categories.model';
 
 export class CreateCategoryDTO {
   @ApiProperty({
@@ -13,8 +13,8 @@ export class CreateCategoryDTO {
 
   @ApiProperty({
     description: 'The type of the category',
-    enum: CategoryType, // ✅ enum для Swagger
-    example: CategoryType.INCOME, // пример
+    enum: CategoryType,
+    example: CategoryType.INCOME,
   })
   @IsEnum(CategoryType)
   @IsNotEmpty()
