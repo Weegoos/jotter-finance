@@ -1,4 +1,5 @@
-import { Column, Model, Table } from 'sequelize-typescript';
+import { Column, HasMany, Model, Table } from 'sequelize-typescript';
+import { Transactions } from 'src/transaction/transaction.model';
 
 @Table
 export class Account extends Model {
@@ -14,4 +15,7 @@ export class Account extends Model {
   type: string;
   @Column
   active: boolean;
+
+  @HasMany(() => Transactions)
+  transactions: Transactions[];
 }
