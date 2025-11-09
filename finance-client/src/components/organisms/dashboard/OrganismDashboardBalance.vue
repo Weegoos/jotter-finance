@@ -21,7 +21,12 @@
           <div class="text-2xl">
             <p>Расходы</p>
           </div>
-          <Select label="Выберите счет" v-model="account" class="q-mb-sm"></Select>
+          <Select
+            label="Выберите счет"
+            :options="propsAccounts"
+            v-model="account"
+            class="q-mb-sm"
+          ></Select>
           <Select label="Категория операции" v-model="category" class="q-mb-sm"></Select>
           <Input label="Сумма операции" :type="'Number'" v-model="amount" class="q-mb-sm"></Input>
           <Select label="Тип операции" v-model="type" class="q-mb-sm"></Select>
@@ -40,6 +45,11 @@
 import { Button, Input, Select } from 'src/components/atoms'
 import { Dialog, Dropdown } from 'src/components/molecules'
 import { computed, ref } from 'vue'
+
+const props = defineProps({
+  activeAccounts: Array,
+})
+
 const dashboardBalanceButtons = computed(() => [
   {
     label: 'Create Category',
@@ -48,6 +58,14 @@ const dashboardBalanceButtons = computed(() => [
 ])
 
 const emit = defineEmits(['submit'])
+
+const propsAccounts = computed(() =>
+  props.activeAccounts.map((account) => ({
+    label: account.name,
+    value: account.id,
+  }))
+)
+
 
 const addPayment = ref(false)
 const account = ref('')
@@ -58,7 +76,7 @@ const description = ref('')
 const repeat = ref('')
 const submitForm = () => {
   const payload = {
-    accountId: account.value,
+    accountId: account.value.value,
     categoryId: category.value,
     amount: Number(amount.value),
     type: type.value,

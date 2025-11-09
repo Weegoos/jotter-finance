@@ -13,7 +13,7 @@
       </div>
     </div>
 
-    <OrganismDashboardBalance @submit="createTransaction" />
+    <OrganismDashboardBalance @submit="createTransaction" :activeAccounts="activeAccounts" />
 
     <div class="payment grid grid-cols-2 grid-rows-1 q-gutter-md q-mt-md">
       <q-card class="my-card">
@@ -55,7 +55,7 @@ import { Button, Input } from 'src/components/atoms'
 import OrganismDashboardBalance from 'src/components/organisms/dashboard/OrganismDashboardBalance.vue'
 import { useSocketEvents } from 'src/composables/javascript/useSocketEvents'
 import { accountsApiStore } from 'src/stores/accounts-api'
-import { onMounted, ref } from 'vue'
+import {onMounted, ref } from 'vue'
 // globalVariables
 const accountStore = accountsApiStore()
 const $q = useQuasar()
