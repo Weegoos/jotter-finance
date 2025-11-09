@@ -1,6 +1,7 @@
 <template>
   <div class="transaction-overview q-mt-md">
-    <Table
+    <div v-if="props.data?.data?.length > 0">
+      <Table
       :data="Object(transactionsWithAccountName)"
       :title="'Transaction Overview'"
       :columns="transactionColumn"
@@ -32,6 +33,14 @@
         <Button class="text-black" label="Изменить" @emit-click="editTransaction"></Button>
       </template>
     </Dialog>
+    </div>
+    <div v-else>
+      <q-card class="my-card">
+        <q-card-section>
+          <div class="text-subtitle1">Вы еще не совершали транзакции</div>
+        </q-card-section>
+      </q-card>
+    </div>
   </div>
 </template>
 
