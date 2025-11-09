@@ -18,8 +18,8 @@ import {
 import { IAccount } from './interface/account.interface';
 import { AccountService } from './account.service';
 import { AccountDTO } from './dto/account-create.dto';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { ChatGateway } from 'src/chat.gateway';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ChatGateway } from '../chat.gateway';
 
 @ApiTags('accounts')
 @Controller('accounts')
@@ -92,6 +92,7 @@ export class AccountController {
     this.chatGateway.server.emit('accountUpdated', allAccounts);
     return this.accountService.destroy(id, req.user.id);
   }
+
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Put(':id')

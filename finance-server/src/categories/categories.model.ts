@@ -1,5 +1,5 @@
 import { Table, Column, Model, DataType, HasMany } from 'sequelize-typescript';
-import { Transactions } from 'src/transaction/transaction.model';
+import { Transactions } from '../transaction/transaction.model';
 
 export enum CategoryType {
   INCOME = 'income',

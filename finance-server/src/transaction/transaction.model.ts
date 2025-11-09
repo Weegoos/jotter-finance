@@ -6,8 +6,8 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript';
-import { Account } from 'src/accounts/account.model';
-import { Categories } from 'src/categories/categories.model';
+import { Account } from '../accounts/account.model';
+import { Categories } from '../categories/categories.model';
 import { ITransaction } from './interface/transaction.interface';
 
 export enum TransactionType {

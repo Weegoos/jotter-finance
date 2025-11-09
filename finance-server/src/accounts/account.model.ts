@@ -1,5 +1,5 @@
 import { Column, HasMany, Model, Table } from 'sequelize-typescript';
-import { Transactions } from 'src/transaction/transaction.model';
+import { Transactions } from '../transaction/transaction.model';
 
 @Table
 export class Account extends Model {

@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -15,10 +16,11 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { TransactionService } from './transaction.service';
-import { ChatGateway } from 'src/chat.gateway';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { ChatGateway } from '../chat.gateway';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateTransactionDTO } from './dto/transaction-create.dto';
 import { ITransaction } from './interface/transaction.interface';
+import { UpdateTransactionDTO } from './dto/transaction-update.dto';
 
 @ApiTags('transactions')
 @Controller('transactions')
@@ -67,5 +69,27 @@ export class TransactionController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async delete(@Req() req: any, @Param('id') id: number): Promise<void> {
     return this.transactionService.destroy(id, req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Put(':id')
+  @ApiOperation({ summary: 'Update a transaction by ID' })
+  @ApiResponse({ status: 200, description: 'Transaction updated successfully' })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Transaction not found' })
+  async update(
+    @Req() req: any,
+    @Param('id') id: number,
+    @Body() updates: UpdateTransactionDTO,
+  ): Promise<ITransaction> {
+    const updatedTransaction = await this.transactionService.update(
+      id,
+      req.user.id,
+      updates,
+    );
+
+    return updatedTransaction;
   }
 }

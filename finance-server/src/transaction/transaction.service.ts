@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -10,8 +11,8 @@ import { InjectModel } from '@nestjs/sequelize';
 import { Transactions } from './transaction.model';
 import { CreateTransactionDTO } from './dto/transaction-create.dto';
 import { ITransaction } from './interface/transaction.interface';
-import { Account } from 'src/accounts/account.model';
-import { Categories } from 'src/categories/categories.model';
+import { Account } from '../accounts/account.model';
+import { Categories } from '../categories/categories.model';
 
 @Injectable()
 export class TransactionService {
@@ -90,5 +91,25 @@ export class TransactionService {
     }
 
     await transaction.destroy();
+  }
+
+  async update(
+    id: number,
+    userId: number,
+    updates: Partial<Transactions>,
+  ): Promise<Transactions> {
+    const transaction = await this.transactionModel.findByPk(id);
+
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    if (transaction.dataValues.userId !== userId) {
+      throw new ForbiddenException(
+        'User not authorized to delete this account',
+      );
+    }
+
+    return transaction.update(updates);
   }
 }
