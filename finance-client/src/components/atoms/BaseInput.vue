@@ -1,4 +1,3 @@
-<!-- src/components/atoms/BaseInput.vue -->
 <template>
   <q-input
     :model-value="modelValue"
@@ -9,7 +8,6 @@
     :outlined="props.outlined"
     :label="props.label"
   >
-    <!-- проброс слотов из родителя -->
     <template v-if="$slots.append" v-slot:append>
       <slot name="append" />
     </template>

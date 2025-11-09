@@ -5,16 +5,15 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Настройка Swagger
   const config = new DocumentBuilder()
     .setTitle('Jotter Finance Monitoring API')
     .setDescription('Управление финансами и мониторинг')
     .setVersion('1.0.0')
-    .addBearerAuth() // если нужен JWT auth
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document); // документация будет доступна по /api
+  SwaggerModule.setup('api', app, document);
 
   app.enableCors({
     origin: ['http://localhost:9000', 'http://localhost:9001'],

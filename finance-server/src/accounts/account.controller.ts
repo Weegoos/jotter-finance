@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  Patch,
   Post,
   Put,
   Req,
@@ -19,9 +18,8 @@ import {
 import { IAccount } from './interface/account.interface';
 import { AccountService } from './account.service';
 import { AccountDTO } from './dto/account-create.dto';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { AccountStatusUpdate } from './dto/account-status-update.dto';
-import { ChatGateway } from 'src/chat.gateway';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ChatGateway } from '../chat.gateway';
 
 @ApiTags('accounts')
 @Controller('accounts')
@@ -45,7 +43,6 @@ export class AccountController {
   ): Promise<IAccount> {
     const newAccount = await this.accountService.create(req.user.id, account);
 
-    // теперь берём уже актуальные данные
     const allAccounts = await this.accountService.findAllByUserId(req.user.id);
     this.chatGateway.server.emit('accountUpdated', allAccounts);
 
@@ -74,7 +71,6 @@ export class AccountController {
   ): Promise<IAccount[]> {
     const userId = req.user.id;
 
-    // Преобразуем строку в boolean
     let active: boolean | undefined;
     if (activeParam === 'true') active = true;
     else if (activeParam === 'false') active = false;
@@ -96,6 +92,7 @@ export class AccountController {
     this.chatGateway.server.emit('accountUpdated', allAccounts);
     return this.accountService.destroy(id, req.user.id);
   }
+
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Put(':id')
@@ -109,7 +106,6 @@ export class AccountController {
     @Param('id') id: number,
     @Body() updates: AccountDTO,
   ): Promise<IAccount> {
-    // 1️⃣ обновляем запись
     const updatedAccount = await this.accountService.update(
       id,
       req.user.id,

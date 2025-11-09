@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { Categories } from './categories.model';
-import { JwtStrategy } from 'src/auth/jwt.strategy';
+import { JwtStrategy } from '../auth/jwt.strategy';
 import { CategoriesService } from './categories.service';
 import { CategoriesController } from './categories.controller';
 

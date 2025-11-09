@@ -4,8 +4,8 @@ import dotenv from 'dotenv';
 import { Account } from './account.model';
 import { AccountService } from './account.service';
 import { AccountController } from './account.controller';
-import { JwtStrategy } from 'src/auth/jwt.strategy';
-import { ChatGateway } from 'src/chat.gateway';
+import { JwtStrategy } from '../auth/jwt.strategy';
+import { ChatGateway } from '../chat.gateway';
 
 dotenv.config();
 

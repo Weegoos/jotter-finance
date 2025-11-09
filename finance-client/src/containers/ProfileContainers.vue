@@ -10,7 +10,6 @@
         <p class="q-mr-sm">{{ userInfo.email }}</p>
       </q-card-section>
       <q-card-section class="row justify-center">
-        <!-- <Button icon="mdi-dots-horizontal" flat /> -->
         <Dropdown
           dropdown-icon="mdi-dots-horizontal"
           :data="profileButtons"

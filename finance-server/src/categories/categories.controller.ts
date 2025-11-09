@@ -6,7 +6,6 @@ import {
   Param,
   Post,
   Put,
-  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -17,7 +16,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { CategoriesService } from './categories.service';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateCategoryDTO } from './dto/categories-create.dto';
 import { ICategory } from './interface/category.interface';
 

@@ -17,7 +17,6 @@ export async function getMethod(serverURL, url, $q) {
   } catch (error) {
     const status = error.response?.status
     const message = error.response?.data?.message || 'Неизвестная ошибка'
-    // console.log(status)
 
     if (status === 401) {
       console.warn('Пользователь не авторизован.')

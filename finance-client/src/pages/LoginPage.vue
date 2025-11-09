@@ -2,7 +2,6 @@
   <div class="container">
     <section class="wrapper fixed-center">
       <div class="p-[16px]">
-        <!-- <Icon align="center w-[32px] h-[32px]" /> -->
         <p
           class="flex justify-center text-bold font-medium p-[16px]"
           :class="$q.screen.width < mobileWidth ? 'text-xl' : 'text-2xl'"
