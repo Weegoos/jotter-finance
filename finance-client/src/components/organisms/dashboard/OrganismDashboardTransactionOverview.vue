@@ -2,37 +2,37 @@
   <div class="transaction-overview q-mt-md">
     <div v-if="props.data?.data?.length > 0">
       <Table
-      :data="Object(transactionsWithAccountName)"
-      :title="'Transaction Overview'"
-      :columns="transactionColumn"
-      :actions="['update', 'delete']"
-      @update="openDialog"
-      @delete="onDelete"
-      @row-click="viewDetailedUser"
-    />
-    <Dialog :modelValue="isDialog">
-      <template #content>
-        <Close :sectionName="'Изменить транзакцию'" @emit-click="isDialog = false" />
-        <Input label="Сумму" :type="'number'" v-model="amount" class="q-mb-sm"></Input>
-        <Select
-          label="Тип "
-          v-model="type"
-          :options="['income', 'expense']"
-          class="q-mb-sm"
-        ></Select>
-        <Input label="Описание" v-model="description" autogrow class="q-mb-sm"></Input>
-        <Select
-          label="Повторение"
-          class="q-mb-sm"
-          v-model="repeat"
-          :options="['weekly', 'monthly']"
-        ></Select>
-      </template>
+        :data="Object(transactionsWithAccountName)"
+        :title="'Transaction Overview'"
+        :columns="transactionColumn"
+        :actions="['update', 'delete']"
+        @update="openDialog"
+        @delete="onDelete"
+        @row-click="viewDetailedUser"
+      />
+      <Dialog :modelValue="isDialog">
+        <template #content>
+          <Close :sectionName="'Изменить транзакцию'" @emit-click="isDialog = false" />
+          <Input label="Сумму" :type="'number'" v-model="amount" class="q-mb-sm"></Input>
+          <Select
+            label="Тип "
+            v-model="type"
+            :options="['income', 'expense']"
+            class="q-mb-sm"
+          ></Select>
+          <Input label="Описание" v-model="description" autogrow class="q-mb-sm"></Input>
+          <Select
+            label="Повторение"
+            class="q-mb-sm"
+            v-model="repeat"
+            :options="['weekly', 'monthly']"
+          ></Select>
+        </template>
 
-      <template #actions>
-        <Button class="text-black" label="Изменить" @emit-click="editTransaction"></Button>
-      </template>
-    </Dialog>
+        <template #actions>
+          <Button class="text-black" label="Изменить" @emit-click="editTransaction"></Button>
+        </template>
+      </Dialog>
     </div>
     <div v-else>
       <q-card class="my-card">
