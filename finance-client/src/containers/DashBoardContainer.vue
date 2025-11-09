@@ -17,6 +17,8 @@
       @submit="createTransaction"
       :activeAccounts="activeAccounts.data"
       :categories="categories"
+      @createCategory="createCategory"
+      @deleteCategory="deleteCategory"
     />
 
     <div class="payment grid grid-cols-2 grid-rows-1 q-gutter-md q-mt-md">
@@ -98,6 +100,14 @@ const getCategories = async () => {
   categories.value = categoryStore.category
 }
 
+const createCategory = async (payload) => {
+  await postMethod(financeServerURL, 'categories', payload, $q, 'Категория успешно создана')
+}
+
+const deleteCategory = async (item) => {
+  await deleteMethod(financeServerURL, 'categories', item.id)
+}
+
 const transactions = ref([])
 const getTransactions = async () => {
   await transactionStore.getAllTransaction($q, viewLimitedTransaction, 1)
@@ -111,6 +121,9 @@ useSocketEvents({
   },
   transactionUpdated: () => {
     getTransactions()
+  },
+  categoryUpdated: () => {
+    getCategories()
   },
   newMessage: (msg) => messages.value.push(msg),
 })

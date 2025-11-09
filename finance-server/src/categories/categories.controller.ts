@@ -19,11 +19,15 @@ import { CategoriesService } from './categories.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateCategoryDTO } from './dto/categories-create.dto';
 import { ICategory } from './interface/category.interface';
+import { ChatGateway } from 'src/chat.gateway';
 
 @ApiTags('categories')
 @Controller('categories')
 export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) {}
+  constructor(
+    private readonly categoriesService: CategoriesService,
+    private readonly chatGateway: ChatGateway,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -37,7 +41,13 @@ export class CategoriesController {
     @Req() req: any,
     @Body() category: CreateCategoryDTO,
   ): Promise<ICategory> {
-    return this.categoriesService.create(req.user.id, category);
+    const newCategory = await this.categoriesService.create(
+      req.user.id,
+      category,
+    );
+    const allCategories = await this.categoriesService.findAll(req.user.id);
+    this.chatGateway.server.emit('categoryUpdated', allCategories);
+    return newCategory;
   }
 
   @UseGuards(JwtAuthGuard)
@@ -71,7 +81,13 @@ export class CategoriesController {
     @Req() req: any,
     @Param('id') id: number,
   ): Promise<void> {
-    return this.categoriesService.delete(req.user.id, id);
+    const deletedCategory = await this.categoriesService.delete(
+      req.user.id,
+      id,
+    );
+    const allCategories = await this.categoriesService.findAll(req.user.id);
+    this.chatGateway.server.emit('categoryUpdated', allCategories);
+    return deletedCategory;
   }
 
   @UseGuards(JwtAuthGuard)

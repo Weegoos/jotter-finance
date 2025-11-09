@@ -54,26 +54,71 @@
           <Button @emit-click="submitForm" class="text-black" :label="'Создать'"></Button>
         </template>
       </Dialog>
+      <Dialog :model-value="isCategory">
+        <template #content>
+          <Close :sectionName="'Категория'" @emit-click="isCategory = false" />
+          <Input label="Название" class="q-mb-sm" v-model="categoryName"></Input>
+          <Select
+            :options="['income', 'expense']"
+            label="Тип"
+            v-model="categoryType"
+            class="q-mb-sm"
+          ></Select>
+          <Button class="text-black" label="Создать" @emit-click="createCategory"></Button>
+          <DottedSeparator />
+
+          <q-list bordered v-for="(item, index) in props.categories" :key="index">
+            <q-item clickable v-ripple>
+              <q-item-section avatar>
+                <q-icon
+                  :name="item.type === 'expense' ? 'mdi-trending-down' : 'mdi-trending-up'"
+                  :class="item.type === 'expense' ? 'text-red' : 'text-green'"
+                />
+              </q-item-section>
+              <q-item-section>{{ item.name }}</q-item-section>
+              <q-item-section avatar>
+                <Dropdown
+                  dropdown-icon="mdi-dots-horizontal"
+                  :data="dashboardCategoryButtons"
+                  @onItemClick="(action) => handleClickCategory(action, item)"
+                  flat
+                  dense
+                />
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </template>
+      </Dialog>
     </q-card>
   </div>
 </template>
 
 <script setup>
-import { Button, Input, Select } from 'src/components/atoms'
+import { Button, DottedSeparator, Input, Select } from 'src/components/atoms'
 import { Close, Dialog, Dropdown } from 'src/components/molecules'
 import { computed, ref } from 'vue'
-
 const props = defineProps({
   activeAccounts: Array,
   categories: Array,
 })
 
+const isCategory = ref(false)
 const dashboardBalanceButtons = computed(() => [
   {
     label: 'Create Category',
     icon: 'mdi-plus',
     action: () => {
-      console.log('create')
+      isCategory.value = true
+    },
+  },
+])
+
+const dashboardCategoryButtons = computed(() => [
+  {
+    icon: 'mdi-delete',
+    label: 'Удалить',
+    action: (item) => {
+      emit('deleteCategory', item)
     },
   },
 ])
@@ -82,7 +127,11 @@ function handleClick(item) {
   if (item.action) item.action()
 }
 
-const emit = defineEmits(['submit'])
+const handleClickCategory = (action, category) => {
+  action.action(category)
+}
+
+const emit = defineEmits(['submit', 'createCategory', 'deleteCategory'])
 
 const propsAccounts = computed(() =>
   props.activeAccounts.map((account) => ({
@@ -99,7 +148,6 @@ const propsCategories = computed(() =>
 )
 
 const today = new Date().toISOString().split('T')[0]
-console.log(today)
 
 const addPayment = ref(false)
 const account = ref('')
@@ -119,6 +167,17 @@ const submitForm = () => {
     date: today,
   }
   emit('submit', payload)
+}
+
+const categoryName = ref('')
+const categoryType = ref('')
+const createCategory = () => {
+  const payload = {
+    name: categoryName.value,
+    type: categoryType.value,
+  }
+
+  emit('createCategory', payload)
 }
 </script>
 
