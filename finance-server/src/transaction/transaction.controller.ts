@@ -107,6 +107,9 @@ export class TransactionController {
       updates,
     );
 
+    const allTransactions = await this.transactionService.findAll(req.user.id);
+    this.chatGateway.server.emit('transactionUpdated', allTransactions);
+
     return updatedTransaction;
   }
 }

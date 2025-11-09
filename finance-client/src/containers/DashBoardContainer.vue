@@ -17,6 +17,8 @@
       @submit="createTransaction"
       :activeAccounts="activeAccounts.data"
       :categories="categories"
+      @createCategory="createCategory"
+      @deleteCategory="deleteCategory"
     />
 
     <div class="payment grid grid-cols-2 grid-rows-1 q-gutter-md q-mt-md">
@@ -53,6 +55,7 @@
     <TransactionOverview
       :data="transactions"
       @deleteTransaction="deleteTransaction"
+      @updateTransaction="updateTransaction"
     ></TransactionOverview>
   </section>
 </template>
@@ -65,6 +68,7 @@ import { Pagination } from 'src/components/molecules'
 import { Balance, TransactionOverview } from 'src/components/organisms'
 import { deleteMethod } from 'src/composables/api-method/delete'
 import { postMethod } from 'src/composables/api-method/post'
+import { putMethod } from 'src/composables/api-method/put'
 import { useSocketEvents } from 'src/composables/javascript/useSocketEvents'
 import { accountsApiStore } from 'src/stores/accounts-api'
 import { categoryApiStore } from 'src/stores/category-api'
@@ -96,6 +100,14 @@ const getCategories = async () => {
   categories.value = categoryStore.category
 }
 
+const createCategory = async (payload) => {
+  await postMethod(financeServerURL, 'categories', payload, $q, 'Категория успешно создана')
+}
+
+const deleteCategory = async (item) => {
+  await deleteMethod(financeServerURL, 'categories', item.id)
+}
+
 const transactions = ref([])
 const getTransactions = async () => {
   await transactionStore.getAllTransaction($q, viewLimitedTransaction, 1)
@@ -110,6 +122,9 @@ useSocketEvents({
   transactionUpdated: () => {
     getTransactions()
   },
+  categoryUpdated: () => {
+    getCategories()
+  },
   newMessage: (msg) => messages.value.push(msg),
 })
 
@@ -119,6 +134,10 @@ const createTransaction = async (payload) => {
 
 const deleteTransaction = async (row) => {
   await deleteMethod(financeServerURL, 'transactions', row.id)
+}
+
+const updateTransaction = async (payload, transactionID) => {
+  await putMethod(financeServerURL, `transactions/${transactionID}`, payload, $q, {})
 }
 
 onMounted(() => {

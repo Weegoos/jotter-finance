@@ -5,20 +5,45 @@
       :title="'Transaction Overview'"
       :columns="transactionColumn"
       :actions="['update', 'delete']"
-      @update="emit(deleteTransaction, $event)"
+      @update="openDialog"
       @delete="onDelete"
       @row-click="viewDetailedUser"
     />
+    <Dialog :modelValue="isDialog">
+      <template #content>
+        <Close :sectionName="'Изменить транзакцию'" @emit-click="isDialog = false" />
+        <Input label="Сумму" :type="'number'" v-model="amount" class="q-mb-sm"></Input>
+        <Select
+          label="Тип "
+          v-model="type"
+          :options="['income', 'expense']"
+          class="q-mb-sm"
+        ></Select>
+        <Input label="Описание" v-model="description" autogrow class="q-mb-sm"></Input>
+        <Select
+          label="Повторение"
+          class="q-mb-sm"
+          v-model="repeat"
+          :options="['weekly', 'monthly']"
+        ></Select>
+      </template>
+
+      <template #actions>
+        <Button class="text-black" label="Изменить" @emit-click="editTransaction"></Button>
+      </template>
+    </Dialog>
   </div>
 </template>
 
 <script setup>
-import { Table } from 'src/components/molecules'
-import { computed } from 'vue'
-
+import { Button, Input, Select } from 'src/components/atoms'
+import { Close, Dialog, Table } from 'src/components/molecules'
+import { computed, ref } from 'vue'
 const props = defineProps({
   data: Object,
 })
+
+const isDialog = ref(false)
 
 const transactionsWithAccountName = computed(() => {
   if (!props.data || !Array.isArray(props.data.data)) {
@@ -55,9 +80,33 @@ const transactionColumn = [
 
 const viewDetailedUser = () => {}
 
-const emit = defineEmits(['deleteTransaction'])
+const emit = defineEmits(['deleteTransaction', 'updateTransaction'])
 const onDelete = (row) => {
-  emit('deleteTransaction', row) // передаём данные строки родителю
+  emit('deleteTransaction', row)
+}
+
+const amount = ref('')
+const type = ref('')
+const description = ref('')
+const repeat = ref('')
+const transactionID = ref('')
+const openDialog = async (row) => {
+  isDialog.value = true
+  amount.value = row.amount
+  type.value = row.type
+  description.value = row.description
+  repeat.value = row.repeat_rule
+  transactionID.value = row.id
+}
+
+const editTransaction = async () => {
+  const payload = {
+    amount: Number(amount.value),
+    type: type.value,
+    description: description.value,
+    repeat_rule: repeat.value,
+  }
+  emit('updateTransaction', payload, transactionID.value)
 }
 </script>
 
