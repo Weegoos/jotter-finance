@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -20,6 +21,8 @@ import { AccountService } from './account.service';
 import { AccountDTO } from './dto/account-create.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ChatGateway } from '../chat.gateway';
+import { PaginationDto } from './dto/pagination.dto';
+import { PaginatedAccounts } from './interface/paginatedAccount.interface';
 
 @ApiTags('accounts')
 @Controller('accounts')
@@ -55,8 +58,23 @@ export class AccountController {
   @ApiOperation({ summary: 'Get all accounts for a user' })
   @ApiResponse({ status: 200, description: 'Accounts retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async findAll(@Req() req: any): Promise<IAccount[]> {
-    return this.accountService.findAllByUserId(req.user.id);
+  async findAll(
+    @Req() req: any,
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedAccounts> {
+    const { data, totalCount, totalPages, currentPage } =
+      await this.accountService.findAllByUserId(
+        req.user.id,
+        undefined,
+        paginationDto,
+      );
+
+    return {
+      data,
+      totalCount,
+      totalPages,
+      currentPage,
+    };
   }
 
   @UseGuards(JwtAuthGuard)
@@ -68,7 +86,8 @@ export class AccountController {
   async findAllByStatus(
     @Req() req: any,
     @Param('active') activeParam: string,
-  ): Promise<IAccount[]> {
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedAccounts> {
     const userId = req.user.id;
 
     let active: boolean | undefined;
@@ -76,9 +95,13 @@ export class AccountController {
     else if (activeParam === 'false') active = false;
     else active = undefined;
 
-    const accounts = await this.accountService.findAllByUserId(userId, active);
+    const result = await this.accountService.findAllByUserId(
+      userId,
+      active,
+      paginationDto,
+    );
 
-    return accounts;
+    return result;
   }
 
   @UseGuards(JwtAuthGuard)

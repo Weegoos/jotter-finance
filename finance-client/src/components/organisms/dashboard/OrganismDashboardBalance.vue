@@ -18,18 +18,33 @@
       </q-card-section>
       <Dialog :modelValue="addPayment" :style="'width: 300px'">
         <template #content>
-          <Close :sectionName="'Расход'" @emit-click="addPayment = false"/>
+          <Close :sectionName="'Расход'" @emit-click="addPayment = false" />
           <Select
             label="Выберите счет"
             :options="propsAccounts"
             v-model="account"
             class="q-mb-sm"
           ></Select>
-          <Select label="Категория операции" :options="propsCategories" v-model="category" class="q-mb-sm"></Select>
+          <Select
+            label="Категория операции"
+            :options="propsCategories"
+            v-model="category"
+            class="q-mb-sm"
+          ></Select>
           <Input label="Сумма операции" :type="'Number'" v-model="amount" class="q-mb-sm"></Input>
-          <Select label="Тип операции" :options="['income', 'expense']" v-model="type" class="q-mb-sm"></Select>
+          <Select
+            label="Тип операции"
+            :options="['income', 'expense']"
+            v-model="type"
+            class="q-mb-sm"
+          ></Select>
           <Input label="Описание" v-model="description" autogrow class="q-mb-sm"></Input>
-          <Select label="Повторять (опционально)" :options="['weekly', 'monthly']" v-model="repeat" class="q-mb-sm"></Select>
+          <Select
+            label="Повторять (опционально)"
+            :options="['weekly', 'monthly']"
+            v-model="repeat"
+            class="q-mb-sm"
+          ></Select>
         </template>
         <template #actions>
           <Button @emit-click="submitForm" class="text-black" :label="'Создать'"></Button>
@@ -65,7 +80,6 @@ const propsAccounts = computed(() =>
   })),
 )
 
-
 const propsCategories = computed(() =>
   props.categories.map((category) => ({
     label: category.name,
@@ -91,7 +105,7 @@ const submitForm = () => {
     type: type.value,
     description: description.value,
     repeat_rule: repeat.value,
-    date: today
+    date: today,
   }
   emit('submit', payload)
   // addPayment.value = false

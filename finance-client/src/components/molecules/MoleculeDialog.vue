@@ -18,7 +18,7 @@ import { ref, watch } from 'vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, required: true },
-  style: String
+  style: String,
 })
 
 const localValue = ref(props.modelValue)
