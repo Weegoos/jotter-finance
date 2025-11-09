@@ -13,14 +13,7 @@
       </div>
     </div>
 
-    <div class="total_balance q-mt-md">
-      <q-card class="my-card">
-        <q-card-section>
-          <div class="text-h6">Total Balance</div>
-          <div class="text-subtitle2">$ 3200</div>
-        </q-card-section>
-      </q-card>
-    </div>
+    <OrganismDashboardBalance @submit="createTransaction" />
 
     <div class="payment grid grid-cols-2 grid-rows-1 q-gutter-md q-mt-md">
       <q-card class="my-card">
@@ -59,6 +52,7 @@
 <script setup>
 import { useQuasar } from 'quasar'
 import { Button, Input } from 'src/components/atoms'
+import OrganismDashboardBalance from 'src/components/organisms/dashboard/OrganismDashboardBalance.vue'
 import { useSocketEvents } from 'src/composables/javascript/useSocketEvents'
 import { accountsApiStore } from 'src/stores/accounts-api'
 import { onMounted, ref } from 'vue'
@@ -80,6 +74,10 @@ useSocketEvents({
   },
   newMessage: (msg) => messages.value.push(msg),
 })
+
+const createTransaction = (payload) => {
+  console.log(payload)
+}
 
 onMounted(() => {
   getAccountByStatus()
