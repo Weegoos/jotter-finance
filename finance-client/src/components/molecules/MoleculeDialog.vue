@@ -1,7 +1,7 @@
 <template>
   <div>
     <q-dialog v-model="localValue" persistent>
-      <q-card>
+      <q-card :style="style">
         <q-card-section>
           <slot name="content" />
         </q-card-section>
@@ -18,6 +18,7 @@ import { ref, watch } from 'vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, required: true },
+  style: String,
 })
 
 const localValue = ref(props.modelValue)

@@ -13,14 +13,11 @@
       </div>
     </div>
 
-    <div class="total_balance q-mt-md">
-      <q-card class="my-card">
-        <q-card-section>
-          <div class="text-h6">Total Balance</div>
-          <div class="text-subtitle2">$ 3200</div>
-        </q-card-section>
-      </q-card>
-    </div>
+    <Balance
+      @submit="createTransaction"
+      :activeAccounts="activeAccounts.data"
+      :categories="categories"
+    />
 
     <div class="payment grid grid-cols-2 grid-rows-1 q-gutter-md q-mt-md">
       <q-card class="my-card">
@@ -41,48 +38,93 @@
           <div class="text-h6">Graphs</div>
         </q-card-section>
         <q-card-section class="col">
-          <div v-if="activeAccounts.length > 0">
-            <div v-for="(items, index) in activeAccounts" :key="index">
+          <div v-if="activeAccounts.data?.length > 0">
+            <div v-for="(items, index) in activeAccounts.data" :key="index">
               <p>{{ items.name }}</p>
 
               <p class="q-mb-md">{{ items.balance }} {{ items.currency }}</p>
-              <q-separator />
             </div>
+            <Pagination :variableName="Object(activeAccounts)" @pagination="pagination" />
           </div>
           <div v-else>Пока нету активных счетов</div>
         </q-card-section>
       </q-card>
     </div>
+    <TransactionOverview
+      :data="transactions"
+      @deleteTransaction="deleteTransaction"
+    ></TransactionOverview>
   </section>
 </template>
 
 <script setup>
 import { useQuasar } from 'quasar'
+import { accountLimit, financeServerURL, viewLimitedTransaction } from 'src/boot/config'
 import { Button, Input } from 'src/components/atoms'
+import { Pagination } from 'src/components/molecules'
+import { Balance, TransactionOverview } from 'src/components/organisms'
+import { deleteMethod } from 'src/composables/api-method/delete'
+import { postMethod } from 'src/composables/api-method/post'
 import { useSocketEvents } from 'src/composables/javascript/useSocketEvents'
 import { accountsApiStore } from 'src/stores/accounts-api'
+import { categoryApiStore } from 'src/stores/category-api'
+import { transactionApiStore } from 'src/stores/transaction-api'
 import { onMounted, ref } from 'vue'
+
 // globalVariables
 const accountStore = accountsApiStore()
+const categoryStore = categoryApiStore()
+const transactionStore = transactionApiStore()
 const $q = useQuasar()
 
 const activeAccounts = ref([])
-const getAccountByStatus = async () => {
-  await accountStore.getAccountsByStatus($q, true)
+const current = ref(1)
+const getAccountByStatus = async (page) => {
+  await accountStore.getAccountsByStatus($q, true, accountLimit, page)
   activeAccounts.value = accountStore.accountsByStatus
-  console.log(activeAccounts.value)
+}
+
+const pagination = (page) => {
+  current.value = page
+  getAccountByStatus(current.value)
+  getTransactions()
+}
+
+const categories = ref([])
+const getCategories = async () => {
+  await categoryStore.getAllCategory($q)
+  categories.value = categoryStore.category
+}
+
+const transactions = ref([])
+const getTransactions = async () => {
+  await transactionStore.getAllTransaction($q, viewLimitedTransaction, 1)
+  transactions.value = transactionStore.transaction
 }
 
 const messages = ref([])
 useSocketEvents({
   accountUpdated: () => {
-    getAccountByStatus()
+    getAccountByStatus(current.value)
+  },
+  transactionUpdated: () => {
+    getTransactions()
   },
   newMessage: (msg) => messages.value.push(msg),
 })
 
+const createTransaction = async (payload) => {
+  await postMethod(financeServerURL, 'transactions', payload, $q, 'Транзакция создана успешно')
+}
+
+const deleteTransaction = async (row) => {
+  await deleteMethod(financeServerURL, 'transactions', row.id)
+}
+
 onMounted(() => {
-  getAccountByStatus()
+  getAccountByStatus(current.value)
+  getTransactions()
+  getCategories()
 })
 </script>
 

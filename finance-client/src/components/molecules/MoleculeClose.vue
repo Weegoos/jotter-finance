@@ -4,7 +4,7 @@
       <p class="text-2xl">{{ props.sectionName }}</p>
     </section>
     <div class="flex justify-end">
-      <Button :label="'X'" flat rounded @emitClick="emit('emitClick')"></Button>
+      <Button :icon="'mdi-close'" dense rounded flat @emitClick="emit('emitClick')"></Button>
     </div>
   </div>
 </template>

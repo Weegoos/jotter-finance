@@ -7,6 +7,8 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Account } from './account.model';
+import { PaginatedAccounts } from './interface/paginatedAccount.interface';
+import { PaginationDto } from 'src/pagination/dto/pagination.dto';
 
 @Injectable()
 export class AccountService {
@@ -27,23 +29,44 @@ export class AccountService {
     return this.accountModel.create(newAccount);
   }
 
-  async findAllByUserId(userId: number, active?: boolean): Promise<Account[]> {
+  async findAllByUserId(
+    userId: number,
+    active?: boolean,
+    paginationDTO?: PaginationDto,
+  ): Promise<PaginatedAccounts> {
+    const page = paginationDTO?.page ?? 1;
+    const limit = paginationDTO?.limit ?? 10;
+    const offset = (page - 1) * limit;
     if (!userId) {
       throw new UnauthorizedException('User not authorized');
     }
 
     const where: any = { userId };
 
-    // добавляем фильтр только если active задан явно
     if (typeof active === 'boolean') {
       where.active = active;
     }
 
-    return this.accountModel.findAll({
+    const { count, rows } = await this.accountModel.findAndCountAll({
       where,
       order: [['createdAt', 'DESC']],
+      offset,
+      limit,
     });
+
+    const accounts: Account[] = rows.map((row) =>
+      row.get({ plain: true }),
+    ) as Account[];
+    const totalPages = Math.ceil(count / limit);
+
+    return {
+      data: accounts,
+      totalCount: count,
+      totalPages,
+      currentPage: page,
+    };
   }
+
   async destroy(id: number, userId: number): Promise<void> {
     const account = await this.accountModel.findByPk(id);
 

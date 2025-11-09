@@ -3,7 +3,7 @@
     <div class="grid grid-cols-3 gap-6">
       <q-card
         class="q-ma-md q-pa-sm"
-        v-for="(item, index) in userAccounts"
+        v-for="(item, index) in userAccounts.data"
         :key="index"
         style="border-radius: 10px"
       >
@@ -52,6 +52,7 @@
         </Dialog>
       </q-card>
     </div>
+    <Pagination :variableName="Object(userAccounts)" @pagination="pagination" />
     <div class="q-ma-md q-pa-sm">
       <Button
         class="text-black"
@@ -91,9 +92,9 @@
 
 <script setup>
 import { useQuasar } from 'quasar'
-import { financeServerURL } from 'src/boot/config'
+import { accountLimit, financeServerURL } from 'src/boot/config'
 import { Button, Input, Select } from 'src/components/atoms'
-import { Close, Dialog, Dropdown } from 'src/components/molecules'
+import { Close, Dialog, Dropdown, Pagination } from 'src/components/molecules'
 import { deleteMethod } from 'src/composables/api-method/delete'
 // import { patchMethod } from 'src/composables/api-method/patch'
 import { postMethod } from 'src/composables/api-method/post'
@@ -102,21 +103,28 @@ import { useSocketEvents } from 'src/composables/javascript/useSocketEvents'
 import { accountsApiStore } from 'src/stores/accounts-api'
 import { computed, onMounted, ref } from 'vue'
 // global variables
+
 const accountApi = accountsApiStore()
 const $q = useQuasar()
 
 const userAccounts = ref([])
 const currenciesArray = ref(['USD', 'Euro'])
 
-const getUserAccounts = async () => {
-  await accountApi.getAllAccounts($q)
+const current = ref(1)
+const getUserAccounts = async (page) => {
+  await accountApi.getAllAccounts($q, accountLimit, page)
   userAccounts.value = accountApi.accounts
+}
+
+const pagination = (page) => {
+  current.value = page
+  getUserAccounts(current.value)
 }
 
 const messages = ref([])
 useSocketEvents({
   accountUpdated: () => {
-    getUserAccounts()
+    getUserAccounts(current.value)
   },
   newMessage: (msg) => messages.value.push(msg),
 })
@@ -198,6 +206,6 @@ const createAccount = async () => {
 
 const isCreateAccountDialog = ref(false)
 onMounted(() => {
-  getUserAccounts()
+  getUserAccounts(current.value)
 })
 </script>
