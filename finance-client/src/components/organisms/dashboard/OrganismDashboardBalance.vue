@@ -14,7 +14,11 @@
           @emit-click="addPayment = true"
         />
         <Button class="text-black bg-white" :label="'Send Invoice'" rounded icon="mdi-arrow-up" />
-        <Dropdown dropdown-icon="mdi-dots-horizontal" :data="dashboardBalanceButtons" />
+        <Dropdown
+          dropdown-icon="mdi-dots-horizontal"
+          :data="dashboardBalanceButtons"
+          @onItemClick="handleClick"
+        />
       </q-card-section>
       <Dialog :modelValue="addPayment" :style="'width: 300px'">
         <template #content>
@@ -68,8 +72,15 @@ const dashboardBalanceButtons = computed(() => [
   {
     label: 'Create Category',
     icon: 'mdi-plus',
+    action: () => {
+      console.log('create')
+    },
   },
 ])
+
+function handleClick(item) {
+  if (item.action) item.action()
+}
 
 const emit = defineEmits(['submit'])
 
@@ -108,7 +119,6 @@ const submitForm = () => {
     date: today,
   }
   emit('submit', payload)
-  // addPayment.value = false
 }
 </script>
 

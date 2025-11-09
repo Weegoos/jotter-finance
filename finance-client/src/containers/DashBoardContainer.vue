@@ -53,6 +53,7 @@
     <TransactionOverview
       :data="transactions"
       @deleteTransaction="deleteTransaction"
+      @updateTransaction="updateTransaction"
     ></TransactionOverview>
   </section>
 </template>
@@ -65,6 +66,7 @@ import { Pagination } from 'src/components/molecules'
 import { Balance, TransactionOverview } from 'src/components/organisms'
 import { deleteMethod } from 'src/composables/api-method/delete'
 import { postMethod } from 'src/composables/api-method/post'
+import { putMethod } from 'src/composables/api-method/put'
 import { useSocketEvents } from 'src/composables/javascript/useSocketEvents'
 import { accountsApiStore } from 'src/stores/accounts-api'
 import { categoryApiStore } from 'src/stores/category-api'
@@ -119,6 +121,10 @@ const createTransaction = async (payload) => {
 
 const deleteTransaction = async (row) => {
   await deleteMethod(financeServerURL, 'transactions', row.id)
+}
+
+const updateTransaction = async (payload, transactionID) => {
+  await putMethod(financeServerURL, `transactions/${transactionID}`, payload, $q, {})
 }
 
 onMounted(() => {
