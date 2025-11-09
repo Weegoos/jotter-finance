@@ -83,7 +83,10 @@ export class TransactionController {
   @ApiResponse({ status: 200, description: 'Account deleted successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async delete(@Req() req: any, @Param('id') id: number): Promise<void> {
-    const deletedTransaction = await this.transactionService.destroy(id, req.user.id);
+    const deletedTransaction = await this.transactionService.destroy(
+      id,
+      req.user.id,
+    );
     const allTransactions = await this.transactionService.findAll(req.user.id);
     this.chatGateway.server.emit('transactionUpdated', allTransactions);
     return deletedTransaction;

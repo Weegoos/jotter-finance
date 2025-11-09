@@ -111,9 +111,10 @@ export class AccountController {
   @ApiResponse({ status: 200, description: 'Account deleted successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async delete(@Req() req: any, @Param('id') id: number): Promise<void> {
+    const deletedAccount = await this.accountService.destroy(id, req.user.id);
     const allAccounts = await this.accountService.findAllByUserId(req.user.id);
     this.chatGateway.server.emit('accountUpdated', allAccounts);
-    return this.accountService.destroy(id, req.user.id);
+    return deletedAccount;
   }
 
   @UseGuards(JwtAuthGuard)
