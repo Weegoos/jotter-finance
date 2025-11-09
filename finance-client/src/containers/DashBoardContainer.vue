@@ -13,7 +13,7 @@
       </div>
     </div>
 
-    <OrganismDashboardBalance
+    <Balance
       @submit="createTransaction"
       :activeAccounts="activeAccounts.data"
       :categories="categories"
@@ -50,34 +50,31 @@
         </q-card-section>
       </q-card>
     </div>
-
-    <div class="transaction-overview q-mt-md">
-      <q-card class="my-card">
-        <q-card-section>
-          <div class="text-h6">Transaction Overview</div>
-          <div class="text-subtitle2">by John Doe</div>
-        </q-card-section>
-        <q-card-section> Lorem ipsum dolor sit amet, consectetur adipiscing elit </q-card-section>
-      </q-card>
-    </div>
+    <TransactionOverview
+      :data="transactions"
+      @deleteTransaction="deleteTransaction"
+    ></TransactionOverview>
   </section>
 </template>
 
 <script setup>
 import { useQuasar } from 'quasar'
-import { accountLimit, financeServerURL } from 'src/boot/config'
+import { accountLimit, financeServerURL, viewLimitedTransaction } from 'src/boot/config'
 import { Button, Input } from 'src/components/atoms'
 import { Pagination } from 'src/components/molecules'
-import OrganismDashboardBalance from 'src/components/organisms/dashboard/OrganismDashboardBalance.vue'
+import { Balance, TransactionOverview } from 'src/components/organisms'
+import { deleteMethod } from 'src/composables/api-method/delete'
 import { postMethod } from 'src/composables/api-method/post'
 import { useSocketEvents } from 'src/composables/javascript/useSocketEvents'
 import { accountsApiStore } from 'src/stores/accounts-api'
 import { categoryApiStore } from 'src/stores/category-api'
+import { transactionApiStore } from 'src/stores/transaction-api'
 import { onMounted, ref } from 'vue'
-// globalVariables
 
+// globalVariables
 const accountStore = accountsApiStore()
 const categoryStore = categoryApiStore()
+const transactionStore = transactionApiStore()
 const $q = useQuasar()
 
 const activeAccounts = ref([])
@@ -90,6 +87,7 @@ const getAccountByStatus = async (page) => {
 const pagination = (page) => {
   current.value = page
   getAccountByStatus(current.value)
+  getTransactions()
 }
 
 const categories = ref([])
@@ -98,10 +96,19 @@ const getCategories = async () => {
   categories.value = categoryStore.category
 }
 
+const transactions = ref([])
+const getTransactions = async () => {
+  await transactionStore.getAllTransaction($q, viewLimitedTransaction, 1)
+  transactions.value = transactionStore.transaction
+}
+
 const messages = ref([])
 useSocketEvents({
   accountUpdated: () => {
     getAccountByStatus(current.value)
+  },
+  transactionUpdated: () => {
+    getTransactions()
   },
   newMessage: (msg) => messages.value.push(msg),
 })
@@ -110,8 +117,13 @@ const createTransaction = async (payload) => {
   await postMethod(financeServerURL, 'transactions', payload, $q, 'Транзакция создана успешно')
 }
 
+const deleteTransaction = async (row) => {
+  await deleteMethod(financeServerURL, 'transactions', row.id)
+}
+
 onMounted(() => {
   getAccountByStatus(current.value)
+  getTransactions()
   getCategories()
 })
 </script>

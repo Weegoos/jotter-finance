@@ -7,8 +7,8 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Account } from './account.model';
-import { PaginationDto } from './dto/pagination.dto';
 import { PaginatedAccounts } from './interface/paginatedAccount.interface';
+import { PaginationDto } from 'src/pagination/dto/pagination.dto';
 
 @Injectable()
 export class AccountService {

@@ -21,8 +21,8 @@ import { AccountService } from './account.service';
 import { AccountDTO } from './dto/account-create.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ChatGateway } from '../chat.gateway';
-import { PaginationDto } from './dto/pagination.dto';
 import { PaginatedAccounts } from './interface/paginatedAccount.interface';
+import { PaginationDto } from 'src/pagination/dto/pagination.dto';
 
 @ApiTags('accounts')
 @Controller('accounts')

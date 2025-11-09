@@ -13,6 +13,8 @@ import { CreateTransactionDTO } from './dto/transaction-create.dto';
 import { ITransaction } from './interface/transaction.interface';
 import { Account } from '../accounts/account.model';
 import { Categories } from '../categories/categories.model';
+import { PaginationDto } from 'src/pagination/dto/pagination.dto';
+import { PaginatedTransaction } from './interface/paginatedTransaction';
 
 @Injectable()
 export class TransactionService {
@@ -67,14 +69,45 @@ export class TransactionService {
     return this.transactionModel.create(newTransaction);
   }
 
-  async findAll(userId: number): Promise<Transactions[]> {
+  async findAll(
+    userId: number,
+    paginationDTO?: PaginationDto,
+  ): Promise<PaginatedTransaction> {
+    const page = paginationDTO?.page ?? 1;
+    const limit = paginationDTO?.limit ?? 10;
+    const offset = (page - 1) * limit;
     if (!userId) {
       throw new UnauthorizedException('User not authorized');
     }
 
-    return this.transactionModel.findAll({
+    const { count, rows } = await this.transactionModel.findAndCountAll({
       where: { userId },
+      include: [
+        {
+          model: this.accountModel,
+          attributes: ['name'], // берем только имя счета
+        },
+        {
+          model: this.categoriesModel,
+          attributes: ['name'], // берем только имя счета
+        },
+      ],
+      order: [['createdAt', 'DESC']],
+      offset,
+      limit,
     });
+
+    const transactions: Transactions[] = rows.map((row) =>
+      row.get({ plain: true }),
+    ) as Transactions[];
+    const totalPages = Math.ceil(count / limit);
+
+    return {
+      data: transactions,
+      totalCount: count,
+      totalPages,
+      currentPage: page,
+    };
   }
 
   async destroy(id: number, userId: number): Promise<void> {
