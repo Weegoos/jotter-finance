@@ -10,6 +10,7 @@ import { AppService } from './app.service';
 import { ChatGateway } from './chat.gateway';
 import { Transactions } from './transaction/transaction.model';
 import { TransactionModule } from './transaction/transaction.module';
+import { Stats } from './stats/stats.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { TransactionModule } from './transaction/transaction.module';
     AccountModule,
     CategoriesModule,
     TransactionModule,
+    Stats,
   ],
   providers: [AppService, ChatGateway],
 })

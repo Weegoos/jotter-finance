@@ -15,6 +15,7 @@ import { Account } from '../accounts/account.model';
 import { Categories } from '../categories/categories.model';
 import { PaginationDto } from 'src/pagination/dto/pagination.dto';
 import { PaginatedTransaction } from './interface/paginatedTransaction';
+import { AfterCreate, AfterDestroy } from 'sequelize-typescript';
 
 @Injectable()
 export class TransactionService {
@@ -40,6 +41,7 @@ export class TransactionService {
         id: transaction.accountId,
         userId,
       },
+      attributes: ['id', 'balance'],
     });
     if (!account) {
       throw new HttpException(
@@ -60,6 +62,37 @@ export class TransactionService {
         HttpStatus.BAD_REQUEST,
       );
     }
+
+    const amount = Number(transaction.amount);
+    if (isNaN(amount) || amount <= 0) {
+      throw new HttpException(
+        'Invalid transaction amount',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    let balance = Number(account.getDataValue('balance')) || 0;
+
+    if (transaction.type === 'expense') {
+      if (balance < amount) {
+        throw new HttpException(
+          'Not enough balance in account',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      balance -= amount;
+    } else if (transaction.type === 'income') {
+      balance += amount;
+    } else {
+      throw new HttpException(
+        'Invalid transaction type',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // сохраняем числовой баланс
+    account.setDataValue('balance', balance);
+    await account.save();
 
     const newTransaction: ITransaction = {
       ...transaction,
@@ -117,11 +150,45 @@ export class TransactionService {
       throw new NotFoundException('Transaction not found');
     }
 
-    if (transaction.dataValues.userId !== userId) {
+    if (transaction.getDataValue('userId') !== userId) {
       throw new UnauthorizedException(
-        'User not authorized to delete this account',
+        'User not authorized to delete this transaction',
       );
     }
+
+    const account = await this.accountModel.findOne({
+      where: {
+        id: transaction.getDataValue('accountId'),
+        userId,
+      },
+      attributes: ['id', 'balance'],
+    });
+
+    if (!account) {
+      throw new HttpException(
+        'Current Account does not exist',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const amount = Number(transaction.getDataValue('amount'));
+    if (isNaN(amount) || amount <= 0) {
+      throw new HttpException(
+        'Invalid transaction amount',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    let balance = Number(account.getDataValue('balance')) || 0;
+
+    if (transaction.getDataValue('type') === 'expense') {
+      balance += amount; // возвращаем при удалении расхода
+    } else if (transaction.getDataValue('type') === 'income') {
+      balance -= amount; // вычитаем при удалении дохода
+    }
+
+    account.setDataValue('balance', balance);
+    await account.save();
 
     await transaction.destroy();
   }
