@@ -24,7 +24,12 @@
     <!-- Опциональный слот Actions -->
     <template v-if="props.actions.length" v-slot:body-cell-actions="scope">
       <q-td align="center">
-        <q-btn-dropdown @click.stop color="primary">
+        <q-btn-dropdown
+          dropdown-icon="mdi-dots-horizontal"
+          @click.stop
+          class="text-black bg-white"
+          flat
+        >
           <q-list style="min-width: 100px">
             <q-item clickable v-close-popup v-if="props.actions.includes('update')">
               <q-item-section>
