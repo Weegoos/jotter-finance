@@ -36,12 +36,7 @@
             class="q-mb-sm"
           ></Select>
           <Input label="Сумма операции" :type="'Number'" v-model="amount" class="q-mb-sm"></Input>
-          <Select
-            label="Тип операции"
-            :options="['income', 'expense']"
-            v-model="type"
-            class="q-mb-sm"
-          ></Select>
+          <Select label="Тип операции" v-model="type" class="q-mb-sm"></Select>
           <Input label="Описание" v-model="description" autogrow class="q-mb-sm"></Input>
           <Select
             label="Повторять (опционально)"
@@ -96,7 +91,7 @@
 <script setup>
 import { Button, DottedSeparator, Input, Select } from 'src/components/atoms'
 import { Close, Dialog, Dropdown } from 'src/components/molecules'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 const props = defineProps({
   activeAccounts: Array,
   categories: Array,
@@ -144,6 +139,7 @@ const propsCategories = computed(() =>
   props.categories.map((category) => ({
     label: category.name,
     value: category.id,
+    type: category.type,
   })),
 )
 
@@ -153,7 +149,14 @@ const addPayment = ref(false)
 const account = ref('')
 const category = ref('')
 const amount = ref('')
-const type = ref('')
+const type = ref(category.value.type)
+
+watch(
+  () => category.value.type,
+  (newVal) => {
+    type.value = newVal
+  },
+)
 const description = ref('')
 const repeat = ref('')
 const submitForm = () => {
