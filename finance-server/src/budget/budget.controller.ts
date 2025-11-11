@@ -1,4 +1,15 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -34,5 +45,54 @@ export class BudgetController {
     const newBudget = await this.budgetService.create(req.user.id, budget);
 
     return newBudget;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get()
+  @ApiOperation({ summary: 'Get all budgets for a user' })
+  @ApiResponse({ status: 201, description: 'Budget obtained successfully' })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async findAllBudget(@Req() req: any): Promise<IBudget[]> {
+    return this.budgetService.findAll(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Delete(':id')
+  @ApiOperation({ summary: 'Budget deleted successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Budget deleted successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'The request is denied' })
+  @ApiResponse({ status: 404, description: 'Budget not found' })
+  async delete(@Req() req: any, @Param('id') id: number): Promise<void> {
+    const deletedBudget = await this.budgetService.delete(req.user.id, id);
+
+    return deletedBudget;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Put(':id')
+  @ApiOperation({ summary: 'Budget has been successfully changed' })
+  @ApiResponse({
+    status: 201,
+    description: 'Budget updated successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'The request is denied' })
+  @ApiResponse({ status: 404, description: 'Budget not found' })
+  async update(
+    @Req() req: any,
+    @Body() updates: CreateBudgetDTO,
+    @Param('id') id: number,
+  ): Promise<IBudget> {
+    return this.budgetService.update(id, req.user.id, updates);
   }
 }

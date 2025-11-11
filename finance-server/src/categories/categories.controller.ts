@@ -71,7 +71,7 @@ export class CategoriesController {
   @ApiOperation({ summary: 'Category deleted successfully' })
   @ApiResponse({
     status: 201,
-    description: 'Categories deleted successfully',
+    description: 'Category deleted successfully',
   })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -96,7 +96,7 @@ export class CategoriesController {
   @ApiOperation({ summary: 'Category has been successfully changed' })
   @ApiResponse({
     status: 201,
-    description: 'Categories deleted successfully',
+    description: 'Category updated successfully',
   })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })

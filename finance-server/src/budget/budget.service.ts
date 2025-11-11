@@ -1,7 +1,9 @@
 import {
+  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
@@ -43,5 +45,47 @@ export class BudgetService {
     };
 
     return this.budgetModel.create(newBudget as any);
+  }
+
+  async findAll(userId: number): Promise<Budget[]> {
+    if (!userId) {
+      throw new UnauthorizedException('User not authorized');
+    }
+
+    return this.budgetModel.findAll({
+      where: { userId },
+      order: [['updatedAt', 'DESC']],
+    });
+  }
+
+  async delete(userId: number, id: number): Promise<void> {
+    const budget = await this.budgetModel.findByPk(id);
+    if (!budget) {
+      throw new NotFoundException('Budget not found');
+    }
+
+    if (budget.dataValues.userId !== userId) {
+      throw new ForbiddenException('The request is denied');
+    }
+
+    await budget.destroy();
+  }
+
+  async update(
+    id: number,
+    userId: number,
+    updates: Partial<Budget>,
+  ): Promise<Budget> {
+    const budget = await this.budgetModel.findByPk(id);
+
+    if (!budget) {
+      throw new NotFoundException('Budget not found');
+    }
+
+    if (budget.dataValues.userId !== userId) {
+      throw new ForbiddenException('The request is denied');
+    }
+
+    return budget.update(updates);
   }
 }

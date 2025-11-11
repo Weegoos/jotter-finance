@@ -59,7 +59,10 @@ export class TransactionController {
   @ApiBearerAuth()
   @Get()
   @ApiOperation({ summary: 'Get all transactions for a user' })
-  @ApiResponse({ status: 201, description: 'Transaction created successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Transaction obtained successfully',
+  })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async findAllTransactions(
