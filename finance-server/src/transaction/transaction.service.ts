@@ -197,18 +197,70 @@ export class TransactionService {
     userId: number,
     updates: Partial<Transactions>,
   ): Promise<Transactions> {
+    // Находим транзакцию
     const transaction = await this.transactionModel.findByPk(id);
-
     if (!transaction) {
       throw new NotFoundException('Transaction not found');
     }
 
-    if (transaction.dataValues.userId !== userId) {
-      throw new ForbiddenException(
-        'User not authorized to delete this account',
+    if (transaction.getDataValue('userId') !== userId) {
+      throw new UnauthorizedException(
+        'User not authorized to update this transaction',
       );
     }
 
-    return transaction.update(updates);
+    // Находим аккаунт
+    const account = await this.accountModel.findOne({
+      where: {
+        id: transaction.getDataValue('accountId'),
+        userId,
+      },
+      attributes: ['id', 'balance'],
+    });
+
+    if (!account) {
+      throw new HttpException(
+        'Current Account does not exist',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Баланс текущего аккаунта
+    let balance = Number(account.getDataValue('balance')) || 0;
+
+    // Старая сумма транзакции
+    const oldAmount = Number(transaction.getDataValue('amount')) || 0;
+    const newAmount = Number(updates.amount ?? oldAmount);
+
+    if (isNaN(newAmount) || newAmount < 0) {
+      throw new HttpException(
+        'Invalid transaction amount',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Корректируем баланс: убираем старую сумму, добавляем новую
+    // Если тип транзакции "income" — увеличиваем, если "expense" — уменьшаем
+    const type = updates.type ?? transaction.getDataValue('type');
+
+    if (type === 'income') {
+      balance = balance - oldAmount + newAmount;
+    } else if (type === 'expense') {
+      balance = balance + oldAmount - newAmount;
+    } else {
+      throw new HttpException(
+        'Invalid transaction type',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Сохраняем новый баланс аккаунта
+    account.setDataValue('balance', balance);
+    await account.save();
+
+    // Обновляем транзакцию
+    const updatedTransaction = await transaction.update(updates);
+
+    return updatedTransaction;
   }
 }

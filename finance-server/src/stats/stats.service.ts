@@ -9,23 +9,21 @@ export class StatService {
     private readonly accountModel: typeof Account,
   ) {}
 
-  async totalBalance(userId: number): Promise<Object> {
+  async totalBalance(userId: number): Promise<{ total_balance: number }> {
     if (!userId) {
       throw new UnauthorizedException('User not authorized');
     }
 
     const accounts = await this.accountModel.findAll({
-      where: { userId },
-      attributes: ['balance'],
+      where: { userId, active: true },
+      attributes: ['balance', 'active'],
     });
+
     const total = accounts.reduce(
       (sum, account) => sum + (account.dataValues.balance || 0),
       0,
     );
 
-    const data = {
-      total_balance: total,
-    };
-    return data;
+    return { total_balance: total };
   }
 }

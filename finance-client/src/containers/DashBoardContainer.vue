@@ -19,6 +19,7 @@
       :categories="categories"
       @createCategory="createCategory"
       @deleteCategory="deleteCategory"
+      :balance="totalBalance"
     />
 
     <div class="payment grid grid-cols-2 grid-rows-1 q-gutter-md q-mt-md">
@@ -29,7 +30,7 @@
       </q-card>
       <q-card class="my-card">
         <q-card-section>
-          <div class="text-h6">Provider Breakdown</div>
+          <div class="text-h6">Goals</div>
         </q-card-section>
       </q-card>
     </div>
@@ -69,9 +70,10 @@ import { Balance, TransactionOverview } from 'src/components/organisms'
 import { deleteMethod } from 'src/composables/api-method/delete'
 import { postMethod } from 'src/composables/api-method/post'
 import { putMethod } from 'src/composables/api-method/put'
-import { useSocketEvents } from 'src/composables/javascript/useSocketEvents'
+import { useSocketEvents, useTotalBalance } from 'src/composables/javascript/useSocketEvents'
 import { accountsApiStore } from 'src/stores/accounts-api'
 import { categoryApiStore } from 'src/stores/category-api'
+// import { statsApiStore } from 'src/stores/stats-api'
 import { transactionApiStore } from 'src/stores/transaction-api'
 import { onMounted, ref } from 'vue'
 
@@ -79,6 +81,7 @@ import { onMounted, ref } from 'vue'
 const accountStore = accountsApiStore()
 const categoryStore = categoryApiStore()
 const transactionStore = transactionApiStore()
+// const statStore = statsApiStore()
 const $q = useQuasar()
 
 const activeAccounts = ref([])
@@ -93,7 +96,7 @@ const pagination = (page) => {
   getAccountByStatus(current.value)
   getTransactions()
 }
-
+// categories
 const categories = ref([])
 const getCategories = async () => {
   await categoryStore.getAllCategory($q)
@@ -108,10 +111,30 @@ const deleteCategory = async (item) => {
   await deleteMethod(financeServerURL, 'categories', item.id)
 }
 
+// transaction
 const transactions = ref([])
 const getTransactions = async () => {
   await transactionStore.getAllTransaction($q, viewLimitedTransaction, 1)
   transactions.value = transactionStore.transaction
+}
+
+const createTransaction = async (payload) => {
+  await postMethod(financeServerURL, 'transactions', payload, $q, 'Транзакция создана успешно')
+}
+
+const deleteTransaction = async (row) => {
+  await deleteMethod(financeServerURL, 'transactions', row.id)
+}
+
+const updateTransaction = async (payload, transactionID) => {
+  await putMethod(financeServerURL, `transactions/${transactionID}`, payload, $q, {})
+}
+
+// stats
+const { totalBalance, fetchTotalBalance } = useTotalBalance($q)
+const refreshBalance = async () => {
+  await fetchTotalBalance()
+  console.log('Обновлённый баланс:', totalBalance.value)
 }
 
 const messages = ref([])
@@ -128,23 +151,10 @@ useSocketEvents({
   newMessage: (msg) => messages.value.push(msg),
 })
 
-const createTransaction = async (payload) => {
-  await postMethod(financeServerURL, 'transactions', payload, $q, 'Транзакция создана успешно')
-}
-
-const deleteTransaction = async (row) => {
-  await deleteMethod(financeServerURL, 'transactions', row.id)
-}
-
-const updateTransaction = async (payload, transactionID) => {
-  await putMethod(financeServerURL, `transactions/${transactionID}`, payload, $q, {})
-}
-
 onMounted(() => {
   getAccountByStatus(current.value)
   getTransactions()
   getCategories()
+  refreshBalance()
 })
 </script>
-
-<style></style>

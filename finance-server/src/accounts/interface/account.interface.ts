@@ -1,6 +1,6 @@
 export interface IAccount {
-  userId: number;
   name: string;
+  userId: number;
   balance?: number;
   currency: string;
   type: string;

@@ -1,21 +1,27 @@
 import { Column, HasMany, Model, Table } from 'sequelize-typescript';
 import { Transactions } from '../transaction/transaction.model';
+import { IAccount } from './interface/account.interface';
 
 @Table
-export class Account extends Model {
+export class Account extends Model<Account, IAccount> {
   @Column
-  name: string;
+  declare name: string;
+
   @Column
-  userId: number;
+  declare userId: number;
+
   @Column
-  balance: number;
+  declare balance: number;
+
   @Column
-  currency: string;
+  declare currency: string;
+
   @Column
-  type: string;
+  declare type: string;
+
   @Column
-  active: boolean;
+  declare active: boolean;
 
   @HasMany(() => Transactions)
-  transactions: Transactions[];
+  declare transactions: Transactions[];
 }

@@ -9,23 +9,37 @@ import { InjectModel } from '@nestjs/sequelize';
 import { Account } from './account.model';
 import { PaginatedAccounts } from './interface/paginatedAccount.interface';
 import { PaginationDto } from 'src/pagination/dto/pagination.dto';
+import { ChatGateway } from 'src/chat.gateway';
+import { StatService } from 'src/stats/stats.service';
+import { IAccount } from './interface/account.interface';
 
 @Injectable()
 export class AccountService {
   constructor(
     @InjectModel(Account)
     private readonly accountModel: typeof Account,
+    private readonly statsService: StatService,
+    private readonly chatGateway: ChatGateway,
   ) {}
 
-  async create(userId: number, account: Partial<Account>): Promise<Account> {
-    const newAccount = { ...account, userId };
+  async create(userId: number, account: Partial<IAccount>): Promise<Account> {
     if (!userId) {
       throw new UnauthorizedException('User not authorized');
     }
 
+    const newAccount: IAccount = {
+      userId,
+      name: account.name!,
+      currency: account.currency!,
+      type: account.type!,
+      balance: account.balance ?? 0,
+      active: account.active ?? true,
+    };
+
     if (!newAccount.name || !newAccount.currency || !newAccount.type) {
       throw new BadRequestException('Missing required account fields');
     }
+
     return this.accountModel.create(newAccount);
   }
 
@@ -94,12 +108,21 @@ export class AccountService {
       throw new NotFoundException('Account not found');
     }
 
-    if (account.dataValues.userId !== userId) {
+    if (account.userId !== userId) {
       throw new ForbiddenException(
-        'User not authorized to delete this account',
+        'User not authorized to update this account',
       );
     }
 
-    return account.update(updates);
+    // Обновляем запись
+    const updatedAccount = await account.update(updates);
+
+    // После обновления пересчитываем total_balance
+    const { total_balance } = await this.statsService.totalBalance(userId);
+
+    // Отправляем обновление пользователю по WebSocket
+    this.chatGateway.sendBalanceUpdate(userId, total_balance);
+
+    return updatedAccount;
   }
 }

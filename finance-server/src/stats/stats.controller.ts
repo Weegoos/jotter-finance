@@ -27,6 +27,7 @@ export class StatController {
   @ApiResponse({ status: 500, description: 'Current Account does not exist' })
   async get_balance(@Req() req: any): Promise<any> {
     const total_balance = await this.statService.totalBalance(req.user.id);
+
     return total_balance;
   }
 }
