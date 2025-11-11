@@ -15,7 +15,6 @@ import { Account } from '../accounts/account.model';
 import { Categories } from '../categories/categories.model';
 import { PaginationDto } from 'src/pagination/dto/pagination.dto';
 import { PaginatedTransaction } from './interface/paginatedTransaction';
-import { AfterCreate, AfterDestroy } from 'sequelize-typescript';
 
 @Injectable()
 export class TransactionService {

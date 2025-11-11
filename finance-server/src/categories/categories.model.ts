@@ -1,5 +1,6 @@
 import { Table, Column, Model, DataType, HasMany } from 'sequelize-typescript';
 import { Transactions } from '../transaction/transaction.model';
+import { Budget } from 'src/budget/budget.model';
 
 export enum CategoryType {
   INCOME = 'income',
@@ -22,4 +23,7 @@ export class Categories extends Model<Categories> {
 
   @HasMany(() => Transactions)
   transactions: Transactions[];
+
+  @HasMany(() => Budget)
+  budget: Budget[];
 }
