@@ -7,7 +7,7 @@
     </q-card>
     <q-card class="my-card">
       <q-card-section>
-        <div class="text-h6">Progress</div>
+        <div class="text-h6">Goal Progress</div>
         <div>
           <LinearProgress
             :track_color="'white'"
@@ -21,6 +21,10 @@
             </div>
           </LinearProgress>
         </div>
+        <p>
+          You are ahead of pace and should
+          <strong>reach {{ props.goal.goal_amount }} USD</strong>
+        </p>
       </q-card-section>
     </q-card>
   </div>
