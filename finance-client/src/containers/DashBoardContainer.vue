@@ -21,7 +21,7 @@
       @deleteCategory="deleteCategory"
       :balance="totalBalance"
     />
-    <Payment />
+    <Payment :goal="goal_progress" />
 
     <div class="account q-mt-md">
       <q-card class="grid grid-cols-2 grid-rows-1">
@@ -62,14 +62,14 @@ import { useSocketEvents, useTotalBalance } from 'src/composables/javascript/use
 import { accountsApiStore } from 'src/stores/accounts-api'
 import { categoryApiStore } from 'src/stores/category-api'
 
-// import { statsApiStore } from 'src/stores/stats-api'
+import { statsApiStore } from 'src/stores/stats-api'
 import { transactionApiStore } from 'src/stores/transaction-api'
 import { onMounted, ref } from 'vue'
 // globalVariables
 const accountStore = accountsApiStore()
 const categoryStore = categoryApiStore()
 const transactionStore = transactionApiStore()
-// const statStore = statsApiStore()
+const statStore = statsApiStore()
 const $q = useQuasar()
 
 const activeAccounts = ref([])
@@ -125,6 +125,12 @@ const refreshBalance = async () => {
   console.log('Обновлённый баланс:', totalBalance.value)
 }
 
+const goal_progress = ref([])
+const getGoalProgress = async () => {
+  await statStore.getTotalBalance($q)
+  goal_progress.value = statStore.goal
+}
+
 const messages = ref([])
 useSocketEvents({
   accountUpdated: () => {
@@ -144,5 +150,6 @@ onMounted(() => {
   getTransactions()
   getCategories()
   refreshBalance()
+  getGoalProgress()
 })
 </script>

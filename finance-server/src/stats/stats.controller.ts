@@ -16,18 +16,19 @@ export class StatController {
     private readonly statService: StatService,
     private readonly chatGateway: ChatGateway,
   ) {}
-
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @Get('total_balance')
-  @ApiOperation({ summary: 'Create a new transaction' })
-  @ApiResponse({ status: 201, description: 'Transaction created successfully' })
+  @Get('goal_progress')
+  @ApiOperation({ summary: 'Get a goal progress' })
+  @ApiResponse({
+    status: 201,
+    description: 'Goal progress obtained successfully',
+  })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 500, description: 'Current Account does not exist' })
-  async get_balance(@Req() req: any): Promise<any> {
-    const total_balance = await this.statService.totalBalance(req.user.id);
+  async goal_progress(@Req() req: any): Promise<any> {
+    const goal = await this.statService.goalProgress(req.user.id);
 
-    return total_balance;
+    return goal;
   }
 }

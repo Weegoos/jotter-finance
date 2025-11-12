@@ -28,10 +28,29 @@
 
 <script setup>
 import { Badge, LinearProgress } from 'src/components/atoms'
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
-const progress1 = ref(0.8)
-const progressLabel1 = ref(80)
+const props = defineProps({
+  goal: Object,
+})
+
+const progress1 = ref(props.goal.progress)
+
+watch(
+  () => props.goal,
+  (newVal) => {
+    console.log(newVal)
+  },
+)
+
+watch(
+  () => props.goal.progress,
+  (newVal) => {
+    progress1.value = newVal
+  },
+)
+
+const progressLabel1 = computed(() => (progress1.value * 100).toFixed(2) + '%')
 </script>
 
 <style></style>

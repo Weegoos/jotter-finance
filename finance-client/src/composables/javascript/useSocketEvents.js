@@ -23,7 +23,7 @@ export function useTotalBalance($q) {
   // Получаем текущее значение с сервера
   const fetchTotalBalance = async () => {
     try {
-      const data = await getMethod(financeServerURL, 'stats/total_balance', $q)
+      const data = await getMethod(financeServerURL, 'stats/goal_progress', $q)
 
       if (data && typeof data.total_balance !== 'undefined') {
         totalBalance.value = data.total_balance
