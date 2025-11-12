@@ -11,16 +11,13 @@ import { Categories } from 'src/categories/categories.model';
 @Table({ tableName: 'Budget' })
 export class Budget extends Model {
   @ForeignKey(() => Categories)
-  @Column({
-    type: DataType.INTEGER,
-    allowNull: true,
-  })
-  categoryId?: number;
+  @Column({ field: 'category_id', type: DataType.INTEGER })
+  category_id?: number;
 
   @Column
   userId: number;
 
-  @Column
+  @Column({ field: 'amount', type: DataType.NUMBER })
   amount: number;
 
   @Column
@@ -31,6 +28,6 @@ export class Budget extends Model {
   })
   status: string;
 
-  @BelongsTo(() => Categories)
+  @BelongsTo(() => Categories, { as: 'categories', foreignKey: 'category_id' })
   categories?: Categories;
 }

@@ -6,25 +6,31 @@
       </q-card-section>
     </q-card>
     <q-card class="my-card">
-      <q-card-section>
-        <div class="text-h6">Goal Progress</div>
-        <div>
-          <LinearProgress
-            :track_color="'white'"
-            :progress="progress1"
-            :size="'25px'"
-            class="rounded-lg"
-            :color="'green'"
-          >
-            <div class="absolute-full flex flex-center">
-              <Badge :color="'white'" :label="progressLabel1" :text_color="'black'" />
-            </div>
-          </LinearProgress>
-        </div>
-        <p>
-          You are ahead of pace and should
-          <strong>reach {{ props.goal.goal_amount }} USD</strong>
-        </p>
+      <div class="text-h6 q-mt-md q-ml-md">Goal Progress</div>
+      <q-card-section v-for="(item, index) in goal.budgets" :key="index" class="q-mb-md">
+        <span class="text-sm font-medium text-gray-700">
+          Budget {{ index + 1 }} - Category: {{ item.category.name }}
+        </span>
+
+        <!-- Прогрессбар -->
+        <LinearProgress
+          :track_color="'white'"
+          :progress="item.progress"
+          :size="'25px'"
+          class="rounded-full relative overflow-hidden"
+          :color="'green'"
+        >
+          <div class="absolute-full flex items-center justify-center">
+            <Badge
+              :color="'white'"
+              :label="`${(item.progress * 100).toFixed(0)}%`"
+              :text_color="'black'"
+            />
+          </div>
+        </LinearProgress>
+
+        <!-- Сумма бюджета -->
+        <div class="text-xs text-gray-500">Goal amount: {{ item.goal_amount }}</div>
       </q-card-section>
     </q-card>
   </div>
@@ -32,7 +38,7 @@
 
 <script setup>
 import { Badge, LinearProgress } from 'src/components/atoms'
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 
 const props = defineProps({
   goal: Object,
@@ -54,7 +60,7 @@ watch(
   },
 )
 
-const progressLabel1 = computed(() => (progress1.value * 100).toFixed(2) + '%')
+// const progressLabel1 = computed(() => (progress1.value * 100).toFixed(2) + '%')
 </script>
 
 <style></style>

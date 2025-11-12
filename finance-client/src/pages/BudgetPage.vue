@@ -1,15 +1,9 @@
 <template>
-  <div>
-    Budget Page
-  </div>
+  <div>Budget Page</div>
 </template>
 
 <script>
-export default {
-
-}
+export default {}
 </script>
 
-<style>
-
-</style>
+<style></style>

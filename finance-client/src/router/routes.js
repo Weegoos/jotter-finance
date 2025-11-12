@@ -23,7 +23,7 @@ const routes = [
     path: '/accounts',
     component: () => import('pages/AccountsPage.vue'),
   },
-    {
+  {
     path: '/budget',
     component: () => import('pages/BudgetPage.vue'),
   },
