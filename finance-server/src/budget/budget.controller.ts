@@ -34,10 +34,10 @@ export class BudgetController {
   @ApiBearerAuth()
   @Post()
   @ApiOperation({ summary: 'Create a new budget' })
-  @ApiResponse({ status: 201, description: 'budget created successfully' })
+  @ApiResponse({ status: 201, description: 'Budget created successfully' })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 500, description: 'Current Account does not exist' })
+  @ApiResponse({ status: 500, description: 'Current Budget does not exist' })
   async create(
     @Req() req: any,
     @Body() budget: CreateBudgetDTO,
