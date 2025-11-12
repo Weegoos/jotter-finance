@@ -75,6 +75,9 @@ export class BudgetService {
         ],
         ['createdAt', 'DESC'],
       ],
+      include: {
+        model: Categories,
+      },
     });
   }
 
@@ -98,7 +101,7 @@ export class BudgetService {
   ): Promise<Budget> {
     const budget = await this.budgetModel.findByPk(id);
     console.log(budget);
-    
+
     if (!budget) {
       throw new NotFoundException('Budget not found');
     }

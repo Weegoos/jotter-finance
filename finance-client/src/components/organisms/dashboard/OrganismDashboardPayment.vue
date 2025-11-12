@@ -14,7 +14,7 @@
 
         <!-- Прогрессбар -->
         <LinearProgress
-          :track_color="'white'"
+          :track_color="'grey'"
           :progress="item.progress"
           :size="'25px'"
           class="rounded-full relative overflow-hidden"

@@ -1,9 +1,9 @@
 <template>
-  <div>Budget Page</div>
+  <BudgetContainer />
 </template>
 
-<script>
-export default {}
+<script setup>
+import BudgetContainer from 'src/containers/BudgetContainer.vue'
 </script>
 
 <style></style>
