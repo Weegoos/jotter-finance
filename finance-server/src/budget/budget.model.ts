@@ -26,6 +26,11 @@ export class Budget extends Model {
   @Column
   period: string;
 
+  @Column({
+    defaultValue: 'inactive',
+  })
+  status: string;
+
   @BelongsTo(() => Categories)
   categories?: Categories;
 }

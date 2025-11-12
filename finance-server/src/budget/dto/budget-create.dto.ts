@@ -23,4 +23,11 @@ export class CreateBudgetDTO {
   })
   @IsString()
   period: string;
+
+  @ApiProperty({
+    description: 'Статус бюджета',
+    example: 'active',
+  })
+  @IsString()
+  status: string;
 }

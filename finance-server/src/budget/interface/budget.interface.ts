@@ -3,4 +3,5 @@ export class IBudget {
   categoryId?: number;
   amount: number;
   period: string;
+  status: string;
 }
