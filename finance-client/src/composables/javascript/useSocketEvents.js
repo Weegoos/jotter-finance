@@ -27,7 +27,6 @@ export function useTotalBalance($q) {
 
       if (data && typeof data.total_balance !== 'undefined') {
         totalBalance.value = data.total_balance
-
       } else {
         console.warn('⚠️ Сервер не вернул total_balance:', data)
       }
@@ -48,9 +47,9 @@ export function useTotalBalance($q) {
     socket.on('balance_update', handleBalanceUpdate)
   })
 
-onBeforeUnmount(() => {
-  socket.off('balance_update', handleBalanceUpdate)
-})
+  onBeforeUnmount(() => {
+    socket.off('balance_update', handleBalanceUpdate)
+  })
 
   return { totalBalance, fetchTotalBalance }
 }

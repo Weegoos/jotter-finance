@@ -21,19 +21,7 @@
       @deleteCategory="deleteCategory"
       :balance="totalBalance"
     />
-
-    <div class="payment grid grid-cols-2 grid-rows-1 q-gutter-md q-mt-md">
-      <q-card class="my-card">
-        <q-card-section>
-          <div class="text-h6">Payment Types</div>
-        </q-card-section>
-      </q-card>
-      <q-card class="my-card">
-        <q-card-section>
-          <div class="text-h6">Goals</div>
-        </q-card-section>
-      </q-card>
-    </div>
+    <Payment />
 
     <div class="account q-mt-md">
       <q-card class="grid grid-cols-2 grid-rows-1">
@@ -66,17 +54,17 @@ import { useQuasar } from 'quasar'
 import { accountLimit, financeServerURL, viewLimitedTransaction } from 'src/boot/config'
 import { Button, Input } from 'src/components/atoms'
 import { Pagination } from 'src/components/molecules'
-import { Balance, TransactionOverview } from 'src/components/organisms'
+import { Balance, Payment, TransactionOverview } from 'src/components/organisms'
 import { deleteMethod } from 'src/composables/api-method/delete'
 import { postMethod } from 'src/composables/api-method/post'
 import { putMethod } from 'src/composables/api-method/put'
 import { useSocketEvents, useTotalBalance } from 'src/composables/javascript/useSocketEvents'
 import { accountsApiStore } from 'src/stores/accounts-api'
 import { categoryApiStore } from 'src/stores/category-api'
+
 // import { statsApiStore } from 'src/stores/stats-api'
 import { transactionApiStore } from 'src/stores/transaction-api'
 import { onMounted, ref } from 'vue'
-
 // globalVariables
 const accountStore = accountsApiStore()
 const categoryStore = categoryApiStore()
