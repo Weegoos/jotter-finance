@@ -97,7 +97,8 @@ export class BudgetService {
     updates: Partial<Budget>,
   ): Promise<Budget> {
     const budget = await this.budgetModel.findByPk(id);
-
+    console.log(budget);
+    
     if (!budget) {
       throw new NotFoundException('Budget not found');
     }
@@ -106,15 +107,27 @@ export class BudgetService {
       throw new ForbiddenException('The request is denied');
     }
 
-    const activeBudget = await this.budgetModel.findOne({
-      where: { userId, status: 'active', category_id: budget.category_id },
-    });
+    // Проверяем, если пытаемся установить статус active
+    if (updates.status === 'active') {
+      if (!budget.dataValues.category_id) {
+        throw new BadRequestException('Budget category_id is missing');
+      }
 
-    if (activeBudget && updates.status === 'active') {
-      throw new BadRequestException(
-        'You already have an active budget for this category',
-      );
+      const activeBudget = await this.budgetModel.findOne({
+        where: {
+          userId,
+          status: 'active',
+          category_id: budget.dataValues.category_id,
+        },
+      });
+
+      if (activeBudget) {
+        throw new BadRequestException(
+          'You already have an active budget for this category',
+        );
+      }
     }
+
     return budget.update(updates);
   }
 }

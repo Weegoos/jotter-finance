@@ -36,51 +36,52 @@ export class StatService {
     return { total_balance: total };
   }
 
-async goalProgress(userId: number): Promise<{ total_balance: number; budgets: Object[] }> {
-  if (!userId) throw new UnauthorizedException('User not authorized');
+  async goalProgress(
+    userId: number,
+  ): Promise<{ total_balance: number; budgets: Object[] }> {
+    if (!userId) throw new UnauthorizedException('User not authorized');
 
-  const budgets = await this.budgetModel.findAll({
-    where: { userId, status: 'active' },
-    include: [
-      {
-        model: Categories,
-        as: 'categories',
-        attributes: ['name'],
-      },
-    ],
-  });
+    const budgets = await this.budgetModel.findAll({
+      where: { userId, status: 'active' },
+      include: [
+        {
+          model: Categories,
+          as: 'categories',
+          attributes: ['name'],
+        },
+      ],
+    });
 
-  if (!budgets.length) throw new NotFoundException('No active budgets found');
+    if (!budgets.length) throw new NotFoundException('No active budgets found');
 
-  const accounts = await this.accountModel.findAll({
-    where: { userId, active: true },
-    attributes: ['balance'],
-  });
+    const accounts = await this.accountModel.findAll({
+      where: { userId, active: true },
+      attributes: ['balance'],
+    });
 
-  const totalBalance = accounts.reduce(
-    (sum, account) => sum + (account.dataValues.balance || 0),
-    0,
-  );
+    const totalBalance = accounts.reduce(
+      (sum, account) => sum + (account.dataValues.balance || 0),
+      0,
+    );
 
-  const budgetsProgress = budgets.map((budget) => {
-    const progress =
-      budget.dataValues.amount > 0
-        ? Number((totalBalance / budget.dataValues.amount).toFixed(2))
-        : 0;
+    const budgetsProgress = budgets.map((budget) => {
+      const progress =
+        budget.dataValues.amount > 0
+          ? Number((totalBalance / budget.dataValues.amount).toFixed(2))
+          : 0;
+
+      return {
+        budget_id: budget.id,
+        category_id: budget.category_id,
+        category: budget.dataValues.categories || '',
+        goal_amount: budget.dataValues.amount,
+        progress,
+      };
+    });
 
     return {
-      budget_id: budget.id,
-      category_id: budget.category_id,
-      category: budget.dataValues.categories || '',
-      goal_amount: budget.dataValues.amount,
-      progress,
+      total_balance: totalBalance, // один раз общий баланс
+      budgets: budgetsProgress,
     };
-  });
-
-  return {
-    total_balance: totalBalance, // один раз общий баланс
-    budgets: budgetsProgress,
-  };
-}
-
+  }
 }
