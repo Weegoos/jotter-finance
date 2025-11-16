@@ -30,21 +30,31 @@
       <div class="grid grid-cols-2">
         <p>Construction Costs List</p>
         <div class="grid justify-end">
-          <Button class="text-black" icon="mdi-plus"></Button>
+          <Button class="text-black" icon="mdi-plus" @click="isCreateBudget = true"></Button>
         </div>
       </div>
+      <Dialog :modelValue="isCreateBudget">
+        <template #content>
+          <Close :section-name="'Create budget'" @emit-click="isCreateBudget = false"></Close>
+          <Input label="Amount" v-model="createBudgetAmount"></Input>
+          <Select></Select>
+        </template>
+      </Dialog>
     </div>
   </section>
 </template>
 
 <script setup>
-import { Button } from 'src/components/atoms'
-
+import { Button, Input, Select } from 'src/components/atoms'
+import { Close, Dialog } from 'src/components/molecules'
+import { ref } from 'vue'
 const props = defineProps({
   data: Object,
+  categories: Object,
 })
 
 const emit = defineEmits(['deleteBudget'])
+const isCreateBudget = ref(false)
 </script>
 
 <style scope>

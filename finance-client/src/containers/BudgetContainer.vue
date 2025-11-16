@@ -1,6 +1,10 @@
 <template>
   <div>
-    <ViewBudget :data="budgets" @deleteBudget="deleteBudget"></ViewBudget>
+    <ViewBudget
+      :data="budgets"
+      @deleteBudget="deleteBudget"
+      :categories="userCategories"
+    ></ViewBudget>
   </div>
 </template>
 
@@ -10,13 +14,22 @@ import { financeServerURL } from 'src/boot/config'
 import { ViewBudget } from 'src/components/organisms'
 import { deleteMethod } from 'src/composables/api-method/delete'
 import { budgetApiStore } from 'src/stores/budget-api'
+import { categoryApiStore } from 'src/stores/category-api'
 import { onMounted, ref } from 'vue'
 
 // global variables
 const $q = useQuasar()
 const budgetStore = budgetApiStore()
+const categoryStore = categoryApiStore()
 
 const budgets = ref([])
+// -------------- category ------------
+const userCategories = ref([])
+const getAllCategories = async () => {
+  await categoryStore.getAllCategory($q)
+  userCategories.value = categoryStore.category
+}
+
 // -------------- budget --------------
 const getAllBudgets = async () => {
   await budgetStore.getAllBudget($q)
@@ -32,6 +45,7 @@ const deleteBudget = async (payload) => {
 // ------- output ------------
 const main = () => {
   getAllBudgets()
+  getAllCategories()
 }
 
 onMounted(() => {
