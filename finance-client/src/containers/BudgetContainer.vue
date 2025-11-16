@@ -5,6 +5,7 @@
       @deleteBudget="deleteBudget"
       :categories="userCategories"
       @createBudget="createBudget"
+      @editBudget="editBudget"
     ></ViewBudget>
   </div>
 </template>
@@ -15,6 +16,7 @@ import { financeServerURL } from 'src/boot/config'
 import { ViewBudget } from 'src/components/organisms'
 import { deleteMethod } from 'src/composables/api-method/delete'
 import { postMethod } from 'src/composables/api-method/post'
+import { putMethod } from 'src/composables/api-method/put'
 import { budgetApiStore } from 'src/stores/budget-api'
 import { categoryApiStore } from 'src/stores/category-api'
 import { onMounted, ref } from 'vue'
@@ -46,6 +48,12 @@ const deleteBudget = async (payload) => {
 const createBudget = async (payload) => {
   // console.log(payload);
   await postMethod(financeServerURL, 'budget', payload, $q, 'Бюджет успешно создан')
+}
+
+const editBudget = async (payload, id) => {
+  console.log(payload, id)
+
+  await putMethod(financeServerURL, `budget/${id}`, payload, $q, {})
 }
 
 // ------- output ------------

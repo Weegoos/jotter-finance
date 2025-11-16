@@ -19,7 +19,7 @@
             <div class="text-subtitle2">Period: {{ item.period }}</div>
           </q-card-section>
           <q-card-actions align="right">
-            <Button color="orange" flat icon="mdi-pencil" />
+            <Button color="orange" flat icon="mdi-pencil" @emit-click="openBudget(item)" />
             <Button color="red" flat icon="mdi-delete" @emit-click="emit('deleteBudget', item)" />
           </q-card-actions>
         </q-card>
@@ -57,6 +57,29 @@
           <Button @emit-click="createBudget" :label="'Создать'" class="text-black"></Button>
         </template>
       </Dialog>
+      <Dialog :modelValue="isEditBudget">
+        <template #content>
+          <Close :section-name="'Edit budget'" @emit-click="isEditBudget = false"></Close>
+          <Input class="q-mb-sm" label="Amount" type="number" v-model="editBudgetAmount"></Input>
+          <Select
+            class="q-mb-sm"
+            v-model="editBudgetCategory"
+            option-label="name"
+            option-value="value"
+            label="Category"
+          ></Select>
+          <Select
+            class="q-mb-sm"
+            :options="['active', 'inactive']"
+            v-model="editBudgetStatus"
+            label="Status"
+          ></Select>
+          <q-date v-model="editBudgetDate" landscape />
+        </template>
+        <template #actions>
+          <Button :label="'Edit'" class="text-black" @emit-click="editBudget"></Button>
+        </template>
+      </Dialog>
     </div>
   </section>
 </template>
@@ -65,13 +88,15 @@
 import { Button, Input, Select } from 'src/components/atoms'
 import { Close, Dialog } from 'src/components/molecules'
 import { ref, watch } from 'vue'
+
 const props = defineProps({
   data: Object,
   categories: Object,
 })
 
-const emit = defineEmits(['deleteBudget', 'createBudget'])
+const emit = defineEmits(['deleteBudget', 'createBudget', 'editBudget'])
 const isCreateBudget = ref(false)
+const isEditBudget = ref(false)
 
 const createBudgetAmount = ref('')
 const createBudgetCategory = ref(null)
@@ -103,6 +128,35 @@ const createBudget = () => {
   }
 
   emit('createBudget', payload)
+}
+
+const editBudgetAmount = ref('')
+const editBudgetCategory = ref(null)
+const editBudgetStatus = ref(null)
+let editBudgetDate = ref('')
+const selectedBudget = ref(null)
+const openBudget = (item) => {
+  selectedBudget.value = item
+  isEditBudget.value = true
+  editBudgetStatus.value = item.status
+  editBudgetAmount.value = item.amount
+  editBudgetCategory.value = item.categories.name
+  // editBudgetDate.value = item.date;
+}
+
+const editBudget = () => {
+  const d = new Date(editBudgetDate.value)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const correct_date = `${year}-${month}`
+
+  const payload = {
+    category_id: selectedBudget.value.categories.id,
+    amount: Number(editBudgetAmount.value),
+    period: correct_date,
+    status: editBudgetStatus.value,
+  }
+  emit('editBudget', payload, selectedBudget.value.id)
 }
 </script>
 
