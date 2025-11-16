@@ -36,8 +36,25 @@
       <Dialog :modelValue="isCreateBudget">
         <template #content>
           <Close :section-name="'Create budget'" @emit-click="isCreateBudget = false"></Close>
-          <Input label="Amount" v-model="createBudgetAmount"></Input>
-          <Select></Select>
+          <Input class="q-mb-sm" label="Amount" type="number" v-model="createBudgetAmount"></Input>
+          <Select
+            class="q-mb-sm"
+            :options="categoryOptions"
+            v-model="createBudgetCategory"
+            option-label="name"
+            option-value="value"
+            label="Category"
+          ></Select>
+          <Select
+            class="q-mb-sm"
+            :options="['active', 'inactive']"
+            v-model="createBudgetStatus"
+            label="Status"
+          ></Select>
+          <q-date v-model="createBudgetDate" landscape />
+        </template>
+        <template #actions>
+          <Button @emit-click="createBudget" :label="'Создать'" class="text-black"></Button>
         </template>
       </Dialog>
     </div>
@@ -47,14 +64,46 @@
 <script setup>
 import { Button, Input, Select } from 'src/components/atoms'
 import { Close, Dialog } from 'src/components/molecules'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 const props = defineProps({
   data: Object,
   categories: Object,
 })
 
-const emit = defineEmits(['deleteBudget'])
+const emit = defineEmits(['deleteBudget', 'createBudget'])
 const isCreateBudget = ref(false)
+
+const createBudgetAmount = ref('')
+const createBudgetCategory = ref(null)
+const createBudgetStatus = ref(null)
+const categoryOptions = ref([])
+
+watch(
+  () => props.categories,
+  (newVal) => {
+    categoryOptions.value = newVal.map((t) => ({
+      name: t.name,
+      value: t.id,
+    }))
+  },
+)
+
+let createBudgetDate = ref('')
+const createBudget = () => {
+  const d = new Date(createBudgetDate.value)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const correct_date = `${year}-${month}`
+
+  const payload = {
+    category_id: createBudgetCategory.value.value,
+    amount: Number(createBudgetAmount.value),
+    period: correct_date,
+    status: createBudgetStatus.value,
+  }
+
+  emit('createBudget', payload)
+}
 </script>
 
 <style scope>

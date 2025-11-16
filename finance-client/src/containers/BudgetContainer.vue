@@ -4,6 +4,7 @@
       :data="budgets"
       @deleteBudget="deleteBudget"
       :categories="userCategories"
+      @createBudget="createBudget"
     ></ViewBudget>
   </div>
 </template>
@@ -13,6 +14,7 @@ import { useQuasar } from 'quasar'
 import { financeServerURL } from 'src/boot/config'
 import { ViewBudget } from 'src/components/organisms'
 import { deleteMethod } from 'src/composables/api-method/delete'
+import { postMethod } from 'src/composables/api-method/post'
 import { budgetApiStore } from 'src/stores/budget-api'
 import { categoryApiStore } from 'src/stores/category-api'
 import { onMounted, ref } from 'vue'
@@ -34,12 +36,16 @@ const getAllCategories = async () => {
 const getAllBudgets = async () => {
   await budgetStore.getAllBudget($q)
   budgets.value = budgetStore.budget
-  console.log(budgets.value)
 }
 
 const deleteBudget = async (payload) => {
-  console.log(payload)
+  // console.log(payload);
   await deleteMethod(financeServerURL, 'budget', payload.id)
+}
+
+const createBudget = async (payload) => {
+  // console.log(payload);
+  await postMethod(financeServerURL, 'budget', payload, $q, 'Бюджет успешно создан')
 }
 
 // ------- output ------------
