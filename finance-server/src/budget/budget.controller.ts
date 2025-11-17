@@ -61,6 +61,20 @@ export class BudgetController {
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
+  @Get('stats')
+  @ApiOperation({ summary: 'Get stats of budget' })
+  @ApiResponse({
+    status: 201,
+    description: 'Budget stats obtained successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getStats(@Req() req: any): Promise<any> {
+    return this.budgetService.stats(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Delete(':id')
   @ApiOperation({ summary: 'Budget deleted successfully' })
   @ApiResponse({

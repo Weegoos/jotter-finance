@@ -133,4 +133,35 @@ export class BudgetService {
 
     return budget.update(updates);
   }
+
+  async stats(userId: number): Promise<any> {
+    const activeBudget = await this.budgetModel.findAll({
+      where: {
+        status: 'active',
+        userId: userId,
+      },
+    });
+
+    const inactiveBudget = await this.budgetModel.findAll({
+      where: {
+        status: 'inactive',
+        userId: userId,
+      },
+    });
+
+    const budgets = await this.budgetModel.findAll({
+      where: {
+        userId: userId
+      }
+    })
+
+    const allBudgets: any[] = [];
+    allBudgets.push(activeBudget.length, inactiveBudget.length, budgets.length)
+    return {
+      activeBudget: activeBudget.length,
+      inactiveBudget: inactiveBudget.length,
+      total: budgets.length,
+      array: allBudgets
+    };
+  }
 }
