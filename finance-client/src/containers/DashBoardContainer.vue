@@ -21,7 +21,7 @@
       @deleteCategory="deleteCategory"
       :balance="goal_progress.total_balance"
     />
-    <Payment :goal="goal_progress" />
+    <Payment :goal="goal_progress" :categories="progress_categories" :data="progress_data" />
 
     <div class="account q-mt-md">
       <q-card class="grid grid-cols-2 grid-rows-1">
@@ -126,9 +126,13 @@ const refreshBalance = async () => {
 }
 
 const goal_progress = ref([])
+const progress_categories = ref([])
+const progress_data = ref([])
 const getGoalProgress = async () => {
   await statStore.getTotalBalance($q)
   goal_progress.value = statStore.goal
+  progress_categories.value = statStore.goal.categories
+  progress_data.value = statStore.goal.data
 }
 
 const messages = ref([])

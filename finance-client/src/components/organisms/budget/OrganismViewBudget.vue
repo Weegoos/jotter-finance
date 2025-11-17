@@ -19,18 +19,8 @@
             <div class="text-subtitle2">Period: {{ item.period }}</div>
           </q-card-section>
           <q-card-actions align="right" class="flex items-end">
-            <Button
-              color="orange"
-              flat
-              icon="mdi-pencil"
-              @emit-click="openBudget(item)"
-            />
-            <Button
-              color="red"
-              flat
-              icon="mdi-delete"
-              @emit-click="emit('deleteBudget', item)"
-            />
+            <Button color="orange" flat icon="mdi-pencil" @emit-click="openBudget(item)" />
+            <Button color="red" flat icon="mdi-delete" @emit-click="emit('deleteBudget', item)" />
           </q-card-actions>
         </q-card>
       </div>
@@ -48,16 +38,8 @@
       </div>
       <Dialog :modelValue="isCreateBudget">
         <template #content>
-          <Close
-            :section-name="'Create budget'"
-            @emit-click="isCreateBudget = false"
-          ></Close>
-          <Input
-            class="q-mb-sm"
-            label="Amount"
-            type="number"
-            v-model="createBudgetAmount"
-          ></Input>
+          <Close :section-name="'Create budget'" @emit-click="isCreateBudget = false"></Close>
+          <Input class="q-mb-sm" label="Amount" type="number" v-model="createBudgetAmount"></Input>
           <Select
             class="q-mb-sm"
             :options="categoryOptions"
@@ -75,22 +57,13 @@
           <q-date v-model="createBudgetDate" landscape />
         </template>
         <template #actions>
-          <Button
-            @emit-click="createBudget"
-            :label="'Создать'"
-            class="text-black"
-          ></Button>
+          <Button @emit-click="createBudget" :label="'Создать'" class="text-black"></Button>
         </template>
       </Dialog>
       <Dialog :modelValue="isEditBudget">
         <template #content>
           <Close :section-name="'Edit budget'" @emit-click="isEditBudget = false"></Close>
-          <Input
-            class="q-mb-sm"
-            label="Amount"
-            type="number"
-            v-model="editBudgetAmount"
-          ></Input>
+          <Input class="q-mb-sm" label="Amount" type="number" v-model="editBudgetAmount"></Input>
           <Select
             class="q-mb-sm"
             v-model="editBudgetCategory"
@@ -115,9 +88,9 @@
 </template>
 
 <script setup>
-import { Button, Input, Select } from "src/components/atoms";
-import { Close, Dialog, PieChart } from "src/components/molecules";
-import { ref, watch } from "vue";
+import { Button, Input, Select } from 'src/components/atoms'
+import { Close, Dialog, PieChart } from 'src/components/molecules'
+import { ref, watch } from 'vue'
 const props = defineProps({
   data: Object,
   categories: Object,
@@ -125,16 +98,16 @@ const props = defineProps({
     type: Object,
     default: () => ({ array: [] }),
   },
-});
+})
 
-const emit = defineEmits(["deleteBudget", "createBudget", "editBudget"]);
-const isCreateBudget = ref(false);
-const isEditBudget = ref(false);
+const emit = defineEmits(['deleteBudget', 'createBudget', 'editBudget'])
+const isCreateBudget = ref(false)
+const isEditBudget = ref(false)
 
-const createBudgetAmount = ref("");
-const createBudgetCategory = ref(null);
-const createBudgetStatus = ref(null);
-const categoryOptions = ref([]);
+const createBudgetAmount = ref('')
+const createBudgetCategory = ref(null)
+const createBudgetStatus = ref(null)
+const categoryOptions = ref([])
 
 watch(
   () => props.categories,
@@ -142,62 +115,62 @@ watch(
     categoryOptions.value = newVal.map((t) => ({
       name: t.name,
       value: t.id,
-    }));
-  }
-);
+    }))
+  },
+)
 
 watch(
   () => props.stats,
   (val) => {
-    console.log(val);
-  }
-);
+    console.log(val)
+  },
+)
 
-let createBudgetDate = ref("");
+let createBudgetDate = ref('')
 const createBudget = () => {
-  const d = new Date(createBudgetDate.value);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const correct_date = `${year}-${month}`;
+  const d = new Date(createBudgetDate.value)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const correct_date = `${year}-${month}`
 
   const payload = {
     category_id: createBudgetCategory.value.value,
     amount: Number(createBudgetAmount.value),
     period: correct_date,
     status: createBudgetStatus.value,
-  };
+  }
 
-  emit("createBudget", payload);
-};
+  emit('createBudget', payload)
+}
 
-const editBudgetAmount = ref("");
-const editBudgetCategory = ref(null);
-const editBudgetStatus = ref(null);
-let editBudgetDate = ref("");
-const selectedBudget = ref(null);
+const editBudgetAmount = ref('')
+const editBudgetCategory = ref(null)
+const editBudgetStatus = ref(null)
+let editBudgetDate = ref('')
+const selectedBudget = ref(null)
 const openBudget = (item) => {
-  selectedBudget.value = item;
-  isEditBudget.value = true;
-  editBudgetStatus.value = item.status;
-  editBudgetAmount.value = item.amount;
-  editBudgetCategory.value = item.categories.name;
+  selectedBudget.value = item
+  isEditBudget.value = true
+  editBudgetStatus.value = item.status
+  editBudgetAmount.value = item.amount
+  editBudgetCategory.value = item.categories.name
   // editBudgetDate.value = item.date;
-};
+}
 
 const editBudget = () => {
-  const d = new Date(editBudgetDate.value);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const correct_date = `${year}-${month}`;
+  const d = new Date(editBudgetDate.value)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const correct_date = `${year}-${month}`
 
   const payload = {
     category_id: selectedBudget.value.categories.id,
     amount: Number(editBudgetAmount.value),
     period: correct_date,
     status: editBudgetStatus.value,
-  };
-  emit("editBudget", payload, selectedBudget.value.id);
-};
+  }
+  emit('editBudget', payload, selectedBudget.value.id)
+}
 </script>
 
 <style scope>

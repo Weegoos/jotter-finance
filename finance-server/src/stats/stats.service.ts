@@ -36,9 +36,12 @@ export class StatService {
     return { total_balance: total };
   }
 
-  async goalProgress(
-    userId: number,
-  ): Promise<{ total_balance: number; budgets: Object[] }> {
+  async goalProgress(userId: number): Promise<{
+    total_balance: number;
+    budgets: Object[];
+    categories: string[];
+    data: number[];
+  }> {
     if (!userId) throw new UnauthorizedException('User not authorized');
 
     const budgets = await this.budgetModel.findAll({
@@ -64,12 +67,22 @@ export class StatService {
       0,
     );
 
+    const categories: string[] = [];
+    const data: number[] = [];
+
     const budgetsProgress = budgets.map((budget) => {
       const progress =
         budget.dataValues.amount > 0
           ? Number((totalBalance / budget.dataValues.amount).toFixed(2))
           : 0;
 
+      categories.push(
+        budget.dataValues.categories.dataValues.name || 'Unknown',
+      );
+      data.push(progress);
+
+      console.log(categories); // ['Food', 'Rent', 'Savings', ...]
+      console.log(data);
       return {
         budget_id: budget.id,
         category_id: budget.category_id,
@@ -82,6 +95,8 @@ export class StatService {
     return {
       total_balance: totalBalance, // один раз общий баланс
       budgets: budgetsProgress,
+      categories,
+      data,
     };
   }
 }
