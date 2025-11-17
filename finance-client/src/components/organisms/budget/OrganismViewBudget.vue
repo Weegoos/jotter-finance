@@ -1,24 +1,24 @@
 <template>
   <section>
-    <div class="row grid-cols-2 gap-2 q-pa-md">
-      <div class="col-9 grid grid-cols-3 gap-4">
+    <div class="grid grid-cols-[70%_30%] gap-2 q-pa-md items-center">
+      <div class="grid grid-cols-3 gap-4 items-center">
         <q-card
           :class="item.status === 'active' ? 'activeClass' : 'inactiveClass'"
           v-for="(item, index) in props.data"
           :key="index"
-          class="cursor-pointer"
+          class="cursor-pointer h-[175px]"
         >
           <q-card-section>
             <div class="grid grid-cols-2">
               <p>Category: {{ item.categories.name }}</p>
               <div class="text-capitalize justify-end grid">
-                <span class="bg-white p-[4px] statusText">{{ item.status }}</span>
+                <span class="p-[4px] statusText">{{ item.status }}</span>
               </div>
             </div>
             <div class="text-subtitle1">{{ item.amount }}$</div>
             <div class="text-subtitle2">Period: {{ item.period }}</div>
           </q-card-section>
-          <q-card-actions align="right">
+          <q-card-actions align="right" class="flex items-end">
             <Button
               color="orange"
               flat
@@ -34,18 +34,17 @@
           </q-card-actions>
         </q-card>
       </div>
-      <div><PieChart :series-data="props.stats"></PieChart></div>
+      <div class="grid justify-end">
+        <PieChart :series-data="props.stats"></PieChart>
+      </div>
     </div>
-    <div class="q-ma-md">
-      <div class="grid grid-cols-2">
-        <p>Construction Costs List</p>
-        <div class="grid justify-end">
-          <Button
-            class="text-black"
-            icon="mdi-plus"
-            @click="isCreateBudget = true"
-          ></Button>
-        </div>
+    <div class="q-ma-md grid grid-cols-2">
+      <div class="grid justify-end">
+        <Button
+          class="text-black grid justify-end"
+          icon="mdi-plus"
+          @click="isCreateBudget = true"
+        ></Button>
       </div>
       <Dialog :modelValue="isCreateBudget">
         <template #content>

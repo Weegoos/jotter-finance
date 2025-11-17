@@ -29,7 +29,7 @@ watch(
 );
 
 const chartOptions = ref({
-  labels: ["Активные", "Неактивные", "Всего"],
+  labels: ["Active", "Inactive", "Total"],
   legend: { position: "bottom" },
 });
 </script>
