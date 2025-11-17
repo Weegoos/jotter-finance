@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   HttpException,
   HttpStatus,
@@ -11,6 +12,7 @@ import { Budget } from './budget.model';
 import { CreateBudgetDTO } from './dto/budget-create.dto';
 import { Categories } from 'src/categories/categories.model';
 import { IBudget } from './interface/budget.interface';
+import { Sequelize } from 'sequelize';
 
 @Injectable()
 export class BudgetService {
@@ -26,9 +28,12 @@ export class BudgetService {
       throw new UnauthorizedException('User not authorized');
     }
 
+    if (!budget.category_id) {
+      throw new BadRequestException('category_id is required');
+    }
     const category = await this.categoriesModel.findOne({
       where: {
-        id: budget.categoryId,
+        id: budget.category_id,
         userId,
       },
     });
@@ -39,6 +44,15 @@ export class BudgetService {
       );
     }
 
+    const activeBudget = await this.budgetModel.findOne({
+      where: { userId, status: 'active', category_id: budget.category_id },
+    });
+
+    if (activeBudget && budget.status === 'active') {
+      throw new BadRequestException(
+        'You already have an active budget for this category',
+      );
+    }
     const newBudget: IBudget = {
       ...budget,
       userId,
@@ -54,7 +68,16 @@ export class BudgetService {
 
     return this.budgetModel.findAll({
       where: { userId },
-      order: [['updatedAt', 'DESC']],
+      order: [
+        [
+          Sequelize.literal(`CASE WHEN status = 'active' THEN 1 ELSE 2 END`),
+          'ASC',
+        ],
+        ['createdAt', 'DESC'],
+      ],
+      include: {
+        model: Categories,
+      },
     });
   }
 
@@ -77,6 +100,7 @@ export class BudgetService {
     updates: Partial<Budget>,
   ): Promise<Budget> {
     const budget = await this.budgetModel.findByPk(id);
+    console.log(budget);
 
     if (!budget) {
       throw new NotFoundException('Budget not found');
@@ -86,6 +110,58 @@ export class BudgetService {
       throw new ForbiddenException('The request is denied');
     }
 
+    // Проверяем, если пытаемся установить статус active
+    if (updates.status === 'inactive') {
+      if (!budget.dataValues.category_id) {
+        throw new BadRequestException('Budget category_id is missing');
+      }
+
+      const activeBudget = await this.budgetModel.findOne({
+        where: {
+          userId,
+          status: 'active',
+          category_id: budget.dataValues.category_id,
+        },
+      });
+
+      if (activeBudget) {
+        throw new BadRequestException(
+          'You already have an active budget for this category',
+        );
+      }
+    }
+
     return budget.update(updates);
+  }
+
+  async stats(userId: number): Promise<any> {
+    const activeBudget = await this.budgetModel.findAll({
+      where: {
+        status: 'active',
+        userId: userId,
+      },
+    });
+
+    const inactiveBudget = await this.budgetModel.findAll({
+      where: {
+        status: 'inactive',
+        userId: userId,
+      },
+    });
+
+    const budgets = await this.budgetModel.findAll({
+      where: {
+        userId: userId
+      }
+    })
+
+    const allBudgets: any[] = [];
+    allBudgets.push(activeBudget.length, inactiveBudget.length, budgets.length)
+    return {
+      activeBudget: activeBudget.length,
+      inactiveBudget: inactiveBudget.length,
+      total: budgets.length,
+      array: allBudgets
+    };
   }
 }

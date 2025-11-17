@@ -1,14 +1,13 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsPositive, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsInt, IsPositive, IsString } from 'class-validator';
 
 export class CreateBudgetDTO {
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'ID категории бюджета',
     example: 1,
   })
-  @IsOptional()
   @IsInt()
-  categoryId?: number;
+  category_id: number; // теперь обязательное поле
 
   @ApiProperty({
     description: 'Сумма бюджета',
@@ -23,4 +22,11 @@ export class CreateBudgetDTO {
   })
   @IsString()
   period: string;
+
+  @ApiProperty({
+    description: 'Статус бюджета',
+    example: 'active',
+  })
+  @IsString()
+  status: string;
 }

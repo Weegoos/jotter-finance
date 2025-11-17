@@ -19,7 +19,7 @@
       :categories="categories"
       @createCategory="createCategory"
       @deleteCategory="deleteCategory"
-      :balance="totalBalance"
+      :balance="goal_progress.total_balance"
     />
     <Payment :goal="goal_progress" />
 

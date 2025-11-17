@@ -3,7 +3,9 @@
     <q-card class="my-card grid grid-cols-2 items-center">
       <q-card-section>
         <div class="text-h6">Total Balance</div>
-        <div class="text-subtitle2">{{ props.balance }}</div>
+        <div class="text-subtitle2">
+          {{ props.balance }}
+        </div>
       </q-card-section>
       <q-card-section class="row gap-4 justify-end">
         <Button

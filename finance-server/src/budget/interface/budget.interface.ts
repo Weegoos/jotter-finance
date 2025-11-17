@@ -1,6 +1,7 @@
 export class IBudget {
   userId: number;
-  categoryId?: number;
+  category_id?: number;
   amount: number;
   period: string;
+  status: string;
 }

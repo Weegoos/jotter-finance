@@ -34,6 +34,15 @@
               @emit-click="$router.push('/accounts')"
               flat
             />
+            <Button
+              :label="'Budget'"
+              color="white"
+              class="text-black w-full"
+              align="left"
+              icon="mdi-card-text-outline"
+              @emit-click="$router.push('/budget')"
+              flat
+            />
           </q-card-section>
         </q-card>
       </q-expansion-item>

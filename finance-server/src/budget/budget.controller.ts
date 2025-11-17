@@ -43,7 +43,8 @@ export class BudgetController {
     @Body() budget: CreateBudgetDTO,
   ): Promise<IBudget> {
     const newBudget = await this.budgetService.create(req.user.id, budget);
-
+    const allBudgets = await this.budgetService.findAll(req.user.id);
+    this.chatGateway.server.emit('budgetUpdated', allBudgets);
     return newBudget;
   }
 
@@ -60,6 +61,20 @@ export class BudgetController {
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
+  @Get('stats')
+  @ApiOperation({ summary: 'Get stats of budget' })
+  @ApiResponse({
+    status: 201,
+    description: 'Budget stats obtained successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getStats(@Req() req: any): Promise<any> {
+    return this.budgetService.stats(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Delete(':id')
   @ApiOperation({ summary: 'Budget deleted successfully' })
   @ApiResponse({
@@ -72,7 +87,8 @@ export class BudgetController {
   @ApiResponse({ status: 404, description: 'Budget not found' })
   async delete(@Req() req: any, @Param('id') id: number): Promise<void> {
     const deletedBudget = await this.budgetService.delete(req.user.id, id);
-
+    const allBudgets = await this.budgetService.findAll(req.user.id);
+    this.chatGateway.server.emit('budgetUpdated', allBudgets);
     return deletedBudget;
   }
 
@@ -93,6 +109,13 @@ export class BudgetController {
     @Body() updates: CreateBudgetDTO,
     @Param('id') id: number,
   ): Promise<IBudget> {
-    return this.budgetService.update(id, req.user.id, updates);
+    const updatedBudget = await this.budgetService.update(
+      id,
+      req.user.id,
+      updates,
+    );
+    const allBudgets = await this.budgetService.findAll(req.user.id);
+    this.chatGateway.server.emit('budgetUpdated', allBudgets);
+    return updatedBudget;
   }
 }

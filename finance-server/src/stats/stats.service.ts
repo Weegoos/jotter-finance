@@ -6,6 +6,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize';
 import { Account } from 'src/accounts/account.model';
 import { Budget } from 'src/budget/budget.model';
+import { Categories } from 'src/categories/categories.model';
 
 @Injectable()
 export class StatService {
@@ -35,11 +36,23 @@ export class StatService {
     return { total_balance: total };
   }
 
-  async goalProgress(userId: number): Promise<Object> {
+  async goalProgress(
+    userId: number,
+  ): Promise<{ total_balance: number; budgets: Object[] }> {
     if (!userId) throw new UnauthorizedException('User not authorized');
 
-    const budget = await this.budgetModel.findOne({ where: { userId } });
-    if (!budget) throw new NotFoundException('The Budget does not exists');
+    const budgets = await this.budgetModel.findAll({
+      where: { userId, status: 'active' },
+      include: [
+        {
+          model: Categories,
+          as: 'categories',
+          attributes: ['name'],
+        },
+      ],
+    });
+
+    if (!budgets.length) throw new NotFoundException('No active budgets found');
 
     const accounts = await this.accountModel.findAll({
       where: { userId, active: true },
@@ -51,15 +64,24 @@ export class StatService {
       0,
     );
 
-    const progress =
-      budget.dataValues.amount > 0
-        ? Number((totalBalance / budget.dataValues.amount).toFixed(2))
-        : 0;
+    const budgetsProgress = budgets.map((budget) => {
+      const progress =
+        budget.dataValues.amount > 0
+          ? Number((totalBalance / budget.dataValues.amount).toFixed(2))
+          : 0;
+
+      return {
+        budget_id: budget.id,
+        category_id: budget.category_id,
+        category: budget.dataValues.categories || '',
+        goal_amount: budget.dataValues.amount,
+        progress,
+      };
+    });
 
     return {
-      total_balance: totalBalance,
-      goal_amount: budget.dataValues.amount,
-      progress, // как число 0.72
+      total_balance: totalBalance, // один раз общий баланс
+      budgets: budgetsProgress,
     };
   }
 }
