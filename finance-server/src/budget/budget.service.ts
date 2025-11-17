@@ -111,7 +111,7 @@ export class BudgetService {
     }
 
     // Проверяем, если пытаемся установить статус active
-    if (updates.status === 'active') {
+    if (updates.status === 'inactive') {
       if (!budget.dataValues.category_id) {
         throw new BadRequestException('Budget category_id is missing');
       }
