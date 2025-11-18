@@ -6,69 +6,69 @@
 
 <script setup>
 // import ApexCharts from "vue3-apexcharts";
-import { ref, watch } from "vue";
+import { ref, watch } from 'vue'
 
 const props = defineProps({
   seriesData: Object,
   categories: Object,
-});
-const series = ref([]);
+})
+const series = ref([])
 
 watch(
   () => props.seriesData,
   (value) => {
     if (value && Array.isArray(value)) {
       // умножаем на 100
-      const data = value.map((v) => Number((v * 100).toFixed(2)));
+      const data = value.map((v) => Number((v * 100).toFixed(2)))
 
       series.value = [
         {
-          name: "Goal Progress",
+          name: 'Goal Progress',
           data: data,
         },
-      ];
+      ]
     } else {
-      series.value = [];
+      series.value = []
     }
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 const chartOptions = ref({
   chart: {
-    type: "bar",
+    type: 'bar',
     height: 350,
   },
   plotOptions: {
     bar: {
       borderRadius: 10,
       dataLabels: {
-        position: "top",
+        position: 'top',
       },
     },
   },
   dataLabels: {
     enabled: true,
     formatter: function (val) {
-      return val + "%";
+      return val + '%'
     },
     offsetY: -20,
     style: {
-      fontSize: "12px",
-      colors: ["#304758"],
+      fontSize: '12px',
+      colors: ['#304758'],
     },
   },
   xaxis: {
     categories: props.categories,
-    position: "top",
+    position: 'top',
     axisBorder: { show: false },
     axisTicks: { show: false },
     crosshairs: {
       fill: {
-        type: "gradient",
+        type: 'gradient',
         gradient: {
-          colorFrom: "#D8E3F0",
-          colorTo: "#BED1E6",
+          colorFrom: '#D8E3F0',
+          colorTo: '#BED1E6',
           stops: [0, 100],
           opacityFrom: 0.4,
           opacityTo: 0.5,
@@ -80,14 +80,14 @@ const chartOptions = ref({
   yaxis: {
     axisBorder: { show: false },
     axisTicks: { show: false },
-    labels: { show: false, formatter: (val) => val + "%" },
+    labels: { show: false, formatter: (val) => val + '%' },
   },
   title: {
-    text: "Goals",
+    text: 'Goals',
     floating: true,
     offsetY: 330,
-    align: "center",
-    style: { color: "#444" },
+    align: 'center',
+    style: { color: '#444' },
   },
-});
+})
 </script>

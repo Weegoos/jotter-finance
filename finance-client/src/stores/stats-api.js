@@ -7,6 +7,7 @@ export const statsApiStore = defineStore('stats-api', {
     goal: null,
     payment: null,
     transaction: null,
+    account: null,
   }),
   actions: {
     async getTotalBalance($q) {
@@ -28,6 +29,14 @@ export const statsApiStore = defineStore('stats-api', {
     async getTransactionStats($q) {
       try {
         this.transaction = await getMethod(financeServerURL, 'stats/transaction_stats', $q)
+      } catch (error) {
+        console.error(error)
+      }
+    },
+
+    async getAccountStats($q) {
+      try {
+        this.account = await getMethod(financeServerURL, 'stats/account_stats', $q)
       } catch (error) {
         console.error(error)
       }

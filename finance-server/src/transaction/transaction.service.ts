@@ -35,7 +35,7 @@ export class TransactionService {
       throw new UnauthorizedException('User not authorized');
     }
 
-    const account = await this.accountModel.findAll({
+    const account = await this.accountModel.findOne({
       where: {
         id: transaction.accountId,
         userId,

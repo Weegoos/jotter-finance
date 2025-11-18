@@ -74,24 +74,24 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { Cookies, useQuasar } from "quasar";
-import { successMessage } from "src/composables/notify/successMessage";
-import axios from "axios";
-import { useRouter } from "vue-router";
-import { Input } from "src/components/atoms";
-import { Form } from "src/components/molecules";
-import { mobileWidth, userServerURL } from "src/boot/config";
+import { ref } from 'vue'
+import { Cookies, useQuasar } from 'quasar'
+import { successMessage } from 'src/composables/notify/successMessage'
+import axios from 'axios'
+import { useRouter } from 'vue-router'
+import { Input } from 'src/components/atoms'
+import { Form } from 'src/components/molecules'
+import { mobileWidth, userServerURL } from 'src/boot/config'
 
 // global variables
-const $q = useQuasar();
-const router = useRouter();
+const $q = useQuasar()
+const router = useRouter()
 
-const firstName = ref("");
-const lastName = ref("");
-const password = ref("");
-const email = ref("");
-const isPwd = ref(true);
+const firstName = ref('')
+const lastName = ref('')
+const password = ref('')
+const email = ref('')
+const isPwd = ref(true)
 
 const register = async () => {
   try {
@@ -100,22 +100,22 @@ const register = async () => {
       lastName: lastName.value,
       email: email.value,
       password: password.value,
-      role: "user",
+      role: 'user',
       settings: {
         general: {
-          theme: "light",
-          language: "en",
+          theme: 'light',
+          language: 'en',
         },
       },
-    });
+    })
 
-    Cookies.set("access_token", response.data.token);
-    successMessage($q, `${response.data.user.firstName} вы успешно зарегистрированы!`);
-    console.log(response.data.user.firstName);
+    Cookies.set('access_token', response.data.token)
+    successMessage($q, `${response.data.user.firstName} вы успешно зарегистрированы!`)
+    console.log(response.data.user.firstName)
 
-    router.push("/");
+    router.push('/')
   } catch (error) {
-    console.error(error);
+    console.error(error)
   }
-};
+}
 </script>

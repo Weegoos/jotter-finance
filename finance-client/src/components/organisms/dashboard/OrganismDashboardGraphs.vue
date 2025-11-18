@@ -8,17 +8,18 @@
         </div>
       </q-card-section>
       <q-card-section class="col">
-        <PieChartWithImages></PieChartWithImages>
+        <PieChartWithImages :seriesData="props.pieChartSeriesData"></PieChartWithImages>
       </q-card-section>
     </q-card>
   </div>
 </template>
 
 <script setup>
-import { LineChart, PieChartWithImages } from "src/components/molecules";
+import { LineChart, PieChartWithImages } from 'src/components/molecules'
 const props = defineProps({
   seriesData: Object,
-});
+  pieChartSeriesData: Object,
+})
 </script>
 
 <style></style>

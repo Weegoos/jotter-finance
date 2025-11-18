@@ -85,7 +85,7 @@ export class StatService {
       );
       data.push(progress);
 
-      console.log(categories); // ['Food', 'Rent', 'Savings', ...]
+      console.log(categories);
       console.log(data);
       return {
         budget_id: budget.id,
@@ -97,7 +97,7 @@ export class StatService {
     });
 
     return {
-      total_balance: totalBalance, // один раз общий баланс
+      total_balance: totalBalance,
       budgets: budgetsProgress,
       categories,
       data,
@@ -134,17 +134,14 @@ export class StatService {
       include: { model: Account, as: 'account' },
     });
 
-    // Берём даты как строки и приводим к формату yyyy-mm-dd
     const uniqueDatesSet = new Set<string>();
     transactions.forEach((tx) => {
-      // Если date хранится как string в формате ISO, можно оставить как есть
-      const date = tx.dataValues.date.slice(0, 10); // yyyy-mm-dd
+      const date = tx.dataValues.date.slice(0, 10);
       uniqueDatesSet.add(date);
     });
 
     const categories = Array.from(uniqueDatesSet).sort();
 
-    // Группируем транзакции по банку
     const seriesMap: Record<string, Record<string, number>> = {};
 
     transactions.forEach((tx) => {
@@ -161,5 +158,17 @@ export class StatService {
     });
 
     return { series, categories };
+  }
+
+  async getAccountStats(userId: number): Promise<any> {
+    // Ждём результат
+    const accounts = await this.accountModel.findAll({
+      where: { userId },
+    });
+
+    // Создаём массив балансов
+    const series = accounts.map((account) => account.balance);
+    const labels = accounts.map((account) => account.name);
+    return { series, labels };
   }
 }

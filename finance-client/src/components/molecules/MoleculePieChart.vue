@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch } from 'vue'
 
 const props = defineProps({
   seriesData: {
@@ -11,24 +11,24 @@ const props = defineProps({
     required: true,
     default: () => ({ array: [] }),
   },
-});
+})
 
-const series = ref([]);
+const series = ref([])
 
 watch(
   () => props.seriesData,
   (value) => {
     if (value && Array.isArray(value.array)) {
-      series.value = value.array;
+      series.value = value.array
     } else {
-      series.value = [];
+      series.value = []
     }
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 const chartOptions = ref({
-  labels: ["Active", "Inactive", "Total"],
-  legend: { position: "bottom" },
-});
+  labels: ['Active', 'Inactive', 'Total'],
+  legend: { position: 'bottom' },
+})
 </script>

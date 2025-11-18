@@ -3,10 +3,10 @@
 </template>
 
 <script setup>
-import { getCurrentInstance } from "vue";
+import { getCurrentInstance } from 'vue'
 
-const { proxy } = getCurrentInstance();
-const version = proxy.$projectVersion;
+const { proxy } = getCurrentInstance()
+const version = proxy.$projectVersion
 </script>
 
 <style></style>

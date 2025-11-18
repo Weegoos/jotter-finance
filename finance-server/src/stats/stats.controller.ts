@@ -65,4 +65,20 @@ export class StatController {
 
     return transaction;
   }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('account_stats')
+  @ApiOperation({ summary: 'Get a accounts stats' })
+  @ApiResponse({
+    status: 201,
+    description: 'Account Stats obtained successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async account_stats(@Req() req: any): Promise<any> {
+    const accounts = await this.statService.getAccountStats(req.user.id);
+
+    return accounts;
+  }
 }
