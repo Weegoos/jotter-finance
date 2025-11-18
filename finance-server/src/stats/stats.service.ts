@@ -126,4 +126,40 @@ export class StatService {
       payment_types,
     };
   }
+  async getTransactionSeriesWithDates(
+    userId: number,
+  ): Promise<{ series: any[]; categories: string[] }> {
+    const transactions = await this.transactionModel.findAll({
+      where: { userId },
+      include: { model: Account, as: 'account' },
+    });
+
+    // Берём даты как строки и приводим к формату yyyy-mm-dd
+    const uniqueDatesSet = new Set<string>();
+    transactions.forEach((tx) => {
+      // Если date хранится как string в формате ISO, можно оставить как есть
+      const date = tx.dataValues.date.slice(0, 10); // yyyy-mm-dd
+      uniqueDatesSet.add(date);
+    });
+
+    const categories = Array.from(uniqueDatesSet).sort();
+
+    // Группируем транзакции по банку
+    const seriesMap: Record<string, Record<string, number>> = {};
+
+    transactions.forEach((tx) => {
+      const bankName = tx.dataValues.account?.dataValues.name || 'Unknown';
+      const date = tx.dataValues.date.slice(0, 10);
+
+      if (!seriesMap[bankName]) seriesMap[bankName] = {};
+      seriesMap[bankName][date] = tx.dataValues.amount;
+    });
+
+    const series = Object.entries(seriesMap).map(([name, dataByDate]) => {
+      const data = categories.map((date) => dataByDate[date] || 0);
+      return { name, data };
+    });
+
+    return { series, categories };
+  }
 }

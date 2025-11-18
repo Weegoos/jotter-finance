@@ -50,41 +50,39 @@
 </template>
 
 <script setup>
-import { getCurrentInstance, ref } from 'vue'
-import { Cookies, useQuasar } from 'quasar'
-import { successMessage } from 'src/composables/notify/successMessage'
-import axios from 'axios'
-import { useRouter } from 'vue-router'
-import { Input } from 'src/components/atoms'
-import { Form } from 'src/components/molecules'
+import { getCurrentInstance, ref } from "vue";
+import { Cookies, useQuasar } from "quasar";
+import { successMessage } from "src/composables/notify/successMessage";
+import axios from "axios";
+import { useRouter } from "vue-router";
+import { Input } from "src/components/atoms";
+import { Form } from "src/components/molecules";
 
 // global variables
-const { proxy } = getCurrentInstance()
-const mobileWidth = proxy.$mobileWidth
-const userServerURL = proxy.$userServerURL
-const $q = useQuasar()
-const router = useRouter()
+const { proxy } = getCurrentInstance();
+const mobileWidth = proxy.$mobileWidth;
+const userServerURL = proxy.$userServerURL;
+const $q = useQuasar();
+const router = useRouter();
 
-console.log(mobileWidth)
-
-const password = ref('')
-const email = ref('')
-const isPwd = ref(true)
+const password = ref("");
+const email = ref("");
+const isPwd = ref(true);
 const login = async () => {
   try {
     const response = await axios.post(`${userServerURL}users/login`, {
       email: email.value,
       password: password.value,
-    })
+    });
 
     successMessage(
       $q,
-      `Добро пожаловать, ${response.data.user.lastName} ${response.data.user.firstName}`,
-    )
-    Cookies.set('access_token', response.data.token)
-    router.push('/')
+      `Добро пожаловать, ${response.data.user.lastName} ${response.data.user.firstName}`
+    );
+    Cookies.set("access_token", response.data.token);
+    router.push("/");
   } catch (error) {
-    console.error(error)
+    console.error(error);
   }
-}
+};
 </script>

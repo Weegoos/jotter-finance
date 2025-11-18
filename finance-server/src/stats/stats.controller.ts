@@ -47,4 +47,22 @@ export class StatController {
 
     return payment;
   }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('transaction_stats')
+  @ApiOperation({ summary: 'Get a transaction type' })
+  @ApiResponse({
+    status: 201,
+    description: 'Transaction Types obtained successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async transaction_stats(@Req() req: any): Promise<any> {
+    const transaction = await this.statService.getTransactionSeriesWithDates(
+      req.user.id,
+    );
+
+    return transaction;
+  }
 }

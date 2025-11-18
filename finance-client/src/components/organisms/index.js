@@ -1,4 +1,6 @@
 export { default as Balance } from './dashboard/OrganismDashboardBalance.vue'
 export { default as TransactionOverview } from './dashboard/OrganismDashboardTransactionOverview.vue'
 export { default as Payment } from './dashboard/OrganismDashboardPayment.vue'
+export { default as DashboardGraphs } from './dashboard/OrganismDashboardGraphs.vue'
+
 export { default as ViewBudget } from './budget/OrganismViewBudget.vue'
