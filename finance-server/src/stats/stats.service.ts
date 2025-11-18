@@ -7,6 +7,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { Account } from 'src/accounts/account.model';
 import { Budget } from 'src/budget/budget.model';
 import { Categories } from 'src/categories/categories.model';
+import { Transactions } from 'src/transaction/transaction.model';
 
 @Injectable()
 export class StatService {
@@ -16,6 +17,9 @@ export class StatService {
 
     @InjectModel(Budget)
     private readonly budgetModel: typeof Budget,
+
+    @InjectModel(Transactions)
+    private readonly transactionModel: typeof Transactions,
   ) {}
 
   async totalBalance(userId: number): Promise<{ total_balance: number }> {
@@ -97,6 +101,29 @@ export class StatService {
       budgets: budgetsProgress,
       categories,
       data,
+    };
+  }
+
+  async getPaymentType(userId: number): Promise<any> {
+    const expenses = await this.transactionModel.findAll({
+      where: {
+        userId: userId,
+        type: 'expense',
+      },
+    });
+
+    const incomes = await this.transactionModel.findAll({
+      where: {
+        userId: userId,
+        type: 'income',
+      },
+    });
+
+    const types = [expenses.length, incomes.length];
+    const payment_types = ['expense', 'income'];
+    return {
+      types,
+      payment_types,
     };
   }
 }

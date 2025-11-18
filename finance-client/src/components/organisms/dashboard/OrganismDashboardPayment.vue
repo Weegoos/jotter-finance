@@ -3,7 +3,7 @@
     <q-card class="my-card">
       <q-card-section>
         <div class="text-h6">Payment Types</div>
-        <PolarChart></PolarChart>
+        <PolarChart :series-data="props.paymentData"></PolarChart>
       </q-card-section>
     </q-card>
     <q-card class="my-card">
@@ -21,6 +21,7 @@ const props = defineProps({
   goal: Object,
   categories: Object,
   data: Object,
+  paymentData: Object,
 })
 
 const progress1 = ref(props.goal.progress)

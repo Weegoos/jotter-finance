@@ -1,27 +1,28 @@
 <template>
-  <div class="w-[90%]">
-    <apexchart type="polarArea" :options="chartOptions" :series="series" />
-  </div>
+  <apexchart type="polarArea" width="500" :options="chartOptions" :series="series" />
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 const props = defineProps({
   seriesData: {
-    type: Array,
-    default: () => [14, 23, 21, 17, 15],
-  },
-  labelsData: {
-    type: Array,
-    default: () => ['Food', 'Rent', 'Transport', 'Entertainment', 'Savings'],
+    type: Object,
+    default: () => ({ array: [] }),
   },
 })
 
-const series = ref(props.seriesData)
+const series = ref([])
+
+watch(
+  () => props.seriesData,
+  (val) => {
+    series.value = val.types
+  },
+)
 
 const chartOptions = ref({
-  labels: props.labelsData,
+  labels: ['Expense', 'Income'],
   stroke: {
     colors: ['#fff'],
   },

@@ -31,4 +31,20 @@ export class StatController {
 
     return goal;
   }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('payment_types')
+  @ApiOperation({ summary: 'Get a payment type' })
+  @ApiResponse({
+    status: 201,
+    description: 'Payment Types obtained successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async payment_types(@Req() req: any): Promise<any> {
+    const payment = await this.statService.getPaymentType(req.user.id);
+
+    return payment;
+  }
 }
