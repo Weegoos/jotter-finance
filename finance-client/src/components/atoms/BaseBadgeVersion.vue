@@ -7,8 +7,6 @@ import { getCurrentInstance } from 'vue'
 
 const { proxy } = getCurrentInstance()
 const version = proxy.$projectVersion
-
-console.log(version)
 </script>
 
 <style></style>

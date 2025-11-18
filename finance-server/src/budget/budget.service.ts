@@ -151,17 +151,17 @@ export class BudgetService {
 
     const budgets = await this.budgetModel.findAll({
       where: {
-        userId: userId
-      }
-    })
+        userId: userId,
+      },
+    });
 
     const allBudgets: any[] = [];
-    allBudgets.push(activeBudget.length, inactiveBudget.length, budgets.length)
+    allBudgets.push(activeBudget.length, inactiveBudget.length, budgets.length);
     return {
       activeBudget: activeBudget.length,
       inactiveBudget: inactiveBudget.length,
       total: budgets.length,
-      array: allBudgets
+      array: allBudgets,
     };
   }
 }

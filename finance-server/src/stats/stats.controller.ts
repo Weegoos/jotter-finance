@@ -31,4 +31,54 @@ export class StatController {
 
     return goal;
   }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('payment_types')
+  @ApiOperation({ summary: 'Get a payment type' })
+  @ApiResponse({
+    status: 201,
+    description: 'Payment Types obtained successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async payment_types(@Req() req: any): Promise<any> {
+    const payment = await this.statService.getPaymentType(req.user.id);
+
+    return payment;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('transaction_stats')
+  @ApiOperation({ summary: 'Get a transaction type' })
+  @ApiResponse({
+    status: 201,
+    description: 'Transaction Types obtained successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async transaction_stats(@Req() req: any): Promise<any> {
+    const transaction = await this.statService.getTransactionSeriesWithDates(
+      req.user.id,
+    );
+
+    return transaction;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('account_stats')
+  @ApiOperation({ summary: 'Get a accounts stats' })
+  @ApiResponse({
+    status: 201,
+    description: 'Account Stats obtained successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async account_stats(@Req() req: any): Promise<any> {
+    const accounts = await this.statService.getAccountStats(req.user.id);
+
+    return accounts;
+  }
 }

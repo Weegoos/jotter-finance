@@ -21,26 +21,16 @@
       @deleteCategory="deleteCategory"
       :balance="goal_progress.total_balance"
     />
-    <Payment :goal="goal_progress" />
-
-    <div class="account q-mt-md">
-      <q-card class="grid grid-cols-2 grid-rows-1">
-        <q-card-section class="">
-          <div class="text-h6">Graphs</div>
-        </q-card-section>
-        <q-card-section class="col">
-          <div v-if="activeAccounts.data?.length > 0">
-            <div v-for="(items, index) in activeAccounts.data" :key="index">
-              <p>{{ items.name }}</p>
-
-              <p class="q-mb-md">{{ items.balance }} {{ items.currency }}</p>
-            </div>
-            <Pagination :variableName="Object(activeAccounts)" @pagination="pagination" />
-          </div>
-          <div v-else>Пока нету активных счетов</div>
-        </q-card-section>
-      </q-card>
-    </div>
+    <Payment
+      :goal="goal_progress"
+      :categories="progress_categories"
+      :data="progress_data"
+      :paymentData="payment_types"
+    />
+    <DashboardGraphs
+      :seriesData="transaction_stats"
+      :pieChartSeriesData="account_stats"
+    ></DashboardGraphs>
     <TransactionOverview
       :data="transactions"
       @deleteTransaction="deleteTransaction"
@@ -53,15 +43,13 @@
 import { useQuasar } from 'quasar'
 import { accountLimit, financeServerURL, viewLimitedTransaction } from 'src/boot/config'
 import { Button, Input } from 'src/components/atoms'
-import { Pagination } from 'src/components/molecules'
-import { Balance, Payment, TransactionOverview } from 'src/components/organisms'
+import { Balance, DashboardGraphs, Payment, TransactionOverview } from 'src/components/organisms'
 import { deleteMethod } from 'src/composables/api-method/delete'
 import { postMethod } from 'src/composables/api-method/post'
 import { putMethod } from 'src/composables/api-method/put'
 import { useSocketEvents, useTotalBalance } from 'src/composables/javascript/useSocketEvents'
 import { accountsApiStore } from 'src/stores/accounts-api'
 import { categoryApiStore } from 'src/stores/category-api'
-
 import { statsApiStore } from 'src/stores/stats-api'
 import { transactionApiStore } from 'src/stores/transaction-api'
 import { onMounted, ref } from 'vue'
@@ -79,11 +67,6 @@ const getAccountByStatus = async (page) => {
   activeAccounts.value = accountStore.accountsByStatus
 }
 
-const pagination = (page) => {
-  current.value = page
-  getAccountByStatus(current.value)
-  getTransactions()
-}
 // categories
 const categories = ref([])
 const getCategories = async () => {
@@ -126,9 +109,25 @@ const refreshBalance = async () => {
 }
 
 const goal_progress = ref([])
+const progress_categories = ref([])
+const progress_data = ref([])
+const payment_types = ref([])
+const transaction_stats = ref([])
+const account_stats = ref([])
 const getGoalProgress = async () => {
   await statStore.getTotalBalance($q)
   goal_progress.value = statStore.goal
+  progress_categories.value = statStore.goal.categories
+  progress_data.value = statStore.goal.data
+
+  await statStore.getPaymentTypes($q)
+  payment_types.value = statStore.payment
+
+  await statStore.getTransactionStats($q)
+  transaction_stats.value = statStore.transaction
+
+  await statStore.getAccountStats($q)
+  account_stats.value = statStore.account
 }
 
 const messages = ref([])

@@ -65,8 +65,6 @@ const userServerURL = proxy.$userServerURL
 const $q = useQuasar()
 const router = useRouter()
 
-console.log(mobileWidth)
-
 const password = ref('')
 const email = ref('')
 const isPwd = ref(true)

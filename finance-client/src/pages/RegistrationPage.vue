@@ -108,7 +108,6 @@ const register = async () => {
         },
       },
     })
-    console.log(response.data)
 
     Cookies.set('access_token', response.data.token)
     successMessage($q, `${response.data.user.firstName} вы успешно зарегистрированы!`)

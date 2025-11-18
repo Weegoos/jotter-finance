@@ -6,9 +6,10 @@ import { JwtStrategy } from 'src/auth/jwt.strategy';
 import { ChatGateway } from 'src/chat.gateway';
 import { StatController } from './stats.controller';
 import { Budget } from 'src/budget/budget.model';
+import { Transactions } from 'src/transaction/transaction.model';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Account, Budget])],
+  imports: [SequelizeModule.forFeature([Account, Budget, Transactions])],
   providers: [StatService, JwtStrategy, ChatGateway],
   exports: [StatService],
   controllers: [StatController],

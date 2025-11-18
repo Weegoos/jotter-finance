@@ -7,6 +7,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { Account } from 'src/accounts/account.model';
 import { Budget } from 'src/budget/budget.model';
 import { Categories } from 'src/categories/categories.model';
+import { Transactions } from 'src/transaction/transaction.model';
 
 @Injectable()
 export class StatService {
@@ -16,6 +17,9 @@ export class StatService {
 
     @InjectModel(Budget)
     private readonly budgetModel: typeof Budget,
+
+    @InjectModel(Transactions)
+    private readonly transactionModel: typeof Transactions,
   ) {}
 
   async totalBalance(userId: number): Promise<{ total_balance: number }> {
@@ -36,9 +40,12 @@ export class StatService {
     return { total_balance: total };
   }
 
-  async goalProgress(
-    userId: number,
-  ): Promise<{ total_balance: number; budgets: Object[] }> {
+  async goalProgress(userId: number): Promise<{
+    total_balance: number;
+    budgets: Object[];
+    categories: string[];
+    data: number[];
+  }> {
     if (!userId) throw new UnauthorizedException('User not authorized');
 
     const budgets = await this.budgetModel.findAll({
@@ -64,12 +71,22 @@ export class StatService {
       0,
     );
 
+    const categories: string[] = [];
+    const data: number[] = [];
+
     const budgetsProgress = budgets.map((budget) => {
       const progress =
         budget.dataValues.amount > 0
           ? Number((totalBalance / budget.dataValues.amount).toFixed(2))
           : 0;
 
+      categories.push(
+        budget.dataValues.categories.dataValues.name || 'Unknown',
+      );
+      data.push(progress);
+
+      console.log(categories);
+      console.log(data);
       return {
         budget_id: budget.id,
         category_id: budget.category_id,
@@ -80,8 +97,78 @@ export class StatService {
     });
 
     return {
-      total_balance: totalBalance, // один раз общий баланс
+      total_balance: totalBalance,
       budgets: budgetsProgress,
+      categories,
+      data,
     };
+  }
+
+  async getPaymentType(userId: number): Promise<any> {
+    const expenses = await this.transactionModel.findAll({
+      where: {
+        userId: userId,
+        type: 'expense',
+      },
+    });
+
+    const incomes = await this.transactionModel.findAll({
+      where: {
+        userId: userId,
+        type: 'income',
+      },
+    });
+
+    const types = [expenses.length, incomes.length];
+    const payment_types = ['expense', 'income'];
+    return {
+      types,
+      payment_types,
+    };
+  }
+  async getTransactionSeriesWithDates(
+    userId: number,
+  ): Promise<{ series: any[]; categories: string[] }> {
+    const transactions = await this.transactionModel.findAll({
+      where: { userId },
+      include: { model: Account, as: 'account' },
+    });
+
+    const uniqueDatesSet = new Set<string>();
+    transactions.forEach((tx) => {
+      const date = tx.dataValues.date.slice(0, 10);
+      uniqueDatesSet.add(date);
+    });
+
+    const categories = Array.from(uniqueDatesSet).sort();
+
+    const seriesMap: Record<string, Record<string, number>> = {};
+
+    transactions.forEach((tx) => {
+      const bankName = tx.dataValues.account?.dataValues.name || 'Unknown';
+      const date = tx.dataValues.date.slice(0, 10);
+
+      if (!seriesMap[bankName]) seriesMap[bankName] = {};
+      seriesMap[bankName][date] = tx.dataValues.amount;
+    });
+
+    const series = Object.entries(seriesMap).map(([name, dataByDate]) => {
+      const data = categories.map((date) => dataByDate[date] || 0);
+      return { name, data };
+    });
+
+    return { series, categories };
+  }
+
+  async getAccountStats(userId: number): Promise<any> {
+    // Ждём результат
+    const accounts = await this.accountModel.findAll({
+      where: { userId },
+    });
+
+    // Создаём массив балансов
+    const series = accounts.map((account) => account.balance);
+    const labels = accounts.map((account) => account.name);
+    return { series, labels };
   }
 }
