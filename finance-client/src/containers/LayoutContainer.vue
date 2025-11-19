@@ -1,6 +1,55 @@
 <template>
-  <q-layout view="lhh Lpr lFf">
-    <q-header elevated> </q-header>
+  <q-layout view="hHh Lpr fFf">
+    <q-header elevated class="bg-black">
+      <q-toolbar class="grid grid-cols-2">
+        <div class="flex items-center justify-end gap-14">
+          <div class="flex-none cursor-pointer">
+            <Icon @click="$router.push('/')"></Icon>
+          </div>
+          <div class="flex-2 row q-gutter-sm">
+            <Button
+              class="text-subtitle1 text-balance"
+              :label="'Account'"
+              unelevated
+              rounded
+            >
+            </Button>
+            <Button
+              class="text-subtitle1 text-balance"
+              :label="'Budget'"
+              unelevated
+              rounded
+            >
+            </Button>
+            <Button
+              class="text-subtitle1 text-balance"
+              :label="'About Us'"
+              unelevated
+              rounded
+            >
+            </Button>
+            <Button
+              class="text-subtitle1 text-balance"
+              :label="'Blog'"
+              unelevated
+              rounded
+            >
+            </Button>
+          </div>
+        </div>
+        <div class="flex items-center justify-end gap-4">
+          <Button class="text-subtitle1 text-balance" :label="'Login'" unelevated rounded>
+          </Button>
+          <Button
+            :label="'Sign up'"
+            class="bg-white text-black text-subtitle1 text-balance"
+            unelevated
+            rounded
+          >
+          </Button>
+        </div>
+      </q-toolbar>
+    </q-header>
     <q-drawer
       side="left"
       v-model="drawerLeft"
@@ -80,32 +129,31 @@
 </template>
 
 <script setup>
-import { useQuasar } from 'quasar'
-import { userServerURL } from 'src/boot/config'
-import { Button, DottedSeparator } from 'src/components/atoms'
-import { useApiStore } from 'src/stores/user-api'
-import { onMounted, ref } from 'vue'
-
+// import { useQuasar } from 'quasar'
+// import { userServerURL } from 'src/boot/config'
+import { Button, DottedSeparator, Icon } from "src/components/atoms";
+// import { useApiStore } from 'src/stores/user-api'
+import { onMounted, ref } from "vue";
 // global variables
-const userApi = useApiStore()
-const $q = useQuasar()
+// const userApi = useApiStore()
+// const $q = useQuasar()
 
-const drawerLeft = ref(false)
+const drawerLeft = ref(false);
 
-const role = ref('')
-const getCurrentUserInfo = async () => {
-  await userApi.getUserInfo(userServerURL, $q)
-  role.value = userApi.role
-  if (role.value) {
-    drawerLeft.value = true
-  } else {
-    drawerLeft.value = false
-  }
-}
+// const role = ref('')
+// const getCurrentUserInfo = async () => {
+//   await userApi.getUserInfo(userServerURL, $q)
+//   role.value = userApi.role
+//   if (role.value) {
+//     drawerLeft.value = true
+//   } else {
+//     drawerLeft.value = false
+//   }
+// }
 
 onMounted(() => {
-  getCurrentUserInfo()
-})
+  // getCurrentUserInfo();
+});
 </script>
 
 <style></style>

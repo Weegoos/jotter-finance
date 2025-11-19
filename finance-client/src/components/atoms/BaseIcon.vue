@@ -1,18 +1,16 @@
 <template>
-  <div class="row items-center justify-center gap-2">
-    <q-img
-      v-bind="$attrs"
-      @click="toggleDrawer"
-      :ratio="1 / 1"
-      src="../../assets/Code.png"
-      alt="icon"
+  <div>
+    <img
+      :src="'src/assets/logo/logo.png'"
+      style="width: 80px"
+      spinner-color="primary"
+      spinner-size="82px"
     />
-    <BadgeVersion />
   </div>
 </template>
 
 <script setup>
-import { BadgeVersion } from '.'
+// import { BadgeVersion } from ".";
 </script>
 
 <style></style>

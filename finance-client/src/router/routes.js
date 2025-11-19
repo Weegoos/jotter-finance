@@ -4,6 +4,10 @@ const routes = [
     component: () => import('pages/IndexPage.vue'),
   },
   {
+    path: '/dashboard',
+    component: () => import('pages/DashBoardPage.vue')
+  },
+  {
     path: '/login',
     component: () => import('pages/LoginPage.vue'),
   },

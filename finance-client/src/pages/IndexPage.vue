@@ -1,9 +1,9 @@
 <template>
-  <DashBoardContainer />
+  <div></div>
 </template>
 
 <script setup>
-import DashBoardContainer from 'src/containers/DashBoardContainer.vue'
+// import BaseIcon from "src/components/atoms/BaseIcon.vue";
 </script>
 
 <style></style>
