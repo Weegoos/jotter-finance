@@ -8,6 +8,7 @@ import {
   Put,
   Query,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -24,6 +25,7 @@ import { ITransaction } from './interface/transaction.interface';
 import { UpdateTransactionDTO } from './dto/transaction-update.dto';
 import { PaginationDto } from 'src/pagination/dto/pagination.dto';
 import { PaginatedTransaction } from './interface/paginatedTransaction';
+import type { Response } from 'express';
 
 @ApiTags('transactions')
 @Controller('transactions')
@@ -118,5 +120,31 @@ export class TransactionController {
     this.chatGateway.server.emit('transactionUpdated', allTransactions);
 
     return updatedTransaction;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Post('export/pdf')
+  @ApiOperation({ summary: 'Create a pdf file' })
+  @ApiResponse({ status: 200, description: 'PDF file created successfully' })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Transactions not found' })
+  async exportPdf(@Req() req, @Res() res: Response) {
+    const userId = req.user.id; // если у тебя стоит JWT guard
+    console.log(req.user);
+    
+    const filePath = await this.transactionService.generatePdf(
+      userId,
+      req.user.firstName,
+      req.user.lastName
+    );
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'attachment; filename=transactions.pdf',
+    });
+
+    return res.sendFile(filePath);
   }
 }

@@ -15,7 +15,9 @@ import { Account } from '../accounts/account.model';
 import { Categories } from '../categories/categories.model';
 import { PaginationDto } from 'src/pagination/dto/pagination.dto';
 import { PaginatedTransaction } from './interface/paginatedTransaction';
-
+import PdfPrinter = require('pdfmake');
+import * as fs from 'fs';
+import { join } from 'path';
 @Injectable()
 export class TransactionService {
   constructor(
@@ -197,7 +199,6 @@ export class TransactionService {
     userId: number,
     updates: Partial<Transactions>,
   ): Promise<Transactions> {
-    // Находим транзакцию
     const transaction = await this.transactionModel.findByPk(id);
     if (!transaction) {
       throw new NotFoundException('Transaction not found');
@@ -209,7 +210,6 @@ export class TransactionService {
       );
     }
 
-    // Находим аккаунт
     const account = await this.accountModel.findOne({
       where: {
         id: transaction.getDataValue('accountId'),
@@ -225,10 +225,7 @@ export class TransactionService {
       );
     }
 
-    // Баланс текущего аккаунта
     let balance = Number(account.getDataValue('balance')) || 0;
-
-    // Старая сумма транзакции
     const oldAmount = Number(transaction.getDataValue('amount')) || 0;
     const newAmount = Number(updates.amount ?? oldAmount);
 
@@ -239,8 +236,6 @@ export class TransactionService {
       );
     }
 
-    // Корректируем баланс: убираем старую сумму, добавляем новую
-    // Если тип транзакции "income" — увеличиваем, если "expense" — уменьшаем
     const type = updates.type ?? transaction.getDataValue('type');
 
     if (type === 'income') {
@@ -254,13 +249,151 @@ export class TransactionService {
       );
     }
 
-    // Сохраняем новый баланс аккаунта
     account.setDataValue('balance', balance);
     await account.save();
 
-    // Обновляем транзакцию
     const updatedTransaction = await transaction.update(updates);
 
     return updatedTransaction;
+  }
+
+  async generatePdf(
+    userId: number,
+    firstName: string,
+    lastName: string,
+  ): Promise<string> {
+    if (!userId) throw new UnauthorizedException('User not authorized');
+
+    const transactions = await this.transactionModel.findAll({
+      where: { userId },
+      include: [
+        { model: Account, as: 'account' },
+        { model: Categories, as: 'categories' },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+
+    const fonts = {
+      Roboto: {
+        normal: join(process.cwd(), 'fonts/Roboto-Regular.ttf'),
+        italics: join(process.cwd(), 'fonts/Roboto-Italic.ttf'),
+        bold: join(process.cwd(), 'fonts/Roboto-Bold.ttf'),
+      },
+    };
+
+    const plainTransactions = transactions.map((t) => t.get({ plain: true }));    
+    const body = [
+      [
+        { text: 'Date', style: 'tableHeader' },
+        { text: 'Account', style: 'tableHeader' },
+        { text: 'Category', style: 'tableHeader' },
+        { text: 'Type', style: 'tableHeader' },
+        { text: 'Amount', style: 'tableHeader', alignment: 'right' },
+      ],
+      ...plainTransactions.map((t) => [
+        t.createdAt ? t.createdAt.toISOString().split('T')[0] : '-',
+        t.account?.name ?? '-',
+        t.categories?.name ?? '-',
+        t.type ?? '-',
+        t.amount?.toLocaleString() ?? '0',
+      ]),
+    ];
+
+    const printer = new PdfPrinter(fonts);
+
+    const docDefinition = {
+      content: [
+        // Заголовок компании
+        { text: 'Jotter-Finance', style: 'company' },
+
+        {
+          text: `User: ${firstName} ${lastName}`,
+          style: 'user',
+          margin: [0, 0, 0, 15],
+        },
+
+        { text: 'Transaction Report', style: 'title', margin: [0, 0, 0, 10] },
+
+        {
+          table: {
+            headerRows: 1,
+            widths: ['*', '*', '*', '*', 'auto'],
+            body,
+          },
+          layout: {
+            fillColor: (rowIndex: number) =>
+              rowIndex === 0
+                ? '#dce6f1'
+                : rowIndex % 2 === 0
+                  ? '#f8f8f8'
+                  : null,
+            hLineWidth: () => 0.5,
+            vLineWidth: () => 0.5,
+            hLineColor: () => '#b0b0b0',
+            vLineColor: () => '#b0b0b0',
+            paddingLeft: () => 6,
+            paddingRight: () => 6,
+            paddingTop: () => 4,
+            paddingBottom: () => 4,
+          },
+          margin: [0, 0, 0, 15],
+        },
+
+        {
+          text: `Generated on: ${new Date().toLocaleString()}`,
+          style: 'footer',
+          margin: [0, 10, 0, 5],
+        },
+
+        // Благодарность
+        {
+          text: 'Thank you for using our service!',
+          style: 'thankYou',
+        },
+      ],
+      styles: {
+        company: {
+          fontSize: 18,
+          bold: true,
+          color: '#0a74da',
+          margin: [0, 0, 0, 10],
+        },
+        user: {
+          fontSize: 12,
+          italics: true,
+          alignment: 'right',
+        },
+        title: { fontSize: 16, bold: true, margin: [0, 0, 0, 10] },
+        tableHeader: { bold: true, fontSize: 12, color: '#333' },
+        footer: {
+          fontSize: 10,
+          italics: true,
+          color: '#666',
+          alignment: 'right',
+        },
+        thankYou: {
+          fontSize: 12,
+          bold: true,
+          color: '#0a74da',
+          alignment: 'center',
+          margin: [0, 5, 0, 0],
+        },
+      },
+      defaultStyle: { font: 'Roboto', fontSize: 11 },
+    };
+
+    const pdfDoc = printer.createPdfKitDocument(docDefinition);
+
+    const exportDir = join(process.cwd(), 'exports');
+    if (!fs.existsSync(exportDir)) fs.mkdirSync(exportDir);
+
+    const filePath = join(exportDir, `transactions-${userId}.pdf`);
+    const fileStream = fs.createWriteStream(filePath);
+    pdfDoc.pipe(fileStream);
+    pdfDoc.end();
+
+    return new Promise((resolve) => {
+      fileStream.on('finish', () => resolve(filePath));
+    });
   }
 }

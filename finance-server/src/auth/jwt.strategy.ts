@@ -8,6 +8,9 @@ dotenv.config();
 export interface JwtPayload {
   id: number;
   email: string;
+  role: string; // добавляем роль
+  lastName: string;
+  firstName: string;
 }
 
 @Injectable()
@@ -23,6 +26,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return {
       id: payload.id,
       email: payload.email,
+      role: payload.role,
+      firstName: payload.firstName,
+      lastName: payload.lastName,
     };
   }
 }
