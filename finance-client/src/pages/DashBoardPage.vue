@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import DashBoardContainer from "src/containers/DashBoardContainer.vue";
+import DashBoardContainer from 'src/containers/DashBoardContainer.vue'
 </script>
 
 <style></style>

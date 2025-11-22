@@ -1,17 +1,26 @@
 <template>
   <q-layout view="hHh Lpr fFf">
-    <q-header elevated class="bg-black">
+    <q-header elevated class="bg-black h-[80px] flex items-center">
       <q-toolbar class="grid grid-cols-2">
         <div class="flex items-center justify-end gap-14">
-          <div class="flex-none cursor-pointer">
+          <div class="flex-none fixed-left cursor-pointer">
             <Icon @click="$router.push('/')"></Icon>
           </div>
-          <div class="flex-2 row q-gutter-sm">
+          <div class="flex-2 row q-gutter-sm" v-if="role">
+            <Button
+              class="text-subtitle1 text-balance"
+              :label="'Dashboard'"
+              unelevated
+              rounded
+              @emit-click="$router.push('/dashboard')"
+            >
+            </Button>
             <Button
               class="text-subtitle1 text-balance"
               :label="'Account'"
               unelevated
               rounded
+              @emit-click="$router.push('/accounts')"
             >
             </Button>
             <Button
@@ -19,6 +28,7 @@
               :label="'Budget'"
               unelevated
               rounded
+              @emit-click="$router.push('/budget')"
             >
             </Button>
             <Button
@@ -37,14 +47,21 @@
             </Button>
           </div>
         </div>
-        <div class="flex items-center justify-end gap-4">
-          <Button class="text-subtitle1 text-balance" :label="'Login'" unelevated rounded>
+        <div class="flex items-center justify-end gap-4" v-if="!role">
+          <Button
+            class="text-subtitle1 text-balance"
+            :label="'Login'"
+            unelevated
+            rounded
+            @emit-click="$router.push('/login')"
+          >
           </Button>
           <Button
             :label="'Sign up'"
             class="bg-white text-black text-subtitle1 text-balance"
             unelevated
             rounded
+            @emit-click="$router.push('/register')"
           >
           </Button>
         </div>
@@ -129,30 +146,30 @@
 </template>
 
 <script setup>
-// import { useQuasar } from 'quasar'
-// import { userServerURL } from 'src/boot/config'
+import { useQuasar } from "quasar";
+import { userServerURL } from "src/boot/config";
 import { Button, DottedSeparator, Icon } from "src/components/atoms";
-// import { useApiStore } from 'src/stores/user-api'
+import { useApiStore } from "src/stores/user-api";
 import { onMounted, ref } from "vue";
 // global variables
-// const userApi = useApiStore()
-// const $q = useQuasar()
+const userApi = useApiStore();
+const $q = useQuasar();
 
 const drawerLeft = ref(false);
 
-// const role = ref('')
-// const getCurrentUserInfo = async () => {
-//   await userApi.getUserInfo(userServerURL, $q)
-//   role.value = userApi.role
-//   if (role.value) {
-//     drawerLeft.value = true
-//   } else {
-//     drawerLeft.value = false
-//   }
-// }
+const role = ref("");
+const getCurrentUserInfo = async () => {
+  await userApi.getUserInfo(userServerURL, $q);
+  role.value = userApi.role;
+  if (role.value) {
+    // drawerLeft.value = true;
+  } else {
+    drawerLeft.value = false;
+  }
+};
 
 onMounted(() => {
-  // getCurrentUserInfo();
+  getCurrentUserInfo();
 });
 </script>
 
