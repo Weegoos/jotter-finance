@@ -12,6 +12,7 @@ import { PaginationDto } from 'src/pagination/dto/pagination.dto';
 import { ChatGateway } from 'src/chat.gateway';
 import { StatService } from 'src/stats/stats.service';
 import { IAccount } from './interface/account.interface';
+import { Bank } from 'src/banks/bank.model';
 
 @Injectable()
 export class AccountService {
@@ -20,12 +21,24 @@ export class AccountService {
     private readonly accountModel: typeof Account,
     private readonly statsService: StatService,
     private readonly chatGateway: ChatGateway,
+    @InjectModel(Bank)
+    private readonly bankModel: typeof Bank,
   ) {}
 
   async create(userId: number, account: Partial<IAccount>): Promise<Account> {
     if (!userId) {
       throw new UnauthorizedException('User not authorized');
     }
+
+      const bank = await this.bankModel.findByPk(account.bankId);
+  if (!bank) {
+    throw new BadRequestException('Bank not found');
+  }
+
+  if (!account.bankId) {
+  throw new BadRequestException('bankId is required');
+}
+
 
     const newAccount: IAccount = {
       userId,
@@ -34,6 +47,7 @@ export class AccountService {
       type: account.type!,
       balance: account.balance ?? 0,
       active: account.active ?? true,
+      bankId: account.bankId,
     };
 
     if (!newAccount.name || !newAccount.currency || !newAccount.type) {

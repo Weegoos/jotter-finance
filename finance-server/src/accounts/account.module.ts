@@ -7,11 +7,12 @@ import { AccountController } from './account.controller';
 import { JwtStrategy } from '../auth/jwt.strategy';
 import { ChatGateway } from '../chat.gateway';
 import { Stats } from 'src/stats/stats.module';
+import { Bank } from 'src/banks/bank.model';
 
 dotenv.config();
 
 @Module({
-  imports: [SequelizeModule.forFeature([Account]), Stats],
+  imports: [SequelizeModule.forFeature([Bank, Account]), Stats],
   providers: [AccountService, JwtStrategy, ChatGateway],
   exports: [AccountService],
   controllers: [AccountController],

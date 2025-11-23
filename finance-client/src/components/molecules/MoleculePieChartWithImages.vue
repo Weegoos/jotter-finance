@@ -7,7 +7,7 @@
 import { ref, watch } from 'vue'
 
 const props = defineProps({
-  seriesData: Object, // { series: [], labels: [] }
+  seriesData: Object,
 })
 
 const ready = ref(false)
@@ -17,7 +17,7 @@ const chartOptions = ref({
     width: 380,
     type: 'pie',
   },
-  labels: [], // <-- пустой массив по умолчанию
+  labels: [],
   colors: ['#93C3EE', '#E5C6A0', '#669DB5'],
   fill: {
     type: 'image',
@@ -56,7 +56,6 @@ watch(
       series.value = [...val.series]
       chartOptions.value.labels = [...val.labels]
 
-      // подрезаем картинки под серии
       chartOptions.value.fill.image.src = chartOptions.value.fill.image.src.slice(
         0,
         val.series.length,

@@ -68,10 +68,7 @@
         class="text-black"
         rounded
         icon="mdi-plus"
-        @emit-click="
-          isCreateAccountDialog = true;
-          console.log('777');
-        "
+        @emit-click="isCreateAccountDialog = true"
       ></Button>
       <Dialog :modelValue="isCreateAccountDialog">
         <template #content>

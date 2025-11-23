@@ -1,4 +1,5 @@
-import { Table, Column, Model, DataType } from 'sequelize-typescript';
+import { Table, Column, Model, DataType, HasMany } from 'sequelize-typescript';
+import { Account } from 'src/accounts/account.model';
 
 export interface BankCreationAttrs {
   name: string;
@@ -22,4 +23,7 @@ export class Bank extends Model<Bank, BankCreationAttrs> {
 
   @Column(DataType.STRING)
   icon_url: string;
+
+  @HasMany(() => Account)
+  accounts: Account[];
 }
