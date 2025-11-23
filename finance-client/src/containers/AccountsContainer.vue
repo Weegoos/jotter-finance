@@ -21,23 +21,33 @@
         </q-card-section>
         <q-card-section class="grid grid-cols-2 grid-rows-1 items-center">
           <div>
-            <span class="text-subtitle1"> Balance: {{ item.balance }} {{ item.currency }}</span>
+            <span class="text-subtitle1">
+              Balance: {{ item.balance }} {{ item.currency }}</span
+            >
           </div>
           <div>
             <span
               class="text-subtitle1 p-[8px]"
               style="border: solid #000 1px; border-radius: 48px"
-              >{{ item.active === true ? 'Активен' : 'Неактивен' }}</span
+              >{{ item.active === true ? "Активен" : "Неактивен" }}</span
             >
           </div>
         </q-card-section>
         <Dialog :modelValue="openEditAccountDialog">
           <template #content>
-            <Close :sectionName="'Изменение сведения'" @emitClick="openEditAccountDialog = false" />
+            <Close
+              :sectionName="'Изменение сведения'"
+              @emitClick="openEditAccountDialog = false"
+            />
             <section>
               <Input label="Название счета" v-model="name" class="q-mb-sm" />
               <Input label="Тип счета" v-model="type" class="q-mb-sm" />
-              <Input label="Баланс в счете" v-model="balance" type="number" class="q-mb-sm" />
+              <Input
+                label="Баланс в счете"
+                v-model="balance"
+                type="number"
+                class="q-mb-sm"
+              />
               <Input label="Валюта" v-model="currency" class="q-mb-sm" />
             </section>
           </template>
@@ -53,16 +63,22 @@
       </q-card>
     </div>
     <Pagination :variableName="Object(userAccounts)" @pagination="pagination" />
-    <div class="q-ma-md q-pa-sm">
+    <div class="q-ma-md q-pa-sm grid justify-end">
       <Button
         class="text-black"
         rounded
         icon="mdi-plus"
-        @emit-click="isCreateAccountDialog = true"
+        @emit-click="
+          isCreateAccountDialog = true;
+          console.log('777');
+        "
       ></Button>
       <Dialog :modelValue="isCreateAccountDialog">
         <template #content>
-          <Close :sectionName="'Добавьте счет'" @emitClick="isCreateAccountDialog = false" />
+          <Close
+            :sectionName="'Добавьте счет'"
+            @emitClick="isCreateAccountDialog = false"
+          />
           <Input class="q-mb-sm" :label="'Название счета'" v-model="accountName"></Input>
           <Input class="q-mb-sm" :label="'Тип счета'" v-model="accountType"></Input>
           <Input
@@ -91,107 +107,107 @@
 </template>
 
 <script setup>
-import { useQuasar } from 'quasar'
-import { accountLimit, financeServerURL } from 'src/boot/config'
-import { Button, Input, Select } from 'src/components/atoms'
-import { Close, Dialog, Dropdown, Pagination } from 'src/components/molecules'
-import { deleteMethod } from 'src/composables/api-method/delete'
+import { useQuasar } from "quasar";
+import { accountLimit, financeServerURL } from "src/boot/config";
+import { Button, Input, Select } from "src/components/atoms";
+import { Close, Dialog, Dropdown, Pagination } from "src/components/molecules";
+import { deleteMethod } from "src/composables/api-method/delete";
 // import { patchMethod } from 'src/composables/api-method/patch'
-import { postMethod } from 'src/composables/api-method/post'
-import { putMethod } from 'src/composables/api-method/put'
-import { useSocketEvents } from 'src/composables/javascript/useSocketEvents'
-import { accountsApiStore } from 'src/stores/accounts-api'
-import { computed, onMounted, ref } from 'vue'
+import { postMethod } from "src/composables/api-method/post";
+import { putMethod } from "src/composables/api-method/put";
+import { useSocketEvents } from "src/composables/javascript/useSocketEvents";
+import { accountsApiStore } from "src/stores/accounts-api";
+import { computed, onMounted, ref } from "vue";
 // global variables
 
-const accountApi = accountsApiStore()
-const $q = useQuasar()
+const accountApi = accountsApiStore();
+const $q = useQuasar();
 
-const userAccounts = ref([])
-const currenciesArray = ref(['USD', 'Euro'])
+const userAccounts = ref([]);
+const currenciesArray = ref(["USD", "Euro"]);
 
-const current = ref(1)
+const current = ref(1);
 const getUserAccounts = async (page) => {
-  await accountApi.getAllAccounts($q, accountLimit, page)
-  userAccounts.value = accountApi.accounts
-}
+  await accountApi.getAllAccounts($q, accountLimit, page);
+  userAccounts.value = accountApi.accounts;
+};
 
 const pagination = (page) => {
-  current.value = page
-  getUserAccounts(current.value)
-}
+  current.value = page;
+  getUserAccounts(current.value);
+};
 
-const messages = ref([])
+const messages = ref([]);
 useSocketEvents({
   accountUpdated: () => {
-    getUserAccounts(current.value)
+    getUserAccounts(current.value);
   },
   newMessage: (msg) => messages.value.push(msg),
-})
+});
 
-const openEditAccountDialog = ref(false)
-const accountStatus = ref(null)
+const openEditAccountDialog = ref(false);
+const accountStatus = ref(null);
 const accountButtons = computed(() => [
   {
-    label: 'Изменить статус',
-    icon: 'mdi-credit-card-chip',
+    label: "Изменить статус",
+    icon: "mdi-credit-card-chip",
     action: (account) => {
-      accountStatus.value = !account.active
+      accountStatus.value = !account.active;
       const payload = {
         active: accountStatus.value,
-      }
+      };
 
-      putMethod(financeServerURL, `accounts/${account.id}`, payload, $q, {})
+      putMethod(financeServerURL, `accounts/${account.id}`, payload, $q, {});
     },
   },
   {
-    label: 'Редактировать',
-    icon: 'mdi-pencil',
+    label: "Редактировать",
+    icon: "mdi-pencil",
     action: (account) => {
-      openEditAccountDialog.value = true
-      name.value = account.name
-      type.value = account.type
-      currency.value = account.currency
-      balance.value = account.balance
+      openEditAccountDialog.value = true;
+      name.value = account.name;
+      type.value = account.type;
+      currency.value = account.currency;
+      balance.value = account.balance;
     },
   },
   {
-    label: 'Удалить',
-    icon: 'mdi-delete',
+    label: "Удалить",
+    icon: "mdi-delete",
     action: (account) => {
-      deleteAccount(account)
+      deleteAccount(account);
     },
   },
-])
+]);
 
 const handleClick = (actionItem, accountItem) => {
   if (actionItem.action) {
-    actionItem.action(accountItem)
+    actionItem.action(accountItem);
   }
-}
+};
 const deleteAccount = async (data) => {
-  await deleteMethod(financeServerURL, 'accounts', data.id)
-}
+  await deleteMethod(financeServerURL, "accounts", data.id);
+};
 
-const name = ref('')
-const type = ref('')
-const currency = ref('')
-const balance = ref('')
+const name = ref("");
+const type = ref("");
+const currency = ref("");
+const balance = ref("");
 const editAccountInformation = async (account) => {
   const payload = {
     name: name.value,
     type: type.value,
     currency: currency.value,
     balance: balance.value,
-  }
+  };
 
-  await putMethod(financeServerURL, `accounts/${account.id}`, payload, $q, {})
-}
+  await putMethod(financeServerURL, `accounts/${account.id}`, payload, $q, {});
+};
 
-const accountName = ref('')
-const accountType = ref('')
-const accountBalance = ref('')
-const currencyName = ref(null)
+const accountName = ref("");
+const accountType = ref("");
+const accountBalance = ref("");
+const currencyName = ref(null);
 
 const createAccount = async () => {
   const payload = {
@@ -199,13 +215,13 @@ const createAccount = async () => {
     type: accountType.value,
     currency: currencyName.value,
     balance: accountBalance.value,
-    active: 'false',
-  }
-  await postMethod(financeServerURL, 'accounts', payload, $q, 'Счет успешно создан')
-}
+    active: "false",
+  };
+  await postMethod(financeServerURL, "accounts", payload, $q, "Счет успешно создан");
+};
 
-const isCreateAccountDialog = ref(false)
+const isCreateAccountDialog = ref(false);
 onMounted(() => {
-  getUserAccounts(current.value)
-})
+  getUserAccounts(current.value);
+});
 </script>

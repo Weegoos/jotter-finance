@@ -12,6 +12,8 @@ import { Transactions } from './transaction/transaction.model';
 import { TransactionModule } from './transaction/transaction.module';
 import { Stats } from './stats/stats.module';
 import { BudgetModule } from './budget/budget.module';
+import { BankModule } from './banks/bank.module';
+import { Bank } from './banks/bank.model';
 
 @Module({
   imports: [
@@ -25,7 +27,7 @@ import { BudgetModule } from './budget/budget.module';
         username: configService.get<string>('DB_USER'),
         password: configService.get<string>('DB_PASS'),
         database: configService.get<string>('DB_NAME'),
-        models: [Budget, Account, Categories, Transactions] as const, // ✅ здесь
+        models: [Budget, Account, Categories, Transactions, Bank] as const,
         autoLoadModels: true,
         synchronize: true,
       }),
@@ -35,6 +37,7 @@ import { BudgetModule } from './budget/budget.module';
     BudgetModule,
     AccountModule,
     Stats,
+    BankModule,
   ],
   providers: [AppService, ChatGateway],
 })

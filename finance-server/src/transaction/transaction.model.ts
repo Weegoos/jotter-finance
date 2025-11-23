@@ -38,7 +38,7 @@ export class Transactions extends Model<Transactions, ITransaction> {
   categories?: Categories;
 
   @Column({
-    type: DataType.DECIMAL(14, 2), 
+    type: DataType.DECIMAL(14, 2),
   })
   amount: number;
 
