@@ -8,7 +8,7 @@ dotenv.config();
 export interface JwtPayload {
   id: number;
   email: string;
-  role: string; // добавляем роль
+  role: string;
   lastName: string;
   firstName: string;
 }

@@ -131,13 +131,13 @@ export class TransactionController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Transactions not found' })
   async exportPdf(@Req() req, @Res() res: Response) {
-    const userId = req.user.id; // если у тебя стоит JWT guard
+    const userId = req.user.id;
     console.log(req.user);
-    
+
     const filePath = await this.transactionService.generatePdf(
       userId,
       req.user.firstName,
-      req.user.lastName
+      req.user.lastName,
     );
 
     res.set({

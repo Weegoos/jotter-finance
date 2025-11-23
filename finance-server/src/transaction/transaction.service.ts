@@ -281,7 +281,7 @@ export class TransactionService {
       },
     };
 
-    const plainTransactions = transactions.map((t) => t.get({ plain: true }));    
+    const plainTransactions = transactions.map((t) => t.get({ plain: true }));
     const body = [
       [
         { text: 'Date', style: 'tableHeader' },

@@ -20,6 +20,7 @@
       @createCategory="createCategory"
       @deleteCategory="deleteCategory"
       :balance="goal_progress.total_balance"
+      @downloadReport="downloadReport"
     />
     <Payment
       :goal="goal_progress"
@@ -40,7 +41,8 @@
 </template>
 
 <script setup>
-import { useQuasar } from 'quasar'
+import { Cookies, useQuasar } from 'quasar'
+import axios from 'axios'
 import { accountLimit, financeServerURL, viewLimitedTransaction } from 'src/boot/config'
 import { Button, Input } from 'src/components/atoms'
 import { Balance, DashboardGraphs, Payment, TransactionOverview } from 'src/components/organisms'
@@ -91,14 +93,43 @@ const getTransactions = async () => {
 
 const createTransaction = async (payload) => {
   await postMethod(financeServerURL, 'transactions', payload, $q, 'Транзакция создана успешно')
+  getTransactions()
 }
 
 const deleteTransaction = async (row) => {
   await deleteMethod(financeServerURL, 'transactions', row.id)
+  getTransactions()
 }
 
 const updateTransaction = async (payload, transactionID) => {
   await putMethod(financeServerURL, `transactions/${transactionID}`, payload, $q, {})
+  getTransactions()
+}
+
+const downloadReport = async () => {
+  try {
+    const response = await axios.post(
+      `${financeServerURL}transactions/export/pdf`,
+      { title: 'My PDF Title' },
+      {
+        responseType: 'blob', // важно!
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${Cookies.get('access_token')}`,
+        },
+      },
+    )
+    const file = new Blob([response.data], { type: 'application/pdf' })
+
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(file)
+    link.download = 'Transaction Report.pdf'
+    link.click()
+
+    URL.revokeObjectURL(link.href)
+  } catch (error) {
+    console.error('Ошибка при генерации PDF:', error)
+  }
 }
 
 // stats

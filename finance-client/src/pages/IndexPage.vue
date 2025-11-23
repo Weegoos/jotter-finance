@@ -21,15 +21,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted } from 'vue'
 
-const videoEl = ref(null);
+const videoEl = ref(null)
 
 onMounted(() => {
   if (videoEl.value) {
-    videoEl.value.play().catch((err) => console.warn("Autoplay blocked:", err));
+    videoEl.value.play().catch((err) => console.warn('Autoplay blocked:', err))
   }
-});
+})
 </script>
 
 <style scoped>

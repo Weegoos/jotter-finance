@@ -31,19 +31,9 @@
               @emit-click="$router.push('/budget')"
             >
             </Button>
-            <Button
-              class="text-subtitle1 text-balance"
-              :label="'About Us'"
-              unelevated
-              rounded
-            >
+            <Button class="text-subtitle1 text-balance" :label="'About Us'" unelevated rounded>
             </Button>
-            <Button
-              class="text-subtitle1 text-balance"
-              :label="'Blog'"
-              unelevated
-              rounded
-            >
+            <Button class="text-subtitle1 text-balance" :label="'Blog'" unelevated rounded>
             </Button>
           </div>
         </div>
@@ -146,31 +136,31 @@
 </template>
 
 <script setup>
-import { useQuasar } from "quasar";
-import { userServerURL } from "src/boot/config";
-import { Button, DottedSeparator, Icon } from "src/components/atoms";
-import { useApiStore } from "src/stores/user-api";
-import { onMounted, ref } from "vue";
+import { useQuasar } from 'quasar'
+import { userServerURL } from 'src/boot/config'
+import { Button, DottedSeparator, Icon } from 'src/components/atoms'
+import { useApiStore } from 'src/stores/user-api'
+import { onMounted, ref } from 'vue'
 // global variables
-const userApi = useApiStore();
-const $q = useQuasar();
+const userApi = useApiStore()
+const $q = useQuasar()
 
-const drawerLeft = ref(false);
+const drawerLeft = ref(false)
 
-const role = ref("");
+const role = ref('')
 const getCurrentUserInfo = async () => {
-  await userApi.getUserInfo(userServerURL, $q);
-  role.value = userApi.role;
+  await userApi.getUserInfo(userServerURL, $q)
+  role.value = userApi.role
   if (role.value) {
     // drawerLeft.value = true;
   } else {
-    drawerLeft.value = false;
+    drawerLeft.value = false
   }
-};
+}
 
 onMounted(() => {
-  getCurrentUserInfo();
-});
+  getCurrentUserInfo()
+})
 </script>
 
 <style></style>

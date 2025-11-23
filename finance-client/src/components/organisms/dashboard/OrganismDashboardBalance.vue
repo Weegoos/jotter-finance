@@ -15,7 +15,13 @@
           icon="mdi-plus"
           @emit-click="addPayment = true"
         />
-        <Button class="text-black bg-white" :label="'Send Invoice'" rounded icon="mdi-arrow-up" />
+        <Button
+          class="text-black bg-white"
+          :label="'Download'"
+          rounded
+          icon="mdi-download"
+          @emit-click="emit('downloadReport')"
+        />
         <Dropdown
           dropdown-icon="mdi-dots-horizontal"
           :data="dashboardBalanceButtons"
@@ -129,7 +135,7 @@ const handleClickCategory = (action, category) => {
   action.action(category)
 }
 
-const emit = defineEmits(['submit', 'createCategory', 'deleteCategory'])
+const emit = defineEmits(['submit', 'createCategory', 'deleteCategory', 'downloadReport'])
 
 const propsAccounts = computed(() =>
   props.activeAccounts.map((account) => ({

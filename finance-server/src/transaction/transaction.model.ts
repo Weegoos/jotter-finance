@@ -38,8 +38,7 @@ export class Transactions extends Model<Transactions, ITransaction> {
   categories?: Categories;
 
   @Column({
-    type: DataType.DECIMAL(14, 2), // корректно для денежных сумм
-    allowNull: false,
+    type: DataType.DECIMAL(14, 2), 
   })
   amount: number;
 
