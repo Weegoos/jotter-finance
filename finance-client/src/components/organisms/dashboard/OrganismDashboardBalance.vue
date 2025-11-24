@@ -43,8 +43,12 @@
             v-model="category"
             class="q-mb-sm"
           ></Select>
-          <Input label="Сумма операции" :type="'Number'" v-model="amount" class="q-mb-sm"></Input>
-          <Select label="Тип операции" v-model="type" class="q-mb-sm"></Select>
+          <Input label="Сумма операции" :type="'Number'" v-model="amount" class="q-mb-sm">
+            <template #append>
+              <q-icon name="mdi-currency-eur" />
+            </template>
+          </Input>
+
           <Input label="Описание" v-model="description" autogrow class="q-mb-sm"></Input>
           <Select
             label="Повторять (опционально)"
@@ -67,14 +71,20 @@
             v-model="categoryType"
             class="q-mb-sm"
           ></Select>
-          <Button class="text-black" label="Создать" @emit-click="createCategory"></Button>
+          <Button
+            class="text-black"
+            label="Создать"
+            @emit-click="createCategory"
+          ></Button>
           <DottedSeparator />
 
           <q-list bordered v-for="(item, index) in props.categories" :key="index">
             <q-item clickable v-ripple>
               <q-item-section avatar>
                 <q-icon
-                  :name="item.type === 'expense' ? 'mdi-trending-down' : 'mdi-trending-up'"
+                  :name="
+                    item.type === 'expense' ? 'mdi-trending-down' : 'mdi-trending-up'
+                  "
                   :class="item.type === 'expense' ? 'text-red' : 'text-green'"
                 />
               </q-item-section>
@@ -97,100 +107,99 @@
 </template>
 
 <script setup>
-import { Button, DottedSeparator, Input, Select } from 'src/components/atoms'
-import { Close, Dialog, Dropdown } from 'src/components/molecules'
-import { computed, ref, watch } from 'vue'
+import { Button, DottedSeparator, Input, Select } from "src/components/atoms";
+import { Close, Dialog, Dropdown } from "src/components/molecules";
+import { computed, ref } from "vue";
 const props = defineProps({
   activeAccounts: Array,
   categories: Array,
   balance: Number,
-})
+});
 
-const isCategory = ref(false)
+const isCategory = ref(false);
 const dashboardBalanceButtons = computed(() => [
   {
-    label: 'Create Category',
-    icon: 'mdi-plus',
+    label: "Create Category",
+    icon: "mdi-plus",
     action: () => {
-      isCategory.value = true
+      isCategory.value = true;
     },
   },
-])
+]);
 
 const dashboardCategoryButtons = computed(() => [
   {
-    icon: 'mdi-delete',
-    label: 'Удалить',
+    icon: "mdi-delete",
+    label: "Удалить",
     action: (item) => {
-      emit('deleteCategory', item)
+      emit("deleteCategory", item);
     },
   },
-])
+]);
 
 function handleClick(item) {
-  if (item.action) item.action()
+  if (item.action) item.action();
 }
 
 const handleClickCategory = (action, category) => {
-  action.action(category)
-}
+  action.action(category);
+};
 
-const emit = defineEmits(['submit', 'createCategory', 'deleteCategory', 'downloadReport'])
+const emit = defineEmits([
+  "submit",
+  "createCategory",
+  "deleteCategory",
+  "downloadReport",
+]);
 
 const propsAccounts = computed(() =>
   props.activeAccounts.map((account) => ({
     label: account.name,
     value: account.id,
-  })),
-)
+  }))
+);
 
 const propsCategories = computed(() =>
   props.categories.map((category) => ({
     label: category.name,
     value: category.id,
     type: category.type,
-  })),
-)
+  }))
+);
 
-const today = new Date().toISOString().split('T')[0]
+const today = new Date().toISOString().split("T")[0];
 
-const addPayment = ref(false)
-const account = ref('')
-const category = ref('')
-const amount = ref('')
-const type = ref(category.value.type)
+const addPayment = ref(false);
+const account = ref("");
+const category = ref("");
+const amount = ref("");
 
-watch(
-  () => category.value.type,
-  (newVal) => {
-    type.value = newVal
-  },
-)
-const description = ref('')
-const repeat = ref('')
+const description = ref("");
+const repeat = ref("");
 const submitForm = () => {
   const payload = {
     accountId: account.value.value,
     categoryId: category.value.value,
     amount: Number(amount.value),
-    type: type.value,
+    type: category.value.type,
     description: description.value,
     repeat_rule: repeat.value,
     date: today,
-  }
-  emit('submit', payload)
-}
+  };
 
-const categoryName = ref('')
-const categoryType = ref('')
+  emit("submit", payload);
+};
+
+const categoryName = ref("");
+const categoryType = ref("");
 const createCategory = () => {
   const payload = {
     name: categoryName.value,
     type: categoryType.value,
-  }
+  };
 
-  emit('createCategory', payload)
-}
+  emit("createCategory", payload);
+};
 </script>
 
 <style></style>

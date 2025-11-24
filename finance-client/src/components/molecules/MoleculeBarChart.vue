@@ -1,93 +1,88 @@
 <template>
   <div class="w-[90%]">
-    <apexchart type="bar" :options="chartOptions" :series="series" height="350" />
+    <apexchart
+      v-if="ready"
+      type="bar"
+      :options="chartOptions"
+      :series="series"
+      height="350"
+    />
   </div>
 </template>
 
 <script setup>
-// import ApexCharts from "vue3-apexcharts";
-import { ref, watch } from 'vue'
+import { ref, watch } from "vue";
 
 const props = defineProps({
-  seriesData: Object,
-  categories: Object,
-})
-const series = ref([])
+  seriesData: Array,
+  categories: Array,
+});
+
+const series = ref([]);
+const ready = ref(false);
 
 watch(
   () => props.seriesData,
   (value) => {
-    if (value && Array.isArray(value)) {
-      // умножаем на 100
-      const data = value.map((v) => Number((v * 100).toFixed(2)))
+    if (Array.isArray(value) && value.length > 0) {
+      const data = value.map((v) => Number((v * 100).toFixed(2)));
 
       series.value = [
         {
-          name: 'Goal Progress',
-          data: data,
+          name: "Goal Progress",
+          data,
         },
-      ]
-    } else {
-      series.value = []
+      ];
+
+      ready.value = false;
+      requestAnimationFrame(() => (ready.value = true));
     }
   },
-  { immediate: true },
-)
+  { immediate: true }
+);
 
 const chartOptions = ref({
-  chart: {
-    type: 'bar',
-    height: 350,
-  },
+  chart: { type: "bar", height: 350 },
   plotOptions: {
-    bar: {
-      borderRadius: 10,
-      dataLabels: {
-        position: 'top',
-      },
-    },
+    bar: { borderRadius: 10, dataLabels: { position: "top" } },
   },
   dataLabels: {
     enabled: true,
-    formatter: function (val) {
-      return val + '%'
-    },
+    formatter: (val) => val + "%",
     offsetY: -20,
-    style: {
-      fontSize: '12px',
-      colors: ['#304758'],
-    },
+    style: { fontSize: "12px", colors: ["#304758"] },
   },
   xaxis: {
-    categories: props.categories,
-    position: 'top',
+    categories: [],
+    position: "top",
     axisBorder: { show: false },
     axisTicks: { show: false },
-    crosshairs: {
-      fill: {
-        type: 'gradient',
-        gradient: {
-          colorFrom: '#D8E3F0',
-          colorTo: '#BED1E6',
-          stops: [0, 100],
-          opacityFrom: 0.4,
-          opacityTo: 0.5,
-        },
-      },
-    },
     tooltip: { enabled: true },
   },
   yaxis: {
+    labels: { show: false, formatter: (val) => val + "%" },
     axisBorder: { show: false },
     axisTicks: { show: false },
-    labels: { show: false, formatter: (val) => val + '%' },
   },
   title: {
-    text: 'Goals',
+    text: "Goals",
     floating: true,
     offsetY: 330,
-    align: 'center',
-    style: { color: '#444' },
+    align: "center",
+    style: { color: "#444" },
   },
-})
+});
+
+watch(
+  () => props.categories,
+  (value) => {
+    if (Array.isArray(value) && value.length > 0) {
+      chartOptions.value.xaxis.categories = value;
+
+      ready.value = false;
+      requestAnimationFrame(() => (ready.value = true));
+    }
+  },
+  { immediate: true }
+);
 </script>
