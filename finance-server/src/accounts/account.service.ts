@@ -30,15 +30,14 @@ export class AccountService {
       throw new UnauthorizedException('User not authorized');
     }
 
-      const bank = await this.bankModel.findByPk(account.bankId);
-  if (!bank) {
-    throw new BadRequestException('Bank not found');
-  }
+    const bank = await this.bankModel.findByPk(account.bankId);
+    if (!bank) {
+      throw new BadRequestException('Bank not found');
+    }
 
-  if (!account.bankId) {
-  throw new BadRequestException('bankId is required');
-}
-
+    if (!account.bankId) {
+      throw new BadRequestException('bankId is required');
+    }
 
     const newAccount: IAccount = {
       userId,

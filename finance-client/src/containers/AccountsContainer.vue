@@ -21,33 +21,23 @@
         </q-card-section>
         <q-card-section class="grid grid-cols-2 grid-rows-1 items-center">
           <div>
-            <span class="text-subtitle1">
-              Balance: {{ item.balance }} {{ item.currency }}</span
-            >
+            <span class="text-subtitle1"> Balance: {{ item.balance }} {{ item.currency }}</span>
           </div>
           <div>
             <span
               class="text-subtitle1 p-[8px]"
               style="border: solid #000 1px; border-radius: 48px"
-              >{{ item.active === true ? "Активен" : "Неактивен" }}</span
+              >{{ item.active === true ? 'Активен' : 'Неактивен' }}</span
             >
           </div>
         </q-card-section>
         <Dialog :modelValue="openEditAccountDialog">
           <template #content>
-            <Close
-              :sectionName="'Изменение сведения'"
-              @emitClick="openEditAccountDialog = false"
-            />
+            <Close :sectionName="'Изменение сведения'" @emitClick="openEditAccountDialog = false" />
             <section>
               <Input label="Название счета" v-model="name" class="q-mb-sm" />
               <Input label="Тип счета" v-model="type" class="q-mb-sm" />
-              <Input
-                label="Баланс в счете"
-                v-model="balance"
-                type="number"
-                class="q-mb-sm"
-              />
+              <Input label="Баланс в счете" v-model="balance" type="number" class="q-mb-sm" />
               <Input label="Валюта" v-model="currency" class="q-mb-sm" />
             </section>
           </template>
@@ -72,23 +62,39 @@
       ></Button>
       <Dialog :modelValue="isCreateAccountDialog">
         <template #content>
-          <Close
-            :sectionName="'Добавьте счет'"
-            @emitClick="isCreateAccountDialog = false"
-          />
-          <Input class="q-mb-sm" :label="'Название счета'" v-model="accountName"></Input>
-          <Input class="q-mb-sm" :label="'Тип счета'" v-model="accountType"></Input>
+          <Close :sectionName="'Добавьте счет'" @emitClick="isCreateAccountDialog = false" />
+          <q-select
+            dense
+            outlined
+            v-model="selectedBank"
+            use-input
+            option-value="id"
+            option-label="name"
+            emit-value
+            map-options
+            input-debounce="0"
+            label="Выберите банк"
+            :options="createAccountBankOptions"
+            @filter="filterFn"
+            @update:model-value="onBankSelect"
+            class="q-mb-sm"
+          >
+            <template v-slot:no-option>
+              <q-item>
+                <q-item-section class="text-grey"> No results </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
           <Input
             class="q-mb-sm"
             :label="'Укажите баланс'"
             :type="'number'"
             v-model="accountBalance"
-          ></Input>
-          <Select
-            :label="'Выберите валюту'"
-            v-model="currencyName"
-            :options="currenciesArray"
-          ></Select>
+          >
+            <template v-slot:append>
+              <q-icon name="mdi-currency-eur" />
+            </template>
+          </Input>
         </template>
         <template #actions>
           <Button
@@ -104,121 +110,160 @@
 </template>
 
 <script setup>
-import { useQuasar } from "quasar";
-import { accountLimit, financeServerURL } from "src/boot/config";
-import { Button, Input, Select } from "src/components/atoms";
-import { Close, Dialog, Dropdown, Pagination } from "src/components/molecules";
-import { deleteMethod } from "src/composables/api-method/delete";
+import { useQuasar } from 'quasar'
+import { accountLimit, financeServerURL } from 'src/boot/config'
+import { Button, Input } from 'src/components/atoms'
+import { Close, Dialog, Dropdown, Pagination } from 'src/components/molecules'
+import { deleteMethod } from 'src/composables/api-method/delete'
 // import { patchMethod } from 'src/composables/api-method/patch'
-import { postMethod } from "src/composables/api-method/post";
-import { putMethod } from "src/composables/api-method/put";
-import { useSocketEvents } from "src/composables/javascript/useSocketEvents";
-import { accountsApiStore } from "src/stores/accounts-api";
-import { computed, onMounted, ref } from "vue";
+import { postMethod } from 'src/composables/api-method/post'
+import { putMethod } from 'src/composables/api-method/put'
+import { useSocketEvents } from 'src/composables/javascript/useSocketEvents'
+import { accountsApiStore } from 'src/stores/accounts-api'
+import { bankApiStore } from 'src/stores/bank-api'
+import { computed, onMounted, ref } from 'vue'
+
 // global variables
+const accountApi = accountsApiStore()
+const bankApi = bankApiStore()
+const $q = useQuasar()
 
-const accountApi = accountsApiStore();
-const $q = useQuasar();
+const userAccounts = ref([])
 
-const userAccounts = ref([]);
-const currenciesArray = ref(["USD", "Euro"]);
-
-const current = ref(1);
+const current = ref(1)
+// account
 const getUserAccounts = async (page) => {
-  await accountApi.getAllAccounts($q, accountLimit, page);
-  userAccounts.value = accountApi.accounts;
-};
+  await accountApi.getAllAccounts($q, accountLimit, page)
+  userAccounts.value = accountApi.accounts
+}
 
 const pagination = (page) => {
-  current.value = page;
-  getUserAccounts(current.value);
-};
+  current.value = page
+  getUserAccounts(current.value)
+}
 
-const messages = ref([]);
+const messages = ref([])
 useSocketEvents({
   accountUpdated: () => {
-    getUserAccounts(current.value);
+    getUserAccounts(current.value)
   },
   newMessage: (msg) => messages.value.push(msg),
-});
+})
 
-const openEditAccountDialog = ref(false);
-const accountStatus = ref(null);
+const openEditAccountDialog = ref(false)
+const accountStatus = ref(null)
 const accountButtons = computed(() => [
   {
-    label: "Изменить статус",
-    icon: "mdi-credit-card-chip",
+    label: 'Изменить статус',
+    icon: 'mdi-credit-card-chip',
     action: (account) => {
-      accountStatus.value = !account.active;
+      accountStatus.value = !account.active
       const payload = {
         active: accountStatus.value,
-      };
+      }
 
-      putMethod(financeServerURL, `accounts/${account.id}`, payload, $q, {});
+      putMethod(financeServerURL, `accounts/${account.id}`, payload, $q, {})
     },
   },
   {
-    label: "Редактировать",
-    icon: "mdi-pencil",
+    label: 'Редактировать',
+    icon: 'mdi-pencil',
     action: (account) => {
-      openEditAccountDialog.value = true;
-      name.value = account.name;
-      type.value = account.type;
-      currency.value = account.currency;
-      balance.value = account.balance;
+      openEditAccountDialog.value = true
+      name.value = account.name
+      type.value = account.type
+      currency.value = account.currency
+      balance.value = account.balance
     },
   },
   {
-    label: "Удалить",
-    icon: "mdi-delete",
+    label: 'Удалить',
+    icon: 'mdi-delete',
     action: (account) => {
-      deleteAccount(account);
+      deleteAccount(account)
     },
   },
-]);
+])
 
 const handleClick = (actionItem, accountItem) => {
   if (actionItem.action) {
-    actionItem.action(accountItem);
+    actionItem.action(accountItem)
   }
-};
+}
 const deleteAccount = async (data) => {
-  await deleteMethod(financeServerURL, "accounts", data.id);
-};
+  await deleteMethod(financeServerURL, 'accounts', data.id)
+}
 
-const name = ref("");
-const type = ref("");
-const currency = ref("");
-const balance = ref("");
+const name = ref('')
+const type = ref('')
+const currency = ref('')
+const balance = ref('')
 const editAccountInformation = async (account) => {
   const payload = {
     name: name.value,
     type: type.value,
     currency: currency.value,
     balance: balance.value,
-  };
+  }
 
-  await putMethod(financeServerURL, `accounts/${account.id}`, payload, $q, {});
-};
+  await putMethod(financeServerURL, `accounts/${account.id}`, payload, $q, {})
+}
 
-const accountName = ref("");
-const accountType = ref("");
-const accountBalance = ref("");
-const currencyName = ref(null);
+const accountBalance = ref('')
+
+const selectedBank = ref(null)
+
+function onBankSelect(bankId) {
+  const bank = allBanks.value.find((b) => b.id === bankId)
+  if (bank) {
+    selectedBank.value = bank
+  }
+}
 
 const createAccount = async () => {
   const payload = {
-    name: accountName.value,
-    type: accountType.value,
-    currency: currencyName.value,
+    name: selectedBank.value.name,
+    type: selectedBank.value.type,
+    currency: selectedBank.value.currency,
     balance: accountBalance.value,
-    active: "false",
-  };
-  await postMethod(financeServerURL, "accounts", payload, $q, "Счет успешно создан");
-};
+    active: false,
+    bankId: selectedBank.value.id,
+  }
+  console.log(payload)
 
-const isCreateAccountDialog = ref(false);
+  await postMethod(financeServerURL, 'accounts', payload, $q, 'Счет успешно создан')
+}
+
+const isCreateAccountDialog = ref(false)
+
+// bank
+const allBanks = ref([])
+const createAccountBankOptions = ref([])
+
+const getAllBanks = async () => {
+  await bankApi.getAllBanks($q)
+  allBanks.value = bankApi.bank
+  createAccountBankOptions.value = allBanks.value.map((bank) => ({
+    id: bank.id,
+    name: bank.name.trim(),
+    type: bank.type,
+  }))
+}
+
+function filterFn(val, update) {
+  const needle = val.toLowerCase().trim()
+  update(() => {
+    createAccountBankOptions.value =
+      needle === ''
+        ? allBanks.value.map((bank) => ({ id: bank.id, name: bank.name.trim() }))
+        : allBanks.value
+            .map((bank) => ({ id: bank.id, name: bank.name.trim() }))
+            .filter((bank) => bank.name.toLowerCase().includes(needle))
+  })
+}
+
 onMounted(() => {
-  getUserAccounts(current.value);
-});
+  getUserAccounts(current.value)
+  getAllBanks()
+})
 </script>
