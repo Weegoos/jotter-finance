@@ -41,32 +41,19 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     const adminRole = 'admin'
     const $q = useQuasar()
 
-    // Проверяем токен в куках
-    const hasToken = document.cookie.includes('access_token')
-
-    // ⚠️ Если токена нет и это НЕ страница логина — редиректим
-    if (!hasToken && to.path !== '/login' && to.path !== '/register') {
-      return next('/login')
-    }
-
-    // Если токена нет, но юзер уже на логине или регистрации — просто продолжаем
-    if (!hasToken && (to.path === '/login' || to.path === '/register')) {
-      return next()
-    }
-
     // Загружаем данные пользователя, если их ещё нет
     if (!store.role) {
       try {
         await store.getUserInfo(userServerURL, $q)
       } catch (err) {
         console.error('Error getting user info:', err)
-        return next('/login')
+        // Можно оставить переход даже при ошибке
       }
     }
 
     // Если маршрут требует админ-доступ
     if (to.meta.requiresAdmin && store.role !== adminRole) {
-      return next('/login')
+      return next('/')
     }
 
     // Всё в порядке — разрешаем переход

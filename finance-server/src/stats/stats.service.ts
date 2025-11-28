@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Account } from 'src/accounts/account.model';
+import { Bank } from 'src/banks/bank.model';
 import { Budget } from 'src/budget/budget.model';
 import { Categories } from 'src/categories/categories.model';
 import { Transactions } from 'src/transaction/transaction.model';
@@ -20,6 +21,9 @@ export class StatService {
 
     @InjectModel(Transactions)
     private readonly transactionModel: typeof Transactions,
+
+    @InjectModel(Bank)
+    private readonly bankModel: typeof Bank,
   ) {}
 
   async totalBalance(userId: number): Promise<{ total_balance: number }> {
@@ -161,14 +165,25 @@ export class StatService {
   }
 
   async getAccountStats(userId: number): Promise<any> {
-    // Ждём результат
+    // Получаем аккаунты с их банками
     const accounts = await this.accountModel.findAll({
-      where: { userId },
+      where: { userId, active: true },
+      include: [
+        {
+          model: this.bankModel,
+          as: 'bank', // alias совпадает с BelongsTo
+          attributes: ['id', 'name', 'type', 'currency', 'icon_url'],
+        },
+      ],
     });
 
-    // Создаём массив балансов
-    const series = accounts.map((account) => account.balance);
-    const labels = accounts.map((account) => account.name);
-    return { series, labels };
+    // Балансы и имена аккаунтов
+    const series = accounts.map((acc) => acc.balance);
+    const labels = accounts.map((acc) => acc.name);
+
+    // Иконки банков
+    const banks = accounts.map((acc) => acc.dataValues.bank || null);
+
+    return { series, labels, banks };
   }
 }

@@ -17,7 +17,7 @@ export class Budget extends Model {
   @Column
   userId: number;
 
-  @Column({ field: 'amount', type: DataType.NUMBER })
+  @Column({ field: 'amount', type: DataType.INTEGER })
   amount: number;
 
   @Column

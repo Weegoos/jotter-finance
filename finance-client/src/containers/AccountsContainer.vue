@@ -53,7 +53,7 @@
       </q-card>
     </div>
     <Pagination :variableName="Object(userAccounts)" @pagination="pagination" />
-    <div class="q-ma-md q-pa-sm">
+    <div class="q-ma-md q-pa-sm grid justify-end">
       <Button
         class="text-black"
         rounded
@@ -63,19 +63,38 @@
       <Dialog :modelValue="isCreateAccountDialog">
         <template #content>
           <Close :sectionName="'Добавьте счет'" @emitClick="isCreateAccountDialog = false" />
-          <Input class="q-mb-sm" :label="'Название счета'" v-model="accountName"></Input>
-          <Input class="q-mb-sm" :label="'Тип счета'" v-model="accountType"></Input>
+          <q-select
+            dense
+            outlined
+            v-model="selectedBank"
+            use-input
+            option-value="id"
+            option-label="name"
+            emit-value
+            map-options
+            input-debounce="0"
+            label="Выберите банк"
+            :options="createAccountBankOptions"
+            @filter="filterFn"
+            @update:model-value="onBankSelect"
+            class="q-mb-sm"
+          >
+            <template v-slot:no-option>
+              <q-item>
+                <q-item-section class="text-grey"> No results </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
           <Input
             class="q-mb-sm"
             :label="'Укажите баланс'"
             :type="'number'"
             v-model="accountBalance"
-          ></Input>
-          <Select
-            :label="'Выберите валюту'"
-            v-model="currencyName"
-            :options="currenciesArray"
-          ></Select>
+          >
+            <template v-slot:append>
+              <q-icon name="mdi-currency-eur" />
+            </template>
+          </Input>
         </template>
         <template #actions>
           <Button
@@ -93,7 +112,7 @@
 <script setup>
 import { useQuasar } from 'quasar'
 import { accountLimit, financeServerURL } from 'src/boot/config'
-import { Button, Input, Select } from 'src/components/atoms'
+import { Button, Input } from 'src/components/atoms'
 import { Close, Dialog, Dropdown, Pagination } from 'src/components/molecules'
 import { deleteMethod } from 'src/composables/api-method/delete'
 // import { patchMethod } from 'src/composables/api-method/patch'
@@ -101,16 +120,18 @@ import { postMethod } from 'src/composables/api-method/post'
 import { putMethod } from 'src/composables/api-method/put'
 import { useSocketEvents } from 'src/composables/javascript/useSocketEvents'
 import { accountsApiStore } from 'src/stores/accounts-api'
+import { bankApiStore } from 'src/stores/bank-api'
 import { computed, onMounted, ref } from 'vue'
-// global variables
 
+// global variables
 const accountApi = accountsApiStore()
+const bankApi = bankApiStore()
 const $q = useQuasar()
 
 const userAccounts = ref([])
-const currenciesArray = ref(['USD', 'Euro'])
 
 const current = ref(1)
+// account
 const getUserAccounts = async (page) => {
   await accountApi.getAllAccounts($q, accountLimit, page)
   userAccounts.value = accountApi.accounts
@@ -188,24 +209,61 @@ const editAccountInformation = async (account) => {
   await putMethod(financeServerURL, `accounts/${account.id}`, payload, $q, {})
 }
 
-const accountName = ref('')
-const accountType = ref('')
 const accountBalance = ref('')
-const currencyName = ref(null)
+
+const selectedBank = ref(null)
+
+function onBankSelect(bankId) {
+  const bank = allBanks.value.find((b) => b.id === bankId)
+  if (bank) {
+    selectedBank.value = bank
+  }
+}
 
 const createAccount = async () => {
   const payload = {
-    name: accountName.value,
-    type: accountType.value,
-    currency: currencyName.value,
+    name: selectedBank.value.name,
+    type: selectedBank.value.type,
+    currency: selectedBank.value.currency,
     balance: accountBalance.value,
-    active: 'false',
+    active: false,
+    bankId: selectedBank.value.id,
   }
+  console.log(payload)
+
   await postMethod(financeServerURL, 'accounts', payload, $q, 'Счет успешно создан')
 }
 
 const isCreateAccountDialog = ref(false)
+
+// bank
+const allBanks = ref([])
+const createAccountBankOptions = ref([])
+
+const getAllBanks = async () => {
+  await bankApi.getAllBanks($q)
+  allBanks.value = bankApi.bank
+  createAccountBankOptions.value = allBanks.value.map((bank) => ({
+    id: bank.id,
+    name: bank.name.trim(),
+    type: bank.type,
+  }))
+}
+
+function filterFn(val, update) {
+  const needle = val.toLowerCase().trim()
+  update(() => {
+    createAccountBankOptions.value =
+      needle === ''
+        ? allBanks.value.map((bank) => ({ id: bank.id, name: bank.name.trim() }))
+        : allBanks.value
+            .map((bank) => ({ id: bank.id, name: bank.name.trim() }))
+            .filter((bank) => bank.name.toLowerCase().includes(needle))
+  })
+}
+
 onMounted(() => {
   getUserAccounts(current.value)
+  getAllBanks()
 })
 </script>

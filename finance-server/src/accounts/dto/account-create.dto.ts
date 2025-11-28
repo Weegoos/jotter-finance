@@ -26,8 +26,14 @@ export class AccountDTO {
   type: string;
 
   @ApiProperty({
-    example: 'true',
+    example: true,
     description: 'The status of the account',
   })
   active: boolean;
+
+  @ApiProperty({
+    example: 1,
+    description: 'The ID of the bank associated with the account',
+  })
+  bankId: number;
 }
