@@ -6,7 +6,7 @@
           <div class="flex-none fixed-left cursor-pointer">
             <Icon @click="$router.push('/')"></Icon>
           </div>
-          <div class="flex-2 row q-gutter-sm" v-if="role">
+          <div class="flex-2 row q-gutter-sm justify-self-center" v-if="role">
             <Button
               class="text-subtitle1 text-balance"
               :label="'Dashboard'"
@@ -31,9 +31,13 @@
               @emit-click="$router.push('/budget')"
             >
             </Button>
-            <Button class="text-subtitle1 text-balance" :label="'About Us'" unelevated rounded>
-            </Button>
-            <Button class="text-subtitle1 text-balance" :label="'Blog'" unelevated rounded>
+            <Button
+              class="text-subtitle1 text-balance"
+              :label="'AI'"
+              unelevated
+              rounded
+              @emit-click="$router.push('/chat')"
+            >
             </Button>
           </div>
         </div>

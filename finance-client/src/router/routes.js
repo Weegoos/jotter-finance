@@ -31,6 +31,10 @@ const routes = [
     path: '/budget',
     component: () => import('pages/BudgetPage.vue'),
   },
+  {
+    path: '/chat',
+    component: () => import('pages/AIChatPage.vue'),
+  },
 
   // Always leave this as last one,
   // but you can also remove it

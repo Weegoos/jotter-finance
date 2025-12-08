@@ -1,11 +1,11 @@
 from __future__ import annotations
-
 from contextlib import asynccontextmanager
 from typing import Optional
 
 import httpx
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from config import Settings, get_settings
@@ -41,12 +41,34 @@ async def lifespan(app: FastAPI):
     finally:
         await app.state.llm_client.aclose()
 
-
 app = FastAPI(
     title="Jotter Finance LLM API",
     description="LLM gateway for testing provider responses (Swagger available).",
     version="1.0.0",
-    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
+
+@app.on_event("startup")
+async def startup_event():
+    settings = get_settings()
+    app.state.settings = settings
+    app.state.llm_client = AlemLLMClient(settings)
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    await app.state.llm_client.aclose()
+
+
+origins = [
+    "http://localhost:9000",
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -271,4 +293,4 @@ async def unhandled_exception_handler(_, exc: Exception):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=2500)
