@@ -1,11 +1,21 @@
 <template>
   <div class="w-[90%]">
-    <apexchart v-if="ready" type="bar" :options="chartOptions" :series="series" height="350" />
+    <div v-if="!hasData" class="text-center text-gray-500 py-10">
+      Создайте budget
+    </div>
+
+    <apexchart
+      v-if="ready"
+      type="bar"
+      :options="chartOptions"
+      :series="series"
+      height="350"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 
 const props = defineProps({
   seriesData: Array,
@@ -30,6 +40,9 @@ watch(
 
       ready.value = false
       requestAnimationFrame(() => (ready.value = true))
+    } else {
+      series.value = []
+      ready.value = false
     }
   },
   { immediate: true },
@@ -79,4 +92,8 @@ watch(
   },
   { immediate: true },
 )
+
+const hasData = computed(() => {
+  return Array.isArray(props.seriesData) && props.seriesData.length > 0
+})
 </script>

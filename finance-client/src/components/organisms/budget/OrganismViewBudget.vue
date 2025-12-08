@@ -1,7 +1,7 @@
 <template>
   <section>
-    <div class="grid grid-cols-[70%_30%] gap-2 q-pa-md items-center">
-      <div class="grid grid-cols-3 gap-4 items-center">
+    <div :class="props.data?.length ? 'grid grid-cols-[70%_30%] gap-2 q-pa-md items-center' : ''">
+      <div v-if="props.data?.length" class="grid grid-cols-3 gap-4 items-center">
         <q-card
           :class="item.status === 'active' ? 'activeClass' : 'inactiveClass'"
           v-for="(item, index) in props.data"
@@ -24,8 +24,11 @@
           </q-card-actions>
         </q-card>
       </div>
-      <div class="grid justify-end">
+      <div v-if="props.data?.length" class="grid justify-end">
         <PieChart :series-data="props.stats"></PieChart>
+      </div>
+      <div v-else>
+        <p class="text-h6 justify-self-center">Create your first budget!</p>
       </div>
     </div>
     <div class="q-ma-md grid grid-cols-2">
