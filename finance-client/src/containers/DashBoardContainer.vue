@@ -1,11 +1,7 @@
 <template>
   <section>
     <div class="search grid grid-cols-2 grid-rows-1 q-gutter-md">
-      <div class="items-center">
-        <Input class="q-mt-sm" :label="'Search'" rounded />
-      </div>
       <div class="row q-gutter-sm items-center">
-        <Input :label="'Dates'" rounded />
         <Button class="text-black" outline rounded :label="'Export CSV'" />
         <q-avatar size="36px" class="flex justify-end items-end">
           <img src="https://cdn.quasar.dev/img/avatar.png" />
@@ -44,7 +40,7 @@
 import { Cookies, useQuasar } from "quasar";
 import axios from "axios";
 import { accountLimit, financeServerURL, viewLimitedTransaction } from "src/boot/config";
-import { Button, Input } from "src/components/atoms";
+import { Button } from "src/components/atoms";
 import {
   Balance,
   DashboardGraphs,
