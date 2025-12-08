@@ -1,9 +1,14 @@
 <template>
-  <apexchart type="area" :options="chartOptions" :series="series" height="350" />
+  <div>
+    <div v-if="!hasData" class="flex justify-self-center text-gray-500 py-10">
+      Совершите свою первую транзакцию
+    </div>
+    <apexchart v-else type="area" :options="chartOptions" :series="series" height="350" />
+  </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 const props = defineProps({
   seriesData: Object, // { series: [], categories: [] }
@@ -55,4 +60,8 @@ watch(
   },
   { immediate: true },
 )
+
+const hasData = computed(() => {
+  return Array.isArray(props.seriesData) && props.seriesData.length > 0
+})
 </script>

@@ -1,16 +1,8 @@
 <template>
   <div class="w-[90%]">
-    <div v-if="!hasData" class="text-center text-gray-500 py-10">
-      Создайте budget
-    </div>
+    <div v-if="!hasData" class="text-center text-gray-500 py-10">Создайте свой первый budget</div>
 
-    <apexchart
-      v-if="ready"
-      type="bar"
-      :options="chartOptions"
-      :series="series"
-      height="350"
-    />
+    <apexchart v-if="ready" type="bar" :options="chartOptions" :series="series" height="350" />
   </div>
 </template>
 

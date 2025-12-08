@@ -4,7 +4,7 @@
       'fixed fixed-center w-[50%]': isSystem,
       'w-[80%] flex flex-col justify-self-center h-full ': !isSystem,
     }"
-    class="rounded-xl shadow-md  overflow-hidden"
+    class="rounded-xl shadow-md overflow-hidden"
   >
     <!-- Сообщения с прокруткой -->
     <div
@@ -31,7 +31,7 @@
         <!-- Системное сообщение -->
         <div v-if="isSystem" class="w-full flex justify-center">
           <div
-            class="bg-white p-8 rounded-2xl shadow-xl  border border-gray-200 max-w-md text-center animate-fadeIn"
+            class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 max-w-md text-center animate-fadeIn"
           >
             <h1 class="text-2xl font-bold text-gray-800 mb-2">Jotter-Finance</h1>
             <h2 class="text-lg text-gray-600 mb-4">powered by Paida AI 🤖</h2>
@@ -45,7 +45,7 @@
       <!-- Индикатор печати AI -->
       <div v-if="loading" class="flex justify-start mt-2">
         <div
-          class="bg-gray-200 text-gray-600 px-4 py-2 rounded-2xl rounded-bl-none shadow-md  flex items-center space-x-2"
+          class="bg-gray-200 text-gray-600 px-4 py-2 rounded-2xl rounded-bl-none shadow-md flex items-center space-x-2"
         >
           <span class="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></span>
           <span class="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-150"></span>
@@ -56,9 +56,7 @@
     </div>
 
     <!-- Input box -->
-    <div
-      class="p-4 bg-gray-50 border-t rounded-lg border-gray-200 flex space-x-2"
-    >
+    <div class="p-4 bg-gray-50 border-t rounded-lg border-gray-200 flex space-x-2">
       <q-input
         dense
         rounded
@@ -97,11 +95,10 @@ const userStore = useApiStore()
 const $q = useQuasar()
 const name = ref('')
 const getUserInformation = async () => {
-  await userStore.getUserInfo(userServerURL ,$q)
+  await userStore.getUserInfo(userServerURL, $q)
   const data = userStore.userData
   name.value = `${data.lastName} ${data.firstName}`
-  console.log(name.value);
-
+  console.log(name.value)
 }
 
 const scrollToBottom = () => {
