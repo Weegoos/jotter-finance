@@ -25,6 +25,6 @@ export class AIController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getTransactionUsingAI(@Req() req: any) {
     const data = await this.aiService.getTransactionData(req.user.id);
-    return {data};
+    return { data };
   }
 }

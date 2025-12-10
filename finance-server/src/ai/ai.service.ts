@@ -2,12 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Transactions } from 'src/transaction/transaction.model';
 import axios from 'axios';
+import { Account } from 'src/accounts/account.model';
+import { Budget } from 'src/budget/budget.model';
 
 @Injectable()
 export class AIService {
   constructor(
     @InjectModel(Transactions)
     private transactionModel: typeof Transactions,
+    @InjectModel(Account)
+    private accountModel: typeof Account,
+    @InjectModel(Budget)
+    private budgetModel: typeof Budget,
   ) {}
 
   async getTransactionData(userId: number) {
@@ -16,7 +22,31 @@ export class AIService {
         userId,
       },
     });
+
     const data = transactions.map((tx) => tx.get({ plain: true }));
+
+    const accounts = await this.accountModel.findAll({
+      where: {
+        userId,
+      },
+    });
+
+    const budgets = await this.budgetModel.findAll({
+      where: {
+        userId,
+      },
+    });
+
+    const totalBalance = accounts
+      .filter((account) => account.active) // только активные счета
+      .reduce((sum, account) => sum + Number(account.balance), 0);
+
+    // budgets — это массив Budget[]
+    const plainBudgets = budgets.map((b) => b.get({ plain: true }));
+
+    const budgetGoal = plainBudgets
+      .filter((b) => String(b.status).trim().toLowerCase() === 'active')
+      .reduce((max, b) => Math.max(max, Number(b.amount)), 0);
 
     let totalIncome = 0;
     let totalExpense = 0;
@@ -33,9 +63,11 @@ export class AIService {
       {
         role: 'user',
         content: `У меня следующие данные:
-    Доходы: ${income}
-    Расходы: ${expenses}
-    Сделай краткий вывод о его финансовом состоянии и дай совет.`,
+    Доходы в евро: ${income}
+    Расходы в евро: ${expenses}
+    Общий баланс денег в евро: ${totalBalance}
+    Моя цель в евро: ${budgetGoal}
+    Сделай краткий вывод о его финансовом состоянии и дай совет исходя из цели.`,
       },
     ];
 
