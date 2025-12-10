@@ -69,6 +69,6 @@ const chartOptions = ref({
 })
 
 const hasData = computed(() => {
-  return Array.isArray(props.seriesData) && props.seriesData.length > 0
+  return Array.isArray(series.value) && series.value.length > 0
 })
 </script>
