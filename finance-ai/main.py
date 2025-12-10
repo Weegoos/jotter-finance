@@ -4,7 +4,7 @@ from typing import Optional
 
 import httpx
 from fastapi import Depends, FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -262,6 +262,47 @@ async def chat_endpoint(
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     return ChatResponse(**result)
+
+
+@app.post(
+    "/llm/chat/stream",
+    summary="Send streaming chat completion request (SSE)",
+    tags=["LLM"],
+)
+async def chat_stream_endpoint(
+    request: ChatRequest,
+    client: AlemLLMClient = Depends(get_llm_client),
+    settings: Settings = Depends(get_settings),
+):
+    """
+    Stream chat completion response using Server-Sent Events.
+
+    Returns real-time token-by-token response like ChatGPT.
+    """
+
+    async def generate():
+        try:
+            async for chunk in client.chat_stream(
+                request.messages,
+                model=request.model or settings.primary_llm_model,
+                temperature=request.temperature,
+                top_p=request.top_p,
+            ):
+                yield f"data: {chunk}\n\n"
+            yield "data: [DONE]\n\n"
+        except Exception as exc:
+            error_data = {"error": str(exc)}
+            yield f"data: {error_data}\n\n"
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @app.exception_handler(Exception)

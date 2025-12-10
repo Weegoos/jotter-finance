@@ -79,7 +79,6 @@
 
 <script setup>
 import { ref, nextTick, onMounted } from 'vue'
-import axios from 'axios'
 import { marked } from 'marked'
 import { useApiStore } from 'src/stores/user-api'
 import { useQuasar } from 'quasar'
@@ -87,6 +86,7 @@ import { userServerURL } from 'src/boot/config'
 
 const input = ref('')
 const loading = ref(false)
+const isStreaming = ref(false)
 
 const chatWindow = ref(null)
 
@@ -94,6 +94,9 @@ const messages = ref([{ role: 'system', content: 'Hello!' }])
 const userStore = useApiStore()
 const $q = useQuasar()
 const name = ref('')
+
+const LLM_API_URL = 'http://localhost:2500'
+
 const getUserInformation = async () => {
   await userStore.getUserInfo(userServerURL, $q)
   const data = userStore.userData
@@ -125,35 +128,84 @@ async function sendMessage() {
   input.value = ''
   scrollToBottom()
   loading.value = true
+  isStreaming.value = true
+
+  // Добавляем пустое сообщение ассистента для streaming
+  const assistantMessage = { role: 'assistant', content: '' }
+  messages.value.push(assistantMessage)
 
   try {
-    const response = await axios.post('http://localhost:2500/llm/chat', {
-      messages: messages.value.map((m) => ({
-        role: m.role,
-        content: m.content,
-      })),
-      model: 'alemllm',
-      temperature: 0.7,
-      top_p: 1,
+    const response = await fetch(`${LLM_API_URL}/llm/chat/stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: messages.value.slice(0, -1).map((m) => ({
+          role: m.role,
+          content: m.content,
+        })),
+        model: 'alemllm',
+        temperature: 0.7,
+        top_p: 1,
+      }),
     })
 
-    const answer =
-      response.data?.message?.trim() ||
-      response.data?.raw?.choices?.[0]?.message?.content?.trim() ||
-      '⚠️ Пустой ответ от LLM'
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
 
-    if (answer) {
-      messages.value.push({ role: 'assistant', content: answer })
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+
+    loading.value = false // Убираем индикатор "печатает" когда начинается streaming
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      const text = decoder.decode(value, { stream: true })
+      const lines = text.split('\n')
+
+      for (const line of lines) {
+        const trimmedLine = line.trim()
+        if (trimmedLine.startsWith('data: ') && trimmedLine !== 'data: [DONE]') {
+          try {
+            const jsonStr = trimmedLine.slice(6)
+            const json = JSON.parse(jsonStr)
+
+            // Обработка ошибки от сервера
+            if (json.error) {
+              assistantMessage.content = `❌ Ошибка: ${json.error}`
+              break
+            }
+
+            // Извлекаем delta content из OpenAI-style ответа
+            const delta = json.choices?.[0]?.delta?.content || ''
+            if (delta) {
+              assistantMessage.content += delta
+              scrollToBottom()
+            }
+          } catch (e) {
+            // Пропускаем невалидный JSON (может быть частичная строка)
+          }
+        }
+      }
+    }
+
+    // Если ответ пустой после streaming
+    if (!assistantMessage.content.trim()) {
+      assistantMessage.content = '⚠️ Пустой ответ от LLM'
     }
   } catch (err) {
-    console.error(err)
-    messages.value.push({
-      role: 'assistant',
-      content: '❌ Ошибка запроса к серверу.',
-    })
+    console.error('Streaming error:', err)
+    // Обновляем последнее сообщение ассистента
+    const lastMsg = messages.value[messages.value.length - 1]
+    if (lastMsg.role === 'assistant' && !lastMsg.content) {
+      lastMsg.content = '❌ Ошибка подключения к серверу.'
+    }
   }
 
   loading.value = false
+  isStreaming.value = false
   scrollToBottom()
 }
 
