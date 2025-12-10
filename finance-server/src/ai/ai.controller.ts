@@ -1,4 +1,4 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Req, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -15,7 +15,7 @@ export class AIController {
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @Get('advice')
+  @Post('advice')
   @ApiOperation({ summary: 'Get all transactions using AI' })
   @ApiResponse({
     status: 201,
@@ -25,6 +25,6 @@ export class AIController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getTransactionUsingAI(@Req() req: any) {
     const data = await this.aiService.getTransactionData(req.user.id);
-    return data;
+    return {data};
   }
 }

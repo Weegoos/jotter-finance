@@ -20,7 +20,7 @@
       >
         <q-chat-message
           v-if="msg.role !== 'system'"
-          :name="msg.role === 'user' ? name : 'pAIda'"
+          :name="msg.role === 'user' ? name : 'Paida AI-Ассистент'"
           :sent="msg.role === 'user'"
           :avatar-color="msg.role === 'user' ? 'primary' : 'blue-grey-5'"
           class="mb-2 max-w-[70%]"
@@ -31,11 +31,13 @@
         <!-- Системное сообщение -->
         <div v-if="isSystem" class="w-full flex justify-center">
           <div
-            class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 max-w-lg text-center animate-fadeIn"
+            class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 max-w-md text-center animate-fadeIn"
           >
             <h1 class="text-2xl font-bold text-gray-800 mb-2">Jotter Finance</h1>
             <h2 class="text-lg text-gray-600 mb-4">powered by pAIda 🤖</h2>
-            <p class="text-gray-600 mb-4">Привет! 👋 Я pAIda — твой персональный финансовый ассистент.</p>
+            <p class="text-gray-600 mb-4">
+              Привет! 👋 Я pAIda — твой персональный финансовый ассистент.
+            </p>
             <div class="text-left text-gray-500 text-sm space-y-1">
               <p>Я могу помочь тебе с:</p>
               <ul class="list-none pl-2 space-y-1">
@@ -59,7 +61,7 @@
           <span class="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></span>
           <span class="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-150"></span>
           <span class="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-300"></span>
-          <span class="ml-2 text-gray-500 text-xs italic">pAIda думает...</span>
+          <span class="ml-2 text-gray-500 text-xs italic">Печатает...</span>
         </div>
       </div>
     </div>
@@ -88,31 +90,22 @@
 
 <script setup>
 import { ref, nextTick, onMounted } from 'vue'
+import axios from 'axios'
 import { marked } from 'marked'
 import { useApiStore } from 'src/stores/user-api'
-import { useQuasar } from 'quasar'
+import { Cookies, useQuasar } from 'quasar'
 import { userServerURL } from 'src/boot/config'
 
 const input = ref('')
 const loading = ref(false)
-const isStreaming = ref(false)
-
 const chatWindow = ref(null)
-
 const messages = ref([{ role: 'system', content: 'Hello!' }])
+const isSystem = ref(true)
+const name = ref('')
 const userStore = useApiStore()
 const $q = useQuasar()
-const name = ref('')
 
-const LLM_API_URL = 'http://localhost:2500'
-
-const getUserInformation = async () => {
-  await userStore.getUserInfo(userServerURL, $q)
-  const data = userStore.userData
-  name.value = `${data.lastName} ${data.firstName}`
-  console.log(name.value)
-}
-
+// Прокрутка чата вниз
 const scrollToBottom = () => {
   nextTick(() => {
     const el = chatWindow.value
@@ -120,107 +113,86 @@ const scrollToBottom = () => {
   })
 }
 
-const isSystem = ref(true)
+// Ключевые слова для финансовых вопросов
+const financeKeywords = ['доход', 'расход', 'бюджет', 'финансы', 'транзакция']
 
+// Определяем тип вопроса
+function detectQueryType(question) {
+  const lower = question.toLowerCase()
+  return financeKeywords.some((k) => lower.includes(k)) ? 'finance' : 'general'
+}
+// Получение информации о пользователе
+const getUserInformation = async () => {
+  await userStore.getUserInfo(userServerURL, $q)
+  const data = userStore.userData
+  name.value = `${data.lastName} ${data.firstName}`
+}
+
+// Парсинг Markdown
+const parseMarkdown = (text) => (text ? marked(text) : '')
+
+// Отправка сообщения
 async function sendMessage() {
-  isSystem.value = false
   if (!input.value.trim()) return
+  isSystem.value = false
 
   const content = input.value.trim()
-
-  // Добавляем сообщение пользователя в UI
-  messages.value.push({
-    role: 'user',
-    content,
-  })
-
+  messages.value.push({ role: 'user', content })
   input.value = ''
   scrollToBottom()
   loading.value = true
-  isStreaming.value = true
 
-  // Добавляем пустое сообщение ассистента для streaming
-  const assistantMessage = { role: 'assistant', content: '' }
-  messages.value.push(assistantMessage)
+  const type = detectQueryType(content)
 
   try {
-    const response = await fetch(`${LLM_API_URL}/llm/chat/stream`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: messages.value.slice(0, -1).map((m) => ({
-          role: m.role,
-          content: m.content,
-        })),
+    let answer = ''
+
+    if (type === 'finance') {
+      // Финансовый вопрос → backend advice
+      const res = await axios.post(
+        'http://localhost:3000/ai/advice',
+        { question: content },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${Cookies.get('access_token')}`,
+          },
+        },
+      )
+      answer = res.data?.data?.trim() || '⚠️ Нет ответа от финансового ассистента.'
+    } else {
+      // Общий вопрос → LLM
+      const body = {
         model: 'alemllm',
         temperature: 0.7,
-        top_p: 1,
-      }),
-    })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-
-    loading.value = false // Убираем индикатор "печатает" когда начинается streaming
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-
-      const text = decoder.decode(value, { stream: true })
-      const lines = text.split('\n')
-
-      for (const line of lines) {
-        const trimmedLine = line.trim()
-        if (trimmedLine.startsWith('data: ') && trimmedLine !== 'data: [DONE]') {
-          try {
-            const jsonStr = trimmedLine.slice(6)
-            const json = JSON.parse(jsonStr)
-
-            // Обработка ошибки от сервера
-            if (json.error) {
-              assistantMessage.content = `❌ Ошибка: ${json.error}`
-              break
-            }
-
-            // Извлекаем delta content из OpenAI-style ответа
-            const delta = json.choices?.[0]?.delta?.content || ''
-            if (delta) {
-              assistantMessage.content += delta
-              scrollToBottom()
-            }
-          } catch (e) {
-            // Пропускаем невалидный JSON (может быть частичная строка)
-          }
-        }
+        messages: [
+          { role: 'system', content: 'You are a helpful assistant' },
+          ...messages.value
+            .filter((m) => m.role !== 'system')
+            .map((m) => ({ role: m.role, content: String(m.content) })),
+        ],
       }
+
+      const res = await axios.post('http://localhost:2500/llm/chat', body)
+      answer =
+        res.data?.message?.trim() ||
+        res.data?.raw?.choices?.[0]?.message?.content?.trim() ||
+        '⚠️ Пустой ответ от LLM'
     }
 
-    // Если ответ пустой после streaming
-    if (!assistantMessage.content.trim()) {
-      assistantMessage.content = '⚠️ Пустой ответ от LLM'
-    }
+    // Добавляем сообщение ассистента только после получения ответа
+    messages.value.push({ role: 'assistant', content: answer })
   } catch (err) {
-    console.error('Streaming error:', err)
-    // Обновляем последнее сообщение ассистента
-    const lastMsg = messages.value[messages.value.length - 1]
-    if (lastMsg.role === 'assistant' && !lastMsg.content) {
-      lastMsg.content = '❌ Ошибка подключения к серверу.'
-    }
+    console.error(err)
+    messages.value.push({
+      role: 'assistant',
+      content: '❌ Ошибка запроса к серверу.',
+    })
+  } finally {
+    loading.value = false
+    scrollToBottom()
   }
-
-  loading.value = false
-  isStreaming.value = false
-  scrollToBottom()
-}
-
-const parseMarkdown = (text) => {
-  if (!text) return ''
-  return marked(text)
 }
 
 onMounted(() => {

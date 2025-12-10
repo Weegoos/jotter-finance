@@ -26,7 +26,6 @@ export class AIService {
       else if (tx.type === 'expense') totalExpense += Number(tx.amount);
     });
 
-
     const income = totalIncome;
     const expenses = totalExpense;
     const messages = [
