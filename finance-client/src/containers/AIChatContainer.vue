@@ -20,7 +20,7 @@
       >
         <q-chat-message
           v-if="msg.role !== 'system'"
-          :name="msg.role === 'user' ? name : 'Paida AI-Ассистент'"
+          :name="msg.role === 'user' ? name : 'pAIda'"
           :sent="msg.role === 'user'"
           :avatar-color="msg.role === 'user' ? 'primary' : 'blue-grey-5'"
           class="mb-2 max-w-[70%]"
@@ -31,13 +31,22 @@
         <!-- Системное сообщение -->
         <div v-if="isSystem" class="w-full flex justify-center">
           <div
-            class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 max-w-md text-center animate-fadeIn"
+            class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 max-w-lg text-center animate-fadeIn"
           >
-            <h1 class="text-2xl font-bold text-gray-800 mb-2">Jotter-Finance</h1>
-            <h2 class="text-lg text-gray-600 mb-4">powered by Paida AI 🤖</h2>
-            <p class="text-gray-500">
-              Привет! Я ваш помощник. Начните с ввода сообщения ниже, чтобы обсудить финансы.
-            </p>
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">Jotter Finance</h1>
+            <h2 class="text-lg text-gray-600 mb-4">powered by pAIda 🤖</h2>
+            <p class="text-gray-600 mb-4">Привет! 👋 Я pAIda — твой персональный финансовый ассистент.</p>
+            <div class="text-left text-gray-500 text-sm space-y-1">
+              <p>Я могу помочь тебе с:</p>
+              <ul class="list-none pl-2 space-y-1">
+                <li>📊 Анализом расходов и доходов</li>
+                <li>💰 Планированием бюджета</li>
+                <li>🎯 Постановкой финансовых целей</li>
+                <li>📈 Основами инвестирования</li>
+                <li>💡 Советами по экономии</li>
+              </ul>
+            </div>
+            <p class="text-gray-600 mt-4 font-medium">Чем могу помочь сегодня?</p>
           </div>
         </div>
       </div>
@@ -50,7 +59,7 @@
           <span class="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></span>
           <span class="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-150"></span>
           <span class="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-300"></span>
-          <span class="ml-2 text-gray-500 text-xs italic">Paida печатает...</span>
+          <span class="ml-2 text-gray-500 text-xs italic">pAIda думает...</span>
         </div>
       </div>
     </div>

@@ -10,7 +10,8 @@ from pydantic import BaseModel
 
 from config import Settings, get_settings
 from llm_client import AlemLLMClient
-from schemas import ChatRequest, ChatResponse
+from prompts import PAIDA_SYSTEM_PROMPT, PAIDA_WELCOME_MESSAGE
+from schemas import ChatMessage, ChatRequest, ChatResponse
 
 
 class KeyVerifyResponse(BaseModel):
@@ -79,9 +80,61 @@ def get_llm_client(request: Request) -> AlemLLMClient:
     return request.app.state.llm_client
 
 
+def prepare_messages_with_system_prompt(
+    messages: list[ChatMessage],
+) -> list[ChatMessage]:
+    """
+    Prepares messages by ensuring pAIda system prompt is at the beginning.
+
+    - If no system message exists, adds pAIda prompt as first message
+    - If a system message exists, prepends pAIda prompt to it
+    """
+    system_prompt = ChatMessage(role="system", content=PAIDA_SYSTEM_PROMPT)
+
+    # Check if there's already a system message
+    has_system = any(msg.role == "system" for msg in messages)
+
+    if not has_system:
+        # No system message - add pAIda prompt at the beginning
+        return [system_prompt] + list(messages)
+
+    # There's a system message - combine with pAIda prompt
+    result = []
+    for msg in messages:
+        if msg.role == "system":
+            # Prepend pAIda prompt to existing system message
+            combined_content = f"{PAIDA_SYSTEM_PROMPT}\n\n---\n\n{msg.content}"
+            result.append(ChatMessage(role="system", content=combined_content))
+        else:
+            result.append(msg)
+
+    return result
+
+
 @app.get("/health", summary="Health check")
 async def health():
     return {"status": "ok"}
+
+
+@app.get(
+    "/paida/info",
+    summary="Get pAIda assistant information",
+    tags=["pAIda"],
+)
+async def get_paida_info():
+    """Get pAIda assistant configuration and welcome message."""
+    return {
+        "name": "pAIda",
+        "description": "Финансовый AI-ассистент Jotter Finance",
+        "welcome_message": PAIDA_WELCOME_MESSAGE,
+        "capabilities": [
+            "Анализ личных финансов",
+            "Бюджетирование",
+            "Советы по инвестициям",
+            "Финансовое планирование",
+            "Управление расходами",
+        ],
+    }
 
 
 @app.get(
@@ -251,9 +304,12 @@ async def chat_endpoint(
     client: AlemLLMClient = Depends(get_llm_client),
     settings: Settings = Depends(get_settings),
 ):
+    # Prepare messages with pAIda system prompt
+    messages = prepare_messages_with_system_prompt(request.messages)
+
     try:
         result = await client.chat(
-            request.messages,
+            messages,
             model=request.model or settings.primary_llm_model,
             temperature=request.temperature,
             top_p=request.top_p,
@@ -278,12 +334,15 @@ async def chat_stream_endpoint(
     Stream chat completion response using Server-Sent Events.
 
     Returns real-time token-by-token response like ChatGPT.
+    pAIda system prompt is automatically injected.
     """
+    # Prepare messages with pAIda system prompt
+    messages = prepare_messages_with_system_prompt(request.messages)
 
     async def generate():
         try:
             async for chunk in client.chat_stream(
-                request.messages,
+                messages,
                 model=request.model or settings.primary_llm_model,
                 temperature=request.temperature,
                 top_p=request.top_p,
