@@ -14,16 +14,13 @@ class Settings(BaseSettings):
 
     primary_llm_model: str = Field(
         default="alemllm",
-        description="Default model used for chat completions (alemllm, qwen3, gemma3)",
+        description="Default model used for chat completions",
     )
     alem_base_url: str = Field(
         default="https://llm.alem.ai/v1",
         description="Base URL for Alem LLM API",
     )
 
-    qwen3_api_key: Optional[str] = Field(
-        default=None, description="API key for Qwen3 model"
-    )
     alem_api_key: Optional[str] = Field(default=None, description="API key for AlemLLM")
 
     model_config = SettingsConfigDict(

@@ -41,19 +41,22 @@ async def lifespan(app: FastAPI):
     finally:
         await app.state.llm_client.aclose()
 
+
 app = FastAPI(
     title="Jotter Finance LLM API",
     description="LLM gateway for testing provider responses (Swagger available).",
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
 )
+
 
 @app.on_event("startup")
 async def startup_event():
     settings = get_settings()
     app.state.settings = settings
     app.state.llm_client = AlemLLMClient(settings)
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -99,7 +102,6 @@ async def get_api_keys_status(settings: Settings = Depends(get_settings)):
         "primary_llm_model": settings.primary_llm_model,
         "alem_base_url": settings.alem_base_url,
         "alem_api_key": mask_key(settings.alem_api_key),
-        "qwen3_api_key": mask_key(settings.qwen3_api_key),
     }
 
 
@@ -192,28 +194,6 @@ async def _test_llm_key(
 
 
 @app.post(
-    "/test/qwen3",
-    response_model=KeyVerifyResponse,
-    summary="🧪 Test Qwen3",
-    tags=["🔑 API Key Testing"],
-)
-async def test_qwen3_key(
-    request: LLMTestRequest,
-    settings: Settings = Depends(get_settings),
-):
-    """Send a message to Qwen3 and get response."""
-    return await _test_llm_key(
-        base_url=settings.alem_base_url,
-        api_key=settings.qwen3_api_key,
-        provider="Qwen3",
-        model="qwen3",
-        user_message=request.message,
-        max_tokens=request.max_tokens,
-        temperature=request.temperature,
-    )
-
-
-@app.post(
     "/test/alemllm",
     response_model=KeyVerifyResponse,
     summary="🧪 Test AlemLLM",
@@ -246,7 +226,6 @@ async def test_all_keys(settings: Settings = Depends(get_settings)):
 
     results = {
         "alemllm": await test_alemllm_key(llm_req, settings),
-        "qwen3": await test_qwen3_key(llm_req, settings),
     }
 
     summary = {
