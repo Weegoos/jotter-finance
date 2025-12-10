@@ -14,6 +14,7 @@ import { Stats } from './stats/stats.module';
 import { BudgetModule } from './budget/budget.module';
 import { BankModule } from './banks/bank.module';
 import { Bank } from './banks/bank.model';
+import { AIModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { Bank } from './banks/bank.model';
     AccountModule,
     Stats,
     BankModule,
+    AIModule,
   ],
   providers: [AppService, ChatGateway],
 })

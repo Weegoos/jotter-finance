@@ -5,24 +5,24 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch } from 'vue'
 
 const props = defineProps({
   seriesData: Object,
-});
+})
 
-const ready = ref(false);
-const series = ref([]);
+const ready = ref(false)
+const series = ref([])
 
 const chartOptions = ref({
   chart: {
     width: 380,
-    type: "pie",
+    type: 'pie',
   },
   labels: [],
-  colors: ["#93C3EE", "#E5C6A0", "#669DB5"],
+  colors: ['#93C3EE', '#E5C6A0', '#669DB5'],
   fill: {
-    type: "image",
+    type: 'image',
     opacity: 0.85,
     image: {
       src: [], // <-- будет заполняться из бэка
@@ -33,44 +33,44 @@ const chartOptions = ref({
   stroke: { width: 4 },
   dataLabels: {
     enabled: true,
-    style: { colors: ["#111"] },
-    background: { enabled: true, foreColor: "#fff", borderWidth: 0 },
+    style: { colors: ['#111'] },
+    background: { enabled: true, foreColor: '#fff', borderWidth: 0 },
   },
   responsive: [
     {
       breakpoint: 480,
       options: {
         chart: { width: 200 },
-        legend: { position: "bottom" },
+        legend: { position: 'bottom' },
       },
     },
   ],
-});
+})
 
 watch(
   () => props.seriesData,
   (val) => {
     if (val && val.series?.length) {
       // series and labels
-      series.value = [...val.series];
-      chartOptions.value.labels = [...val.labels];
+      series.value = [...val.series]
+      chartOptions.value.labels = [...val.labels]
 
       // images from banks.icon_url
       if (val.banks?.length) {
-        chartOptions.value.fill.image.src = val.banks.map((b) => b.icon_url);
+        chartOptions.value.fill.image.src = val.banks.map((b) => b.icon_url)
       } else {
-        chartOptions.value.fill.image.src = [];
+        chartOptions.value.fill.image.src = []
       }
 
       // truncate images to match series length
       chartOptions.value.fill.image.src = chartOptions.value.fill.image.src.slice(
         0,
-        val.series.length
-      );
+        val.series.length,
+      )
 
-      ready.value = true;
+      ready.value = true
     }
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 </script>

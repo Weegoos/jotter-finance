@@ -15,24 +15,24 @@
 
 <script setup>
 // import { Badge, LinearProgress } from "src/components/atoms";
-import { BarChart, PolarChart } from "src/components/molecules";
-import { ref, watch } from "vue";
+import { BarChart, PolarChart } from 'src/components/molecules'
+import { ref, watch } from 'vue'
 const props = defineProps({
   goal: Object,
   categories: Object,
   data: Object,
   paymentData: Object,
-});
+})
 
-const progress1 = ref(props.goal.progress);
+const progress1 = ref(props.goal.progress)
 
 watch(
   () => props.goal.progress,
   (newVal) => {
-    progress1.value = newVal;
-    console.log(newVal);
-  }
-);
+    progress1.value = newVal
+    console.log(newVal)
+  },
+)
 </script>
 
 <style></style>
