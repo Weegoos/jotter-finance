@@ -2,7 +2,7 @@
   <div
     :class="{
       'fixed fixed-center w-[50%]': isSystem,
-      'w-[80%] flex flex-col justify-self-center h-full ': !isSystem,
+      'w-[80%] flex flex-col justify-self-center  ': !isSystem,
     }"
     class="rounded-xl shadow-md overflow-hidden"
   >
@@ -10,7 +10,6 @@
     <div
       ref="chatWindow"
       class="flex-1 overflow-y-auto p-4 space-y-4 bg-white"
-      style="max-height: 100vh"
     >
       <div
         v-for="(msg, idx) in messages"
