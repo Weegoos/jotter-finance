@@ -94,7 +94,7 @@ import axios from 'axios'
 import { marked } from 'marked'
 import { useApiStore } from 'src/stores/user-api'
 import { Cookies, useQuasar } from 'quasar'
-import { userServerURL } from 'src/boot/config'
+import { financeServerURL, userServerURL } from 'src/boot/config'
 
 const input = ref('')
 const loading = ref(false)
@@ -113,15 +113,12 @@ const scrollToBottom = () => {
   })
 }
 
-// Ключевые слова для финансовых вопросов
 const financeKeywords = ['доход', 'расход', 'бюджет', 'финансы', 'транзакция']
 
-// Определяем тип вопроса
 function detectQueryType(question) {
   const lower = question.toLowerCase()
   return financeKeywords.some((k) => lower.includes(k)) ? 'finance' : 'general'
 }
-// Получение информации о пользователе
 const getUserInformation = async () => {
   await userStore.getUserInfo(userServerURL, $q)
   const data = userStore.userData
@@ -150,7 +147,7 @@ async function sendMessage() {
     if (type === 'finance') {
       // Финансовый вопрос → backend advice
       const res = await axios.post(
-        'http://localhost:3000/ai/advice',
+        `${financeServerURL}ai/advice`,
         { question: content },
         {
           headers: {

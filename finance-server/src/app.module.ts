@@ -15,6 +15,7 @@ import { BudgetModule } from './budget/budget.module';
 import { BankModule } from './banks/bank.module';
 import { Bank } from './banks/bank.model';
 import { AIModule } from './ai/ai.module';
+import { PromoCodes } from './promo_codes/promoCodes.model';
 
 @Module({
   imports: [
@@ -28,7 +29,14 @@ import { AIModule } from './ai/ai.module';
         username: configService.get<string>('DB_USER'),
         password: configService.get<string>('DB_PASS'),
         database: configService.get<string>('DB_NAME'),
-        models: [Budget, Account, Categories, Transactions, Bank] as const,
+        models: [
+          Budget,
+          Account,
+          Categories,
+          Transactions,
+          Bank,
+          PromoCodes,
+        ] as const,
         autoLoadModels: true,
         synchronize: true,
       }),
