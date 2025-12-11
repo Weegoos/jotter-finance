@@ -2,15 +2,12 @@
   <div
     :class="{
       'fixed fixed-center w-[50%]': isSystem,
-      'w-[80%] flex flex-col justify-self-center  ': !isSystem,
+      'w-[80%] flex flex-col justify-self-center': !isSystem,
     }"
     class="rounded-xl shadow-md overflow-hidden"
   >
     <!-- Сообщения с прокруткой -->
-    <div
-      ref="chatWindow"
-      class="flex-1 overflow-y-auto p-4 space-y-4 bg-white"
-    >
+    <div ref="chatWindow" class="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
       <div
         v-for="(msg, idx) in messages"
         :key="idx"
@@ -23,11 +20,13 @@
           :sent="msg.role === 'user'"
           :avatar-color="msg.role === 'user' ? 'primary' : 'blue-grey-5'"
           class="mb-2 max-w-[70%]"
+          :bg-color="msg.role === 'user' ? 'grey-3' : 'grey-3'"
+          :text-color="msg.role === 'user' ? 'black' : 'black'"
         >
           <div v-html="parseMarkdown(msg.content)" class="prose dark:prose-invert"></div>
         </q-chat-message>
 
-        <!-- Системное сообщение -->
+        <!-- Системное приветствие -->
         <div v-if="isSystem" class="w-full flex justify-center">
           <div
             class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 max-w-md text-center animate-fadeIn"
@@ -52,22 +51,26 @@
         </div>
       </div>
 
-      <!-- Индикатор печати AI -->
-      <div v-if="loading" class="flex justify-start mt-2">
+      <!-- Индикатор печати -->
+      <div v-if="loading && !thinkingSteps.length" class="flex justify-start mt-2">
+        <div class="bg-gray-200 text-gray-600 px-4 py-2 rounded-xl animate-pulse">Печатает...</div>
+      </div>
+
+      <!-- Thinking Steps вместо "Печатает..." -->
+      <div v-if="!loading && thinkingSteps.length" class="flex flex-col gap-2 mt-2">
         <div
-          class="bg-gray-200 text-gray-600 px-4 py-2 rounded-2xl rounded-bl-none shadow-md flex items-center space-x-2"
+          v-for="(step, i) in thinkingSteps"
+          :key="i"
+          v-show="i <= currentStepIndex"
+          class="bg-gray-200 text-gray-700 px-4 py-2 rounded-xl shadow-sm animate-fadeIn"
         >
-          <span class="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></span>
-          <span class="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-150"></span>
-          <span class="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-300"></span>
-          <span class="ml-2 text-gray-500 text-xs italic">Печатает...</span>
+          {{ step }}
         </div>
       </div>
     </div>
 
     <!-- Input box -->
     <div class="p-4 bg-gray-50 border-t rounded-lg border-gray-200 flex flex-col space-y-2">
-      <!-- Инпут -->
       <div class="flex space-x-2 relative">
         <q-input
           dense
@@ -88,7 +91,7 @@
       </div>
     </div>
 
-    <!-- Подсказки снизу -->
+    <!-- Подсказки -->
     <div
       v-if="input.trim() === '' && suggestions.length"
       class="mt-2 bg-white border border-gray-200 rounded shadow-md"
@@ -119,10 +122,24 @@ const chatWindow = ref(null)
 const messages = ref([{ role: 'system', content: 'Hello!' }])
 const isSystem = ref(true)
 const name = ref('')
+const thinkingSteps = ref([])
+const currentStepIndex = ref(0)
+
+function playThinkingSteps(steps) {
+  thinkingSteps.value = steps
+  currentStepIndex.value = 0
+
+  const interval = setInterval(() => {
+    currentStepIndex.value++
+    if (currentStepIndex.value >= steps.length) {
+      clearInterval(interval)
+    }
+  }, 1200)
+}
+
 const userStore = useApiStore()
 const $q = useQuasar()
 
-// Прокрутка чата вниз
 const scrollToBottom = () => {
   nextTick(() => {
     const el = chatWindow.value
@@ -136,6 +153,7 @@ function detectQueryType(question) {
   const lower = question.toLowerCase()
   return financeKeywords.some((k) => lower.includes(k)) ? 'finance' : 'general'
 }
+
 const getUserInformation = async () => {
   await userStore.getUserInfo(userServerURL, $q)
   const data = userStore.userData
@@ -155,8 +173,8 @@ const suggestions = ref([
 
 function selectSuggestion(s) {
   input.value = s
-  // sendMessage()
 }
+
 async function sendMessage() {
   if (!input.value.trim()) return
   isSystem.value = false
@@ -166,6 +184,9 @@ async function sendMessage() {
   input.value = ''
   scrollToBottom()
   loading.value = true
+
+  thinkingSteps.value = []
+  currentStepIndex.value = 0
 
   const type = detectQueryType(content)
 
@@ -187,34 +208,51 @@ async function sendMessage() {
       answer = res.data?.data?.trim() || '⚠️ Нет ответа от финансового ассистента.'
     } else {
       const body = {
+        message: content,
+        conversation_history: messages.value
+          .filter((m) => m.role !== 'system')
+          .map((m) => ({
+            role: m.role,
+            content: String(m.content),
+          })),
         model: 'alemllm',
         temperature: 0.7,
-        messages: [
-          { role: 'system', content: 'You are a helpful assistant' },
-          ...messages.value
-            .filter((m) => m.role !== 'system')
-            .map((m) => ({ role: m.role, content: String(m.content) })),
-        ],
       }
 
-      const res = await axios.post('http://localhost:2500/llm/chat', body)
-      answer =
-        res.data?.message?.trim() ||
-        res.data?.raw?.choices?.[0]?.message?.content?.trim() ||
-        '⚠️ Пустой ответ от LLM'
+      const res = await axios.post('http://localhost:2500/llm/smart-chat', body)
+
+      if (res.data?.thinking_steps) {
+        playThinkingSteps(res.data.thinking_steps)
+      }
+
+      answer = res.data?.message?.trim() || '⚠️ Пустой ответ от LLM'
     }
 
-    messages.value.push({ role: 'assistant', content: answer })
+    loading.value = false
+
+    // Дать Vue 1 tick чтобы отрисовать thinking steps
+    await nextTick()
+
+    // После проигрывания thinking steps — показать ответ
+    setTimeout(
+      () => {
+        messages.value.push({ role: 'assistant', content: answer })
+        thinkingSteps.value = [] // теперь можно очищать
+        scrollToBottom()
+      },
+      thinkingSteps.value.length * 1200 + 300,
+    )
+    return
   } catch (err) {
     console.error(err)
     messages.value.push({
       role: 'assistant',
       content: '❌ Ошибка запроса к серверу.',
     })
-  } finally {
-    loading.value = false
-    scrollToBottom()
   }
+
+  loading.value = false
+  scrollToBottom()
 }
 
 onMounted(() => {
@@ -223,18 +261,18 @@ onMounted(() => {
 </script>
 
 <style scoped>
-@keyframes bounce {
-  0%,
-  80%,
-  100% {
-    transform: scale(0);
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
   }
-  40% {
-    transform: scale(1);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-.animate-bounce {
-  animation: bounce 1.4s infinite ease-in-out both;
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-out;
 }
 </style>
