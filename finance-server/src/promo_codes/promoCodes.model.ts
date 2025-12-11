@@ -1,6 +1,6 @@
 import { Table, Column, Model, DataType } from 'sequelize-typescript';
 
-interface PromoCodesAttributes {
+export interface PromoCodesAttributes {
   id?: number; // если будет авто-инкремент
   code: string;
   discountType: 'percent' | 'fixed';

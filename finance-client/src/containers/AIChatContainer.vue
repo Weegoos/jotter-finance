@@ -67,23 +67,42 @@
     </div>
 
     <!-- Input box -->
-    <div class="p-4 bg-gray-50 border-t rounded-lg border-gray-200 flex space-x-2">
-      <q-input
-        dense
-        rounded
-        outlined
-        v-model="input"
-        placeholder="Введите сообщение..."
-        class="flex-1"
-        @keyup.enter="sendMessage"
-      />
-      <q-btn
-        round
-        color="black"
-        icon="send"
-        @click="sendMessage"
-        :disable="loading || input.trim() === ''"
-      />
+    <div class="p-4 bg-gray-50 border-t rounded-lg border-gray-200 flex flex-col space-y-2">
+      <!-- Инпут -->
+      <div class="flex space-x-2 relative">
+        <q-input
+          dense
+          rounded
+          outlined
+          v-model="input"
+          placeholder="Введите сообщение..."
+          class="flex-1"
+          @keyup.enter="sendMessage"
+        />
+        <q-btn
+          round
+          color="black"
+          icon="send"
+          @click="sendMessage"
+          :disable="loading || input.trim() === ''"
+        />
+      </div>
+    </div>
+
+    <!-- Подсказки снизу -->
+    <div
+      v-if="input.trim() === '' && suggestions.length"
+      class="mt-2 bg-white border border-gray-200 rounded shadow-md"
+    >
+      <div
+        v-for="(s, i) in suggestions"
+        :key="i"
+        class="flex items-center gap-2 p-2 rounded hover:bg-gray-100 cursor-pointer"
+        @click="selectSuggestion(s)"
+      >
+        <q-icon name="search" size="16px" />
+        <span class="text-gray-700">{{ s }}</span>
+      </div>
     </div>
   </div>
 </template>
@@ -96,7 +115,6 @@ import { useApiStore } from 'src/stores/user-api'
 import { Cookies, useQuasar } from 'quasar'
 import { financeServerURL, userServerURL } from 'src/boot/config'
 
-const input = ref('')
 const loading = ref(false)
 const chatWindow = ref(null)
 const messages = ref([{ role: 'system', content: 'Hello!' }])
@@ -125,10 +143,21 @@ const getUserInformation = async () => {
   name.value = `${data.lastName} ${data.firstName}`
 }
 
-// Парсинг Markdown
 const parseMarkdown = (text) => (text ? marked(text) : '')
 
-// Отправка сообщения
+const input = ref('')
+const suggestions = ref([
+  'Сделай отчет по финансам (доход, расход, транзакция)',
+  'Сколько я потратил на еду за месяц?',
+  'Помоги составить бюджет на следующий месяц',
+  'Какие инвестиции лучше сейчас?',
+  'Сделай прогноз по расходам на месяц',
+])
+
+function selectSuggestion(s) {
+  input.value = s
+  // sendMessage()
+}
 async function sendMessage() {
   if (!input.value.trim()) return
   isSystem.value = false
@@ -145,7 +174,6 @@ async function sendMessage() {
     let answer = ''
 
     if (type === 'finance') {
-      // Финансовый вопрос → backend advice
       const res = await axios.post(
         `${financeServerURL}ai/advice`,
         { question: content },
@@ -159,7 +187,6 @@ async function sendMessage() {
       )
       answer = res.data?.data?.trim() || '⚠️ Нет ответа от финансового ассистента.'
     } else {
-      // Общий вопрос → LLM
       const body = {
         model: 'alemllm',
         temperature: 0.7,
@@ -178,7 +205,6 @@ async function sendMessage() {
         '⚠️ Пустой ответ от LLM'
     }
 
-    // Добавляем сообщение ассистента только после получения ответа
     messages.value.push({ role: 'assistant', content: answer })
   } catch (err) {
     console.error(err)

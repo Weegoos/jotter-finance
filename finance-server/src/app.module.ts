@@ -16,6 +16,7 @@ import { BankModule } from './banks/bank.module';
 import { Bank } from './banks/bank.model';
 import { AIModule } from './ai/ai.module';
 import { PromoCodes } from './promo_codes/promoCodes.model';
+import { PromoCodesModule } from './promo_codes/promoCodes.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { PromoCodes } from './promo_codes/promoCodes.model';
     Stats,
     BankModule,
     AIModule,
+    PromoCodesModule,
   ],
   providers: [AppService, ChatGateway],
 })
