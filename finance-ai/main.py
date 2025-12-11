@@ -1,4 +1,5 @@
 from __future__ import annotations
+import json
 from contextlib import asynccontextmanager
 from typing import Optional
 
@@ -11,7 +12,15 @@ from pydantic import BaseModel
 from config import Settings, get_settings
 from llm_client import AlemLLMClient
 from prompts import PAIDA_SYSTEM_PROMPT, PAIDA_WELCOME_MESSAGE
-from schemas import ChatMessage, ChatRequest, ChatResponse
+from schemas import (
+    ChatMessage,
+    ChatRequest,
+    ChatResponse,
+    StreamEventTopic,
+    StreamEventContent,
+    StreamEventDone,
+    StreamEventError,
+)
 
 
 class KeyVerifyResponse(BaseModel):
@@ -109,6 +118,21 @@ def prepare_messages_with_system_prompt(
             result.append(msg)
 
     return result
+
+
+def extract_last_user_query(messages: list[ChatMessage]) -> str:
+    """
+    Извлекает последний запрос пользователя из списка сообщений.
+    Используется для создания топика генерации.
+    """
+    for msg in reversed(messages):
+        if msg.role == "user":
+            # Ограничиваем длину для отображения
+            query = msg.content.strip()
+            if len(query) > 150:
+                return query[:150] + "..."
+            return query
+    return "Запрос пользователя"
 
 
 @app.get("/health", summary="Health check")
@@ -335,23 +359,67 @@ async def chat_stream_endpoint(
 
     Returns real-time token-by-token response like ChatGPT.
     pAIda system prompt is automatically injected.
+
+    Формат событий (для фронтенда):
+    1. topic - начало генерации с запросом пользователя
+    2. content - токены ответа
+    3. done - завершение генерации
+    4. error - ошибка (если произошла)
     """
+    # Извлекаем запрос пользователя для топика
+    user_query = extract_last_user_query(request.messages)
+
     # Prepare messages with pAIda system prompt
     messages = prepare_messages_with_system_prompt(request.messages)
 
     async def generate():
         try:
+            # 1. Отправляем топик - начало генерации
+            topic_event = StreamEventTopic(
+                user_query=user_query,
+                status="generating",
+                message=f"Генерирую ответ на запрос: {user_query}",
+            )
+            yield f"data: {topic_event.model_dump_json()}\n\n"
+
+            # 2. Стримим контент от LLM
             async for chunk in client.chat_stream(
                 messages,
                 model=request.model or settings.primary_llm_model,
                 temperature=request.temperature,
                 top_p=request.top_p,
             ):
-                yield f"data: {chunk}\n\n"
-            yield "data: [DONE]\n\n"
+                # Парсим chunk от OpenAI API и оборачиваем в наш формат
+                try:
+                    chunk_data = json.loads(chunk)
+                    delta = (
+                        chunk_data.get("choices", [{}])[0]
+                        .get("delta", {})
+                        .get("content", "")
+                    )
+                    if delta:
+                        content_event = StreamEventContent(delta=delta)
+                        yield f"data: {content_event.model_dump_json()}\n\n"
+                except json.JSONDecodeError:
+                    # Если не JSON, передаём как есть в delta
+                    if chunk.strip():
+                        content_event = StreamEventContent(delta=chunk)
+                        yield f"data: {content_event.model_dump_json()}\n\n"
+
+            # 3. Отправляем событие завершения
+            done_event = StreamEventDone(
+                status="completed",
+                user_query=user_query,
+            )
+            yield f"data: {done_event.model_dump_json()}\n\n"
+
         except Exception as exc:
-            error_data = {"error": str(exc)}
-            yield f"data: {error_data}\n\n"
+            # Отправляем событие ошибки
+            error_event = StreamEventError(
+                error=str(exc),
+                user_query=user_query,
+            )
+            yield f"data: {error_event.model_dump_json()}\n\n"
 
     return StreamingResponse(
         generate(),

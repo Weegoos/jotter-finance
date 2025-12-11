@@ -41,3 +41,53 @@ class ChatResponse(BaseModel):
     raw: Optional[dict] = Field(
         default=None, description="Raw provider response for debugging"
     )
+
+
+# ============================================================================
+# Streaming Event Models (для фронтенда)
+# ============================================================================
+
+
+class StreamEventTopic(BaseModel):
+    """
+    Событие топика - отправляется в начале генерации ответа.
+    Фронтенд может использовать для отображения "Генерирую ответ на: ..."
+    """
+
+    type: Literal["topic"] = Field(default="topic", description="Тип события")
+    user_query: str = Field(..., description="Оригинальный запрос пользователя")
+    status: str = Field(
+        default="generating", description="Статус генерации: generating, completed, error"
+    )
+    message: str = Field(..., description="Сообщение для отображения пользователю")
+
+
+class StreamEventContent(BaseModel):
+    """
+    Событие контента - токены ответа от LLM.
+    """
+
+    type: Literal["content"] = Field(default="content", description="Тип события")
+    delta: str = Field(..., description="Часть ответа (токен или текст)")
+
+
+class StreamEventDone(BaseModel):
+    """
+    Событие завершения - отправляется когда генерация закончена.
+    """
+
+    type: Literal["done"] = Field(default="done", description="Тип события")
+    status: str = Field(default="completed", description="Финальный статус")
+    user_query: str = Field(..., description="Оригинальный запрос пользователя")
+
+
+class StreamEventError(BaseModel):
+    """
+    Событие ошибки - отправляется при возникновении ошибки.
+    """
+
+    type: Literal["error"] = Field(default="error", description="Тип события")
+    error: str = Field(..., description="Описание ошибки")
+    user_query: Optional[str] = Field(
+        default=None, description="Оригинальный запрос пользователя"
+    )
