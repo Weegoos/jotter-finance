@@ -11,10 +11,10 @@ export class AIConversationService {
   ) {}
 
   async create(
-    userId: number,
+    user_id: number,
     conversation: Partial<IAIConversation>,
   ): Promise<AIConversation> {
-    if (!userId) {
+    if (!user_id) {
       throw new UnauthorizedException('User not authorized');
     }
 
@@ -23,10 +23,23 @@ export class AIConversationService {
     }
 
     const created = await this.aiConversationModel.create({
-      user_id: userId,
+      user_id: user_id,
       title: conversation.title,
     });
 
     return created;
+  }
+
+  async findAll(user_id: number): Promise<any> {
+    if (!user_id) {
+      throw new UnauthorizedException('User not authorized');
+    }
+
+    return await this.aiConversationModel.findAll({
+      where: {
+        user_id: user_id,
+      },
+      order: [['createdAt', 'DESC']],
+    });
   }
 }
