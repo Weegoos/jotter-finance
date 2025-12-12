@@ -17,6 +17,8 @@ import { Bank } from './banks/bank.model';
 import { AIModule } from './ai/ai.module';
 import { PromoCodes } from './promo_codes/promoCodes.model';
 import { PromoCodesModule } from './promo_codes/promoCodes.module';
+import { AIConversationModule } from './ai_conversation/ai_conversation.module';
+import { AIConversation } from './ai_conversation/ai_conversation.model';
 
 @Module({
   imports: [
@@ -37,6 +39,7 @@ import { PromoCodesModule } from './promo_codes/promoCodes.module';
           Transactions,
           Bank,
           PromoCodes,
+          AIConversation,
         ] as const,
         autoLoadModels: true,
         synchronize: true,
@@ -50,6 +53,7 @@ import { PromoCodesModule } from './promo_codes/promoCodes.module';
     BankModule,
     AIModule,
     PromoCodesModule,
+    AIConversationModule,
   ],
   providers: [AppService, ChatGateway],
 })
