@@ -1,6 +1,6 @@
 <template>
   <div class="hero-video">
-    <video
+    <!-- <video
       ref="videoEl"
       class="hero-video__video"
       src="src/assets/video/indexPage/Video.mp4"
@@ -8,14 +8,15 @@
       muted
       loop
       playsinline
-    ></video>
+    ></video> -->
 
+    <img src="../../public/landing_photo.png" alt="" class="hero-video__overlay" />
     <div class="hero-video__overlay"></div>
 
     <div class="hero-video__content">
-      <h1>Welcome to Jotter-Finance</h1>
-      <p>Your strategic decision support starts here.</p>
-      <q-btn label="Get Started" color="primary" class="q-mt-md" />
+      <q-btn label="AI-powered" no-caps outline rounded class="q-mt-md" />
+      <h1>Welcome to Jotter Finance</h1>
+      <p>Smart financial insights and guidance to help you reach your goals.</p>
     </div>
   </div>
 </template>
