@@ -8,7 +8,7 @@ import { ref, onMounted, onUpdated } from 'vue'
 const props = defineProps({
   text: { type: String, required: true },
   speed: { type: Number, default: 30 }, // интервал между шагами (мс)
-  chunk: { type: Number, default: 8 },  // сколько символов добавляется за шаг
+  chunk: { type: Number, default: 8 }, // сколько символов добавляется за шаг
 })
 
 const displayed = ref('')
@@ -38,6 +38,4 @@ onMounted(() => {
 .typing-block {
   transition: all 0.15s ease-out;
 }
-
-
 </style>

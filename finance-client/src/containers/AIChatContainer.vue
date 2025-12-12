@@ -1,117 +1,160 @@
 <template>
-  <div
-    :class="{
-      'fixed fixed-center w-[50%]': isSystem,
-      'w-[80%] flex flex-col justify-self-center': !isSystem,
-    }"
-    class="rounded-xl shadow-md overflow-hidden"
-  >
-    <!-- Сообщения с прокруткой -->
-    <div ref="chatWindow" class="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
-      <div
-        v-for="(msg, idx) in messages"
-        :key="idx"
-        class="flex"
-        :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
+  <section>
+    <div>
+      <q-drawer
+        side="left"
+        v-model="drawerLeft"
+        :width="250"
+        :breakpoint="500"
+        class="bg-white p-2 m-0 h-full shadow-md flex flex-col"
+        content-class="bg-grey-3"
       >
-        <q-chat-message
-          v-if="msg.role !== 'system'"
-          :name="msg.role === 'user' ? name : 'Paida AI-Ассистент'"
-          :sent="msg.role === 'user'"
-          :avatar-color="msg.role === 'user' ? 'primary' : 'blue-grey-5'"
-          class="mb-2 max-w-[70%]"
-          :bg-color="msg.role === 'user' ? 'grey-3' : 'grey-3'"
-          :text-color="msg.role === 'user' ? 'black' : 'black'"
-        >
-          <TypingChat
-            v-if="msg.role !== 'user'"
-            :text="parseMarkdown(msg.content)"
-            @update="scrollToBottom"
-          />
-          <div v-else v-html="parseMarkdown(msg.content)"></div>
-        </q-chat-message>
-
-        <!-- Системное приветствие -->
-        <div v-if="isSystem" class="w-full flex justify-center">
-          <div
-            class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 max-w-md text-center animate-fadeIn"
+        <!-- Верхняя панель с кнопкой (фиксированная) -->
+        <div class="flex-none mb-2">
+          <Button
+            flat
+            dense
+            icon="mdi-folder-plus"
+            :label="'Новый чат'"
+            class="w-full text-black flex justify-start items-center px-3 py-2 rounded shadow-sm bg-white hover:bg-grey-2 transition-colors"
           >
-            <h1 class="text-2xl font-bold text-gray-800 mb-2">Jotter Finance</h1>
-            <h2 class="text-lg text-gray-600 mb-4">powered by pAIda 🤖</h2>
-            <p class="text-gray-600 mb-4">
-              Привет! 👋 Я pAIda — твой персональный финансовый ассистент.
-            </p>
-            <div class="text-left text-gray-500 text-sm space-y-1">
-              <p>Я могу помочь тебе с:</p>
-              <ul class="list-none pl-2 space-y-1">
-                <li>📊 Анализом расходов и доходов</li>
-                <li>💰 Планированием бюджета</li>
-                <li>🎯 Постановкой финансовых целей</li>
-                <li>📈 Основами инвестирования</li>
-                <li>💡 Советами по экономии</li>
-              </ul>
+
+          </Button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto">
+          <q-list padding class="space-y-1">
+            <q-item
+              v-for="n in 25"
+              :key="n"
+              clickable
+              v-ripple
+              class="rounded-lg hover:bg-grey-2 transition-colors"
+            >
+              <q-item-section>
+                <span class="font-medium">Icon as avatar {{ n }}</span>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </div>
+      </q-drawer>
+    </div>
+    <div
+      :class="{
+        'fixed fixed-center w-[50%]': isSystem,
+        'w-[80%] flex flex-col justify-self-center': !isSystem,
+      }"
+      class="rounded-xl shadow-md overflow-hidden"
+    >
+      <!-- Сообщения с прокруткой -->
+      <div ref="chatWindow" class="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
+        <div
+          v-for="(msg, idx) in messages"
+          :key="idx"
+          class="flex"
+          :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
+        >
+          <q-chat-message
+            v-if="msg.role !== 'system'"
+            :name="msg.role === 'user' ? name : 'Paida AI-Ассистент'"
+            :sent="msg.role === 'user'"
+            :avatar-color="msg.role === 'user' ? 'primary' : 'blue-grey-5'"
+            class="mb-2 max-w-[70%]"
+            :bg-color="msg.role === 'user' ? 'grey-3' : 'grey-3'"
+            :text-color="msg.role === 'user' ? 'black' : 'black'"
+          >
+            <TypingChat
+              v-if="msg.role !== 'user'"
+              :text="parseMarkdown(msg.content)"
+              @update="scrollToBottom"
+            />
+            <div v-else v-html="parseMarkdown(msg.content)"></div>
+          </q-chat-message>
+
+          <!-- Системное приветствие -->
+          <div v-if="isSystem" class="w-full flex justify-center">
+            <div
+              class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 max-w-md text-center animate-fadeIn"
+            >
+              <h1 class="text-2xl font-bold text-gray-800 mb-2">Jotter Finance</h1>
+              <h2 class="text-lg text-gray-600 mb-4">powered by pAIda 🤖</h2>
+              <p class="text-gray-600 mb-4">
+                Привет! 👋 Я pAIda — твой персональный финансовый ассистент.
+              </p>
+              <div class="text-left text-gray-500 text-sm space-y-1">
+                <p>Я могу помочь тебе с:</p>
+                <ul class="list-none pl-2 space-y-1">
+                  <li>📊 Анализом расходов и доходов</li>
+                  <li>💰 Планированием бюджета</li>
+                  <li>🎯 Постановкой финансовых целей</li>
+                  <li>📈 Основами инвестирования</li>
+                  <li>💡 Советами по экономии</li>
+                </ul>
+              </div>
+              <p class="text-gray-600 mt-4 font-medium">Чем могу помочь сегодня?</p>
             </div>
-            <p class="text-gray-600 mt-4 font-medium">Чем могу помочь сегодня?</p>
+          </div>
+        </div>
+
+        <!-- Индикатор печати -->
+        <div v-if="loading && !thinkingSteps.length" class="flex justify-start mt-2">
+          <div class="bg-gray-200 text-gray-600 px-4 py-2 rounded-xl animate-pulse">
+            Печатает...
+          </div>
+        </div>
+
+        <!-- Thinking Steps вместо "Печатает..." -->
+        <div v-if="!loading && thinkingSteps.length" class="flex flex-col gap-2 mt-2">
+          <div
+            v-for="(step, i) in thinkingSteps"
+            :key="i"
+            v-show="i <= currentStepIndex"
+            class="bg-gray-200 text-gray-700 px-4 py-2 rounded-xl shadow-sm animate-fadeIn"
+          >
+            {{ step }}
           </div>
         </div>
       </div>
 
-      <!-- Индикатор печати -->
-      <div v-if="loading && !thinkingSteps.length" class="flex justify-start mt-2">
-        <div class="bg-gray-200 text-gray-600 px-4 py-2 rounded-xl animate-pulse">Печатает...</div>
+      <!-- Input box -->
+      <div class="p-4 bg-gray-50 border-t rounded-lg border-gray-200 flex flex-col space-y-2">
+        <div class="flex space-x-2 relative">
+          <q-input
+            dense
+            rounded
+            outlined
+            v-model="input"
+            placeholder="Введите сообщение..."
+            class="flex-1"
+            @keyup.enter="sendMessage"
+          />
+          <q-btn
+            round
+            color="black"
+            icon="send"
+            @click="sendMessage"
+            :disable="loading || input.trim() === ''"
+          />
+        </div>
       </div>
 
-      <!-- Thinking Steps вместо "Печатает..." -->
-      <div v-if="!loading && thinkingSteps.length" class="flex flex-col gap-2 mt-2">
+      <!-- Подсказки -->
+      <div
+        v-if="input.trim() === '' && suggestions.length"
+        class="mt-2 bg-white border border-gray-200 rounded shadow-md"
+      >
         <div
-          v-for="(step, i) in thinkingSteps"
+          v-for="(s, i) in suggestions"
           :key="i"
-          v-show="i <= currentStepIndex"
-          class="bg-gray-200 text-gray-700 px-4 py-2 rounded-xl shadow-sm animate-fadeIn"
+          class="flex items-center gap-2 p-2 rounded hover:bg-gray-100 cursor-pointer"
+          @click="selectSuggestion(s)"
         >
-          {{ step }}
+          <q-icon name="search" size="16px" />
+          <span class="text-gray-700">{{ s }}</span>
         </div>
       </div>
     </div>
-
-    <!-- Input box -->
-    <div class="p-4 bg-gray-50 border-t rounded-lg border-gray-200 flex flex-col space-y-2">
-      <div class="flex space-x-2 relative">
-        <q-input
-          dense
-          rounded
-          outlined
-          v-model="input"
-          placeholder="Введите сообщение..."
-          class="flex-1"
-          @keyup.enter="sendMessage"
-        />
-        <q-btn
-          round
-          color="black"
-          icon="send"
-          @click="sendMessage"
-          :disable="loading || input.trim() === ''"
-        />
-      </div>
-    </div>
-
-    <!-- Подсказки -->
-    <div
-      v-if="input.trim() === '' && suggestions.length"
-      class="mt-2 bg-white border border-gray-200 rounded shadow-md"
-    >
-      <div
-        v-for="(s, i) in suggestions"
-        :key="i"
-        class="flex items-center gap-2 p-2 rounded hover:bg-gray-100 cursor-pointer"
-        @click="selectSuggestion(s)"
-      >
-        <q-icon name="search" size="16px" />
-        <span class="text-gray-700">{{ s }}</span>
-      </div>
-    </div>
-  </div>
+  </section>
 </template>
 
 <script setup>
@@ -122,7 +165,7 @@ import { useApiStore } from 'src/stores/user-api'
 import { Cookies, useQuasar } from 'quasar'
 import { financeServerURL, userServerURL } from 'src/boot/config'
 import { TypingChat } from 'src/components/molecules'
-
+import { Button } from 'src/components/atoms'
 const loading = ref(false)
 const chatWindow = ref(null)
 const messages = ref([{ role: 'system', content: 'Hello!' }])
@@ -130,6 +173,7 @@ const isSystem = ref(true)
 const name = ref('')
 const thinkingSteps = ref([])
 const currentStepIndex = ref(0)
+const drawerLeft = ref(true)
 
 function playThinkingSteps(steps) {
   thinkingSteps.value = steps
