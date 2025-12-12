@@ -2,3 +2,48 @@
 .linear_progress {
   background-color: #27f550;
 }
+
+/* Regular */
+@font-face {
+  font-family: 'Jotter UI';
+  src: url('/src/assets/fonts/segoeui.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+}
+
+/* Italic */
+@font-face {
+  font-family: 'Jotter UI';
+  src: url('/src/assets/fonts/segoeuit.ttf') format('truetype');
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* Semibold */
+@font-face {
+  font-family: 'Jotter UI';
+  src: url('/src/assets/fonts/seguisb.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* Bold */
+@font-face {
+  font-family: 'Jotter UI';
+  src: url('/src/assets/fonts/segoeuib.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 700;
+}
+
+html, body {
+  font-family: 'Jotter UI', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+
+
+h1, h2, .hero-title {
+  font-weight: 700;
+}
+
+button, .nav-item {
+  font-weight: 600;
+}
