@@ -18,21 +18,19 @@
             :label="'Новый чат'"
             class="w-full text-black flex justify-start items-center px-3 py-2 rounded shadow-sm bg-white hover:bg-grey-2 transition-colors"
           >
-
           </Button>
         </div>
 
         <div class="flex-1 overflow-y-auto">
           <q-list padding class="space-y-1">
             <q-item
-              v-for="n in 25"
-              :key="n"
+              v-for="(topic, index) in topics"
+              :key="index"
               clickable
-              v-ripple
-              class="rounded-lg hover:bg-grey-2 transition-colors"
+              class="w-full rounded-lg min-h-[48px] flex items-center transition-colors relative hover:bg-grey-2"
             >
               <q-item-section>
-                <span class="font-medium">Icon as avatar {{ n }}</span>
+                <span class="font-medium">{{ topic.title }}</span>
               </q-item-section>
             </q-item>
           </q-list>
@@ -166,6 +164,13 @@ import { Cookies, useQuasar } from 'quasar'
 import { financeServerURL, userServerURL } from 'src/boot/config'
 import { TypingChat } from 'src/components/molecules'
 import { Button } from 'src/components/atoms'
+import { conversationApiStore } from 'src/stores/conversation-api'
+
+// global variables
+const userStore = useApiStore()
+const conversationStore = conversationApiStore()
+const $q = useQuasar()
+
 const loading = ref(false)
 const chatWindow = ref(null)
 const messages = ref([{ role: 'system', content: 'Hello!' }])
@@ -187,8 +192,15 @@ function playThinkingSteps(steps) {
   }, 1200)
 }
 
-const userStore = useApiStore()
-const $q = useQuasar()
+const topics = ref([])
+const getAllConversations = async () => {
+  try {
+    const data = await conversationStore.getAllConversation($q)
+    topics.value = data
+  } catch {
+    //
+  }
+}
 
 const scrollToBottom = () => {
   nextTick(() => {
@@ -306,6 +318,7 @@ async function sendMessage() {
 
 onMounted(() => {
   getUserInformation()
+  getAllConversations()
 })
 </script>
 
