@@ -23,7 +23,12 @@
           :bg-color="msg.role === 'user' ? 'grey-3' : 'grey-3'"
           :text-color="msg.role === 'user' ? 'black' : 'black'"
         >
-          <div v-html="parseMarkdown(msg.content)" class="prose dark:prose-invert"></div>
+          <TypingChat
+            v-if="msg.role !== 'user'"
+            :text="parseMarkdown(msg.content)"
+            @update="scrollToBottom"
+          />
+          <div v-else v-html="parseMarkdown(msg.content)"></div>
         </q-chat-message>
 
         <!-- Системное приветствие -->
@@ -116,6 +121,7 @@ import { marked } from 'marked'
 import { useApiStore } from 'src/stores/user-api'
 import { Cookies, useQuasar } from 'quasar'
 import { financeServerURL, userServerURL } from 'src/boot/config'
+import { TypingChat } from 'src/components/molecules'
 
 const loading = ref(false)
 const chatWindow = ref(null)
@@ -226,18 +232,17 @@ async function sendMessage() {
       }
 
       answer = res.data?.message?.trim() || '⚠️ Пустой ответ от LLM'
+      console.log(res)
     }
 
     loading.value = false
 
-    // Дать Vue 1 tick чтобы отрисовать thinking steps
     await nextTick()
 
-    // После проигрывания thinking steps — показать ответ
     setTimeout(
       () => {
         messages.value.push({ role: 'assistant', content: answer })
-        thinkingSteps.value = [] // теперь можно очищать
+        thinkingSteps.value = []
         scrollToBottom()
       },
       thinkingSteps.value.length * 1200 + 300,
@@ -247,7 +252,7 @@ async function sendMessage() {
     console.error(err)
     messages.value.push({
       role: 'assistant',
-      content: '❌ Ошибка запроса к серверу.',
+      content: 'Ошибка запроса к серверу.',
     })
   }
 
