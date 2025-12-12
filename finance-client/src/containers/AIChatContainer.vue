@@ -9,32 +9,32 @@
         class="bg-white p-2 m-0 h-full shadow-md flex flex-col"
         content-class="bg-grey-3"
       >
-        <!-- Верхняя панель с кнопкой (фиксированная) -->
+        <!-- Верхняя панель с кнопкой -->
         <div class="flex-none mb-2">
           <Button
             flat
             dense
             icon="mdi-folder-plus"
-            :label="'Новый чат'"
+            label="Новый чат"
             class="w-full text-black flex justify-start items-center px-3 py-2 rounded shadow-sm bg-white hover:bg-grey-2 transition-colors"
-          >
-          </Button>
+          />
         </div>
 
-        <div class="flex-1 overflow-y-auto">
-          <q-list padding class="space-y-1">
-            <q-item
-              v-for="(topic, index) in topics"
-              :key="index"
-              clickable
-              class="w-full rounded-lg min-h-[48px] flex items-center transition-colors relative hover:bg-grey-2"
-            >
-              <q-item-section>
-                <span class="font-medium">{{ topic.title }}</span>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </div>
+        <!-- Список чатов -->
+        <q-list>
+          <q-item
+            clickable
+            v-ripple
+            v-for="topic in topics"
+            :key="topic.id"
+            @click="$router.push(`/chat/${topic.id}`)"
+          >
+            <q-item-section avatar>
+              <q-icon name="mdi-database" />
+            </q-item-section>
+            <q-item-section>{{ topic.title }}</q-item-section>
+          </q-item>
+        </q-list>
       </q-drawer>
     </div>
     <div
@@ -156,7 +156,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, nextTick, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { marked } from 'marked'
 import { useApiStore } from 'src/stores/user-api'
@@ -165,12 +165,13 @@ import { financeServerURL, userServerURL } from 'src/boot/config'
 import { TypingChat } from 'src/components/molecules'
 import { Button } from 'src/components/atoms'
 import { conversationApiStore } from 'src/stores/conversation-api'
+import { useRoute } from 'vue-router'
 
 // global variables
 const userStore = useApiStore()
 const conversationStore = conversationApiStore()
 const $q = useQuasar()
-
+const route = useRoute()
 const loading = ref(false)
 const chatWindow = ref(null)
 const messages = ref([{ role: 'system', content: 'Hello!' }])
@@ -235,6 +236,17 @@ const suggestions = ref([
 
 function selectSuggestion(s) {
   input.value = s
+}
+
+watch(
+  () => route.params.id,
+  () => {
+    checkChatID()
+  },
+)
+const checkChatID = () => {
+  const chatId = route.params.id
+  isSystem.value = !chatId || chatId.trim().length === 0
 }
 
 async function sendMessage() {
@@ -319,6 +331,7 @@ async function sendMessage() {
 onMounted(() => {
   getUserInformation()
   getAllConversations()
+  checkChatID()
 })
 </script>
 
