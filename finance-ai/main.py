@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 
 from config import Settings, get_settings
 from llm_client import AlemLLMClient
-from prompts import PAIDA_SYSTEM_PROMPT, PAIDA_WELCOME_MESSAGE, TOPIC_GENERATION_PROMPT
+from prompts import PAIDA_SYSTEM_PROMPT, PAIDA_WELCOME_MESSAGE, THINKING_STEPS_PROMPT
 from schemas import ChatMessage
 
 
@@ -188,7 +188,7 @@ async def generate_thinking_steps(
     """
     fallback = get_fallback_steps(user_message)
 
-    topic_prompt = TOPIC_GENERATION_PROMPT.format(user_message=user_message)
+    topic_prompt = THINKING_STEPS_PROMPT.format(user_message=user_message)
 
     messages = [
         ChatMessage(role="user", content=topic_prompt),
