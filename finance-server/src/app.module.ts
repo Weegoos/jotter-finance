@@ -19,6 +19,7 @@ import { PromoCodes } from './promo_codes/promoCodes.model';
 import { PromoCodesModule } from './promo_codes/promoCodes.module';
 import { AIConversationModule } from './ai_conversation/ai_conversation.module';
 import { AIConversation } from './ai_conversation/ai_conversation.model';
+import { AIMessage } from './ai_message/ai_message.model';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { AIConversation } from './ai_conversation/ai_conversation.model';
           Bank,
           PromoCodes,
           AIConversation,
+          AIMessage,
         ] as const,
         autoLoadModels: true,
         synchronize: true,
