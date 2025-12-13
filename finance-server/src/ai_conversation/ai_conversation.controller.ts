@@ -10,7 +10,7 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { IAIConversation } from './interface/ai_conversation.interface';
 import { CreateAIConversationDto } from './dto/conversation-create.dto';
 
-@ApiTags('conversation')
+@ApiTags('ai_conversation')
 @Controller('conversation')
 export class AIConversationController {
   constructor(private readonly aiConversationService: AIConversationService) {}
