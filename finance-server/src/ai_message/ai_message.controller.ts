@@ -1,4 +1,12 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -32,5 +40,20 @@ export class AIMessageContoller {
       message,
     );
     return newMessage;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get(':conversationId')
+  @ApiOperation({ summary: 'Get all messages by conversation ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Messages retrieved successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async findAllMessagesByConversationID(
+    @Param('conversationId') conversationId: string,
+  ) {
+    return this.ai_messageService.findAll(conversationId);
   }
 }

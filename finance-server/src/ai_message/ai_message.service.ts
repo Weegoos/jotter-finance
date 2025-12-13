@@ -36,4 +36,17 @@ export class AIMessageService {
       content: message.content,
     });
   }
+
+  async findAll(conversationId: string): Promise<any> {
+    if (!conversationId) {
+      throw new BadRequestException('Conversation not found');
+    }
+
+    return await this.aiMessageModel.findAll({
+      where: {
+        conversationId: conversationId,
+      },
+      order: [['createdAt', 'DESC']],
+    });
+  }
 }
