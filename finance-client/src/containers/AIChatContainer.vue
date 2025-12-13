@@ -62,7 +62,7 @@
             :text-color="msg.role === 'user' ? 'black' : 'black'"
           >
             <TypingChat
-              v-if="msg.role !== 'user'"
+              v-if="msg.role !== 'user' && isTyping"
               :text="parseMarkdown(msg.content)"
               @update="scrollToBottom"
             />
@@ -166,15 +166,17 @@ import { TypingChat } from 'src/components/molecules'
 import { Button } from 'src/components/atoms'
 import { conversationApiStore } from 'src/stores/conversation-api'
 import { useRoute } from 'vue-router'
+import { useMessageApiStore } from 'src/stores/message-api'
+import { postMethod } from 'src/composables/api-method/post'
 
 // global variables
 const userStore = useApiStore()
 const conversationStore = conversationApiStore()
+const messageStore = useMessageApiStore()
 const $q = useQuasar()
 const route = useRoute()
 const loading = ref(false)
 const chatWindow = ref(null)
-const messages = ref([{ role: 'system', content: 'Hello!' }])
 const isSystem = ref(true)
 const name = ref('')
 const thinkingSteps = ref([])
@@ -193,6 +195,17 @@ function playThinkingSteps(steps) {
   }, 1200)
 }
 
+watch(
+  () => route.params.id,
+  () => {
+    checkChatID()
+  },
+)
+const checkChatID = () => {
+  const chatId = route.params.id
+  isSystem.value = !chatId || chatId.trim().length === 0
+}
+
 const topics = ref([])
 const getAllConversations = async () => {
   try {
@@ -200,6 +213,25 @@ const getAllConversations = async () => {
     topics.value = data
   } catch {
     //
+  }
+}
+
+const messages = ref([])
+const isTyping = ref(true)
+const getAllMessagesByChatID = async () => {
+  const chatId = route.params.id
+  if (!chatId) {
+    isSystem.value = true
+    return
+  }
+  isSystem.value = false
+
+  try {
+    const data = await messageStore.getAllMessages($q, chatId)
+    messages.value = data // <- подставляем в reactive
+    scrollToBottom()
+  } catch (err) {
+    console.error('Error loading messages:', err)
   }
 }
 
@@ -238,27 +270,23 @@ function selectSuggestion(s) {
   input.value = s
 }
 
-watch(
-  () => route.params.id,
-  () => {
-    checkChatID()
-  },
-)
-const checkChatID = () => {
-  const chatId = route.params.id
-  isSystem.value = !chatId || chatId.trim().length === 0
-}
-
 async function sendMessage() {
   if (!input.value.trim()) return
   isSystem.value = false
 
   const content = input.value.trim()
-  messages.value.push({ role: 'user', content })
+  const chatId = route.params.id
+  messages.value.push({ role: 'user', content})
+  const payload = {
+    conversationId: chatId,
+    role: 'user',
+    content: content,
+  }
+  await postMethod(financeServerURL, 'message', payload, $q, 'Сообщение от пользователя отправлено')
   input.value = ''
   scrollToBottom()
   loading.value = true
-
+  isTyping.value = true
   thinkingSteps.value = []
   currentStepIndex.value = 0
 
@@ -280,6 +308,19 @@ async function sendMessage() {
         },
       )
       answer = res.data?.data?.trim() || '⚠️ Нет ответа от финансового ассистента.'
+      const payload = {
+        conversationId: chatId,
+        role: 'assistant',
+        content: answer,
+      }
+      await postMethod(
+        financeServerURL,
+        'message',
+        payload,
+        $q,
+        'Сообщение от ИИ отправлено',
+      )
+      console.log(answer)
     } else {
       const body = {
         message: content,
@@ -300,7 +341,19 @@ async function sendMessage() {
       }
 
       answer = res.data?.message?.trim() || '⚠️ Пустой ответ от LLM'
-      console.log(res)
+      const payload = {
+        conversationId: chatId,
+        role: 'assistant',
+        content: answer,
+      }
+       await postMethod(
+        financeServerURL,
+        'message',
+        payload,
+        $q,
+        'Сообщение от ИИ отправлено',
+      )
+      console.log(answer)
     }
 
     loading.value = false
@@ -328,10 +381,19 @@ async function sendMessage() {
   scrollToBottom()
 }
 
+watch(
+  () => route.params.id,
+  () => {
+    getAllMessagesByChatID()
+    isTyping.value = false
+  },
+)
+
 onMounted(() => {
   getUserInformation()
   getAllConversations()
   checkChatID()
+  getAllMessagesByChatID()
 })
 </script>
 

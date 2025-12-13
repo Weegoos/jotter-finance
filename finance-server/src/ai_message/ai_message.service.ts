@@ -46,7 +46,7 @@ export class AIMessageService {
       where: {
         conversationId: conversationId,
       },
-      order: [['createdAt', 'DESC']],
+      order: [['createdAt', 'ASC']],
     });
   }
 }
