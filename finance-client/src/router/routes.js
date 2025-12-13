@@ -32,7 +32,7 @@ const routes = [
     component: () => import('pages/BudgetPage.vue'),
   },
   {
-    path: '/chat',
+    path: '/chat/:id?', // знак вопроса делает параметр необязательным
     component: () => import('pages/AIChatPage.vue'),
   },
 

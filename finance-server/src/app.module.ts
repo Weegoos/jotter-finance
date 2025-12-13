@@ -15,6 +15,12 @@ import { BudgetModule } from './budget/budget.module';
 import { BankModule } from './banks/bank.module';
 import { Bank } from './banks/bank.model';
 import { AIModule } from './ai/ai.module';
+import { PromoCodes } from './promo_codes/promoCodes.model';
+import { PromoCodesModule } from './promo_codes/promoCodes.module';
+import { AIConversationModule } from './ai_conversation/ai_conversation.module';
+import { AIConversation } from './ai_conversation/ai_conversation.model';
+import { AIMessage } from './ai_message/ai_message.model';
+import { AIMessageModule } from './ai_message/ai_message.module';
 
 @Module({
   imports: [
@@ -28,7 +34,16 @@ import { AIModule } from './ai/ai.module';
         username: configService.get<string>('DB_USER'),
         password: configService.get<string>('DB_PASS'),
         database: configService.get<string>('DB_NAME'),
-        models: [Budget, Account, Categories, Transactions, Bank] as const,
+        models: [
+          Budget,
+          Account,
+          Categories,
+          Transactions,
+          Bank,
+          PromoCodes,
+          AIConversation,
+          AIMessage,
+        ] as const,
         autoLoadModels: true,
         synchronize: true,
       }),
@@ -40,6 +55,9 @@ import { AIModule } from './ai/ai.module';
     Stats,
     BankModule,
     AIModule,
+    PromoCodesModule,
+    AIConversationModule,
+    AIMessageModule,
   ],
   providers: [AppService, ChatGateway],
 })

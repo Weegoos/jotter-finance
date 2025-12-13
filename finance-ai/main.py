@@ -1,17 +1,45 @@
 from __future__ import annotations
-from contextlib import asynccontextmanager
-from typing import Optional
+
+import json
+from typing import List, Optional
 
 import httpx
 from fastapi import Depends, FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from fastapi.responses import JSONResponse, StreamingResponse
+from pydantic import BaseModel, Field
 
 from config import Settings, get_settings
 from llm_client import AlemLLMClient
-from prompts import PAIDA_SYSTEM_PROMPT, PAIDA_WELCOME_MESSAGE
-from schemas import ChatMessage, ChatRequest, ChatResponse
+from prompts import PAIDA_SYSTEM_PROMPT, PAIDA_WELCOME_MESSAGE, TOPIC_GENERATION_PROMPT
+from schemas import ChatMessage
+
+
+# ============================================================================
+# Request/Response Models
+# ============================================================================
+
+
+class ChatRequest(BaseModel):
+    """Запрос к чату pAIda."""
+
+    message: str = Field(..., description="Сообщение пользователя", min_length=1)
+    conversation_history: Optional[List[ChatMessage]] = Field(
+        default=None,
+        description="История диалога для контекста",
+    )
+    model: Optional[str] = Field(default=None, description="Модель LLM")
+    temperature: float = Field(default=0.7, ge=0, le=2)
+
+
+class ChatResponse(BaseModel):
+    """Ответ от pAIda."""
+
+    thinking_steps: List[str] = Field(
+        ..., description="Шаги мышления — что делает ассистент"
+    )
+    message: str = Field(..., description="Ответ ассистента")
+    model: str = Field(..., description="Использованная модель")
 
 
 class KeyVerifyResponse(BaseModel):
@@ -31,22 +59,47 @@ class LLMTestRequest(BaseModel):
     temperature: float = 0.7
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Initialize shared LLM client for the app lifecycle.
-    settings = get_settings()
-    app.state.settings = settings
-    app.state.llm_client = AlemLLMClient(settings)
-    try:
-        yield
-    finally:
-        await app.state.llm_client.aclose()
+# ============================================================================
+# Streaming Event Models
+# ============================================================================
 
+
+class StreamEventThinking(BaseModel):
+    """Шаги мышления — что делает LLM (как в ChatGPT)."""
+
+    type: str = "thinking"
+    steps: List[str] = Field(..., description="Список шагов мышления")
+
+
+class StreamEventContent(BaseModel):
+    """Токен ответа."""
+
+    type: str = "content"
+    delta: str
+
+
+class StreamEventDone(BaseModel):
+    """Завершение генерации."""
+
+    type: str = "done"
+    status: str = "completed"
+
+
+class StreamEventError(BaseModel):
+    """Ошибка генерации."""
+
+    type: str = "error"
+    error: str
+
+
+# ============================================================================
+# FastAPI App
+# ============================================================================
 
 app = FastAPI(
-    title="Jotter Finance LLM API",
-    description="LLM gateway for testing provider responses (Swagger available).",
-    version="1.0.0",
+    title="Jotter Finance - pAIda API",
+    description="Финансовый AI-ассистент pAIda",
+    version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
 )
@@ -64,12 +117,9 @@ async def shutdown_event():
     await app.state.llm_client.aclose()
 
 
-origins = [
-    "http://localhost:9000",
-]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["http://localhost:9000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -80,35 +130,222 @@ def get_llm_client(request: Request) -> AlemLLMClient:
     return request.app.state.llm_client
 
 
-def prepare_messages_with_system_prompt(
-    messages: list[ChatMessage],
-) -> list[ChatMessage]:
+def build_messages(
+    user_message: str,
+    conversation_history: Optional[List[ChatMessage]] = None,
+) -> List[ChatMessage]:
     """
-    Prepares messages by ensuring pAIda system prompt is at the beginning.
-
-    - If no system message exists, adds pAIda prompt as first message
-    - If a system message exists, prepends pAIda prompt to it
+    Собирает список сообщений для LLM.
+    Системный промпт pAIda автоматически добавляется.
     """
-    system_prompt = ChatMessage(role="system", content=PAIDA_SYSTEM_PROMPT)
+    messages = [ChatMessage(role="system", content=PAIDA_SYSTEM_PROMPT)]
 
-    # Check if there's already a system message
-    has_system = any(msg.role == "system" for msg in messages)
+    # Добавляем историю диалога
+    if conversation_history:
+        for msg in conversation_history:
+            if msg.role != "system":  # Игнорируем system из истории
+                messages.append(ChatMessage(role=msg.role, content=msg.content))
 
-    if not has_system:
-        # No system message - add pAIda prompt at the beginning
-        return [system_prompt] + list(messages)
+    # Добавляем текущее сообщение
+    messages.append(ChatMessage(role="user", content=user_message))
 
-    # There's a system message - combine with pAIda prompt
-    result = []
-    for msg in messages:
-        if msg.role == "system":
-            # Prepend pAIda prompt to existing system message
-            combined_content = f"{PAIDA_SYSTEM_PROMPT}\n\n---\n\n{msg.content}"
-            result.append(ChatMessage(role="system", content=combined_content))
+    return messages
+
+
+def get_fallback_steps(user_message: str) -> List[str]:
+    """Генерирует fallback шаги мышления на основе языка сообщения."""
+    has_cyrillic = any("\u0400" <= c <= "\u04ff" for c in user_message)
+    has_kazakh = any(c in "әғқңөұүһі" for c in user_message.lower())
+
+    if has_kazakh:
+        return [
+            "Сұрақты талдап жатырмын",
+            "Қажетті ақпаратты іздеп жатырмын",
+            "Жауапты дайындап жатырмын",
+        ]
+    elif has_cyrillic:
+        return [
+            "Анализирую твой запрос",
+            "Подбираю нужную информацию",
+            "Формирую ответ",
+        ]
+    else:
+        return [
+            "Analyzing your request",
+            "Gathering relevant information",
+            "Preparing the response",
+        ]
+
+
+async def generate_thinking_steps(
+    client: AlemLLMClient,
+    user_message: str,
+    model: str,
+) -> List[str]:
+    """
+    Генерирует шаги мышления (как в ChatGPT).
+    Возвращает список из 3-5 шагов.
+    """
+    fallback = get_fallback_steps(user_message)
+
+    topic_prompt = TOPIC_GENERATION_PROMPT.format(user_message=user_message)
+
+    messages = [
+        ChatMessage(role="user", content=topic_prompt),
+    ]
+
+    try:
+        result = await client.chat(
+            messages,
+            model=model,
+            temperature=0.7,
+        )
+        response = result.get("message", "").strip()
+
+        # Парсим шаги (каждая строка = один шаг)
+        steps = []
+        for line in response.split("\n"):
+            line = line.strip()
+            # Убираем нумерацию и маркеры
+            line = line.lstrip("0123456789.-–•) ")
+            line = line.strip("\"'`")
+
+            if line and len(line) > 3 and len(line) < 100:
+                steps.append(line)
+
+        # Возвращаем 3-5 шагов
+        if len(steps) >= 3:
+            return steps[:5]
         else:
-            result.append(msg)
+            return fallback
 
-    return result
+    except Exception:
+        return fallback
+
+
+# ============================================================================
+# Main Chat Endpoints
+# ============================================================================
+
+
+@app.post(
+    "/llm/smart-chat",
+    response_model=ChatResponse,
+    summary="💬 Чат с pAIda",
+    description="""
+Финансовый AI-ассистент pAIda.
+
+**Возможности:**
+- Понимает русский, казахский и английский
+- Отвечает на языке пользователя
+- Понимает контекст и опечатки
+- Специализируется на финансах
+
+**Примеры запросов:**
+- "Привет, помоги с бюджетом"
+- "скока я потратил за месец" (с опечатками)
+- "менің табысым қанша" (казахский)
+- "how to save money" (английский)
+""",
+    tags=["Chat"],
+)
+async def chat_endpoint(
+    request: ChatRequest,
+    client: AlemLLMClient = Depends(get_llm_client),
+    settings: Settings = Depends(get_settings),
+):
+    """Основной эндпоинт чата с pAIda."""
+    model = request.model or settings.primary_llm_model
+
+    # Генерируем шаги мышления
+    thinking_steps = await generate_thinking_steps(client, request.message, model)
+
+    messages = build_messages(request.message, request.conversation_history)
+
+    try:
+        result = await client.chat(
+            messages,
+            model=model,
+            temperature=request.temperature,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    return ChatResponse(
+        thinking_steps=thinking_steps,
+        message=result.get("message", ""),
+        model=result.get("model", model),
+    )
+
+
+@app.post(
+    "/llm/smart-chat/stream",
+    summary="💬 Стриминговый чат с pAIda (SSE)",
+    description="Ответ в реальном времени, токен за токеном.",
+    tags=["Chat"],
+)
+async def chat_stream_endpoint(
+    request: ChatRequest,
+    client: AlemLLMClient = Depends(get_llm_client),
+    settings: Settings = Depends(get_settings),
+):
+    """Стриминговый чат с pAIda."""
+    model = request.model or settings.primary_llm_model
+
+    # Сначала генерируем шаги мышления
+    thinking_steps = await generate_thinking_steps(client, request.message, model)
+
+    messages = build_messages(request.message, request.conversation_history)
+
+    async def generate():
+        try:
+            # 1. Отправляем шаги мышления первым событием
+            thinking_event = StreamEventThinking(steps=thinking_steps)
+            yield f"data: {thinking_event.model_dump_json()}\n\n"
+
+            # 2. Стримим основной контент
+            async for chunk in client.chat_stream(
+                messages,
+                model=model,
+                temperature=request.temperature,
+            ):
+                try:
+                    chunk_data = json.loads(chunk)
+                    delta = (
+                        chunk_data.get("choices", [{}])[0]
+                        .get("delta", {})
+                        .get("content", "")
+                    )
+                    if delta:
+                        event = StreamEventContent(delta=delta)
+                        yield f"data: {event.model_dump_json()}\n\n"
+                except json.JSONDecodeError:
+                    if chunk.strip():
+                        event = StreamEventContent(delta=chunk)
+                        yield f"data: {event.model_dump_json()}\n\n"
+
+            # 3. Завершение
+            done = StreamEventDone()
+            yield f"data: {done.model_dump_json()}\n\n"
+
+        except Exception as exc:
+            error = StreamEventError(error=str(exc))
+            yield f"data: {error.model_dump_json()}\n\n"
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+# ============================================================================
+# Info & Health Endpoints
+# ============================================================================
 
 
 @app.get("/health", summary="Health check")
@@ -116,13 +353,9 @@ async def health():
     return {"status": "ok"}
 
 
-@app.get(
-    "/paida/info",
-    summary="Get pAIda assistant information",
-    tags=["pAIda"],
-)
+@app.get("/paida/info", summary="Информация о pAIda", tags=["Info"])
 async def get_paida_info():
-    """Get pAIda assistant configuration and welcome message."""
+    """Информация об ассистенте pAIda."""
     return {
         "name": "pAIda",
         "description": "Финансовый AI-ассистент Jotter Finance",
@@ -134,32 +367,12 @@ async def get_paida_info():
             "Финансовое планирование",
             "Управление расходами",
         ],
-    }
-
-
-@app.get(
-    "/settings/keys",
-    summary="Get configured API keys status",
-    tags=["Settings"],
-)
-async def get_api_keys_status(settings: Settings = Depends(get_settings)):
-    """Show which API keys are configured (masked for security)."""
-
-    def mask_key(key: str | None) -> str:
-        if not key:
-            return "❌ not set"
-        return f"✅ {key[:8]}...{key[-4:]}" if len(key) > 12 else "✅ ***"
-
-    return {
-        "db_dsn": "✅ configured" if settings.db_dsn else "❌ not set",
-        "primary_llm_model": settings.primary_llm_model,
-        "alem_base_url": settings.alem_base_url,
-        "alem_api_key": mask_key(settings.alem_api_key),
+        "supported_languages": ["Русский", "Қазақша", "English"],
     }
 
 
 # ============================================================================
-# API Key Verification Endpoints
+# API Key Testing (для отладки)
 # ============================================================================
 
 
@@ -172,7 +385,7 @@ async def _test_llm_key(
     max_tokens: int = 100,
     temperature: float = 0.7,
 ) -> KeyVerifyResponse:
-    """Helper to test LLM API keys via chat completions endpoint."""
+    """Helper to test LLM API keys."""
     if not api_key:
         return KeyVerifyResponse(
             provider=provider,
@@ -198,51 +411,26 @@ async def _test_llm_key(
 
             if response.status_code == 200:
                 data = response.json()
-                # Extract the assistant's response
                 assistant_message = (
                     data.get("choices", [{}])[0].get("message", {}).get("content", "")
                 )
                 return KeyVerifyResponse(
                     provider=provider,
                     status="success",
-                    message="✅ API key is valid and working",
-                    details={
-                        "your_message": user_message,
-                        "assistant_response": assistant_message,
-                        "model": model,
-                        "raw_response": data,
-                    },
-                )
-            elif response.status_code == 401:
-                return KeyVerifyResponse(
-                    provider=provider,
-                    status="error",
-                    message="❌ Invalid API key (401 Unauthorized)",
-                )
-            elif response.status_code == 403:
-                return KeyVerifyResponse(
-                    provider=provider,
-                    status="error",
-                    message="❌ Access denied (403 Forbidden)",
+                    message="✅ API key is valid",
+                    details={"response": assistant_message[:200]},
                 )
             else:
                 return KeyVerifyResponse(
                     provider=provider,
                     status="error",
-                    message=f"❌ Request failed with status {response.status_code}",
-                    details={"response": response.text[:500]},
+                    message=f"❌ Status {response.status_code}",
                 )
-    except httpx.TimeoutException:
-        return KeyVerifyResponse(
-            provider=provider,
-            status="error",
-            message="❌ Request timed out (60s)",
-        )
     except Exception as e:
         return KeyVerifyResponse(
             provider=provider,
             status="error",
-            message=f"❌ Connection error: {str(e)}",
+            message=f"❌ Error: {str(e)}",
         )
 
 
@@ -250,13 +438,13 @@ async def _test_llm_key(
     "/test/alemllm",
     response_model=KeyVerifyResponse,
     summary="🧪 Test AlemLLM",
-    tags=["🔑 API Key Testing"],
+    tags=["Testing"],
 )
 async def test_alemllm_key(
     request: LLMTestRequest,
     settings: Settings = Depends(get_settings),
 ):
-    """Send a message to AlemLLM and get response (main Alem model)."""
+    """Тест подключения к AlemLLM."""
     return await _test_llm_key(
         base_url=settings.alem_base_url,
         api_key=settings.alem_api_key,
@@ -265,102 +453,6 @@ async def test_alemllm_key(
         user_message=request.message,
         max_tokens=request.max_tokens,
         temperature=request.temperature,
-    )
-
-
-@app.post(
-    "/test/all",
-    summary="🧪 Quick Test All API Keys",
-    tags=["🔑 API Key Testing"],
-)
-async def test_all_keys(settings: Settings = Depends(get_settings)):
-    """Quick test all configured API keys with default messages."""
-    llm_req = LLMTestRequest()
-
-    results = {
-        "alemllm": await test_alemllm_key(llm_req, settings),
-    }
-
-    summary = {
-        "total": len(results),
-        "success": sum(1 for r in results.values() if r.status == "success"),
-        "failed": sum(1 for r in results.values() if r.status == "error"),
-    }
-
-    return {
-        "summary": summary,
-        "results": {k: v.model_dump() for k, v in results.items()},
-    }
-
-
-@app.post(
-    "/llm/chat",
-    response_model=ChatResponse,
-    summary="Send chat completion request",
-    tags=["LLM"],
-)
-async def chat_endpoint(
-    request: ChatRequest,
-    client: AlemLLMClient = Depends(get_llm_client),
-    settings: Settings = Depends(get_settings),
-):
-    # Prepare messages with pAIda system prompt
-    messages = prepare_messages_with_system_prompt(request.messages)
-
-    try:
-        result = await client.chat(
-            messages,
-            model=request.model or settings.primary_llm_model,
-            temperature=request.temperature,
-            top_p=request.top_p,
-        )
-    except Exception as exc:  # pragma: no cover - defensive logging path
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
-
-    return ChatResponse(**result)
-
-
-@app.post(
-    "/llm/chat/stream",
-    summary="Send streaming chat completion request (SSE)",
-    tags=["LLM"],
-)
-async def chat_stream_endpoint(
-    request: ChatRequest,
-    client: AlemLLMClient = Depends(get_llm_client),
-    settings: Settings = Depends(get_settings),
-):
-    """
-    Stream chat completion response using Server-Sent Events.
-
-    Returns real-time token-by-token response like ChatGPT.
-    pAIda system prompt is automatically injected.
-    """
-    # Prepare messages with pAIda system prompt
-    messages = prepare_messages_with_system_prompt(request.messages)
-
-    async def generate():
-        try:
-            async for chunk in client.chat_stream(
-                messages,
-                model=request.model or settings.primary_llm_model,
-                temperature=request.temperature,
-                top_p=request.top_p,
-            ):
-                yield f"data: {chunk}\n\n"
-            yield "data: [DONE]\n\n"
-        except Exception as exc:
-            error_data = {"error": str(exc)}
-            yield f"data: {error_data}\n\n"
-
-    return StreamingResponse(
-        generate(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
     )
 
 

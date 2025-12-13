@@ -58,25 +58,36 @@ export class AIService {
 
     const income = totalIncome;
     const expenses = totalExpense;
-    const messages = [
-      { role: 'system', content: 'You are a financial assistant' },
-      {
-        role: 'user',
-        content: `У меня следующие данные:
-    Доходы в евро: ${income}
-    Расходы в евро: ${expenses}
-    Общий баланс денег в евро: ${totalBalance}
-    Моя цель в евро: ${budgetGoal}
-    Сделай краткий вывод о его финансовом состоянии и дай совет исходя из цели.`,
-      },
-    ];
+    // const messages = [
+    //   { role: 'system', content: 'You are a financial assistant' },
+    //   {
+    //     role: 'user',
+    //     content: `У меня следующие данные:
+    // Доходы в евро: ${income}
+    // Расходы в евро: ${expenses}
+    // Общий баланс денег в евро: ${totalBalance}
+    // Моя цель в евро: ${budgetGoal}
+    // Сделай краткий вывод о его финансовом состоянии и дай совет исходя из цели.`,
+    //   },
+    // ];
 
     const response = await axios.post(
-      'http://localhost:2500/llm/chat',
+      'http://localhost:2500/llm/smart-chat', // <- убедись, что путь правильный
       {
         model: 'alemllm',
         temperature: 0.7,
-        messages,
+        conversation_history: [
+          {
+            role: 'assistant',
+            content: 'Привет',
+          },
+        ],
+        message: `У меня следующие данные:
+Доходы в евро: ${income}
+Расходы в евро: ${expenses}
+Общий баланс денег в евро: ${totalBalance}
+Моя цель в евро: ${budgetGoal}
+Сделай краткий вывод о его финансовом состоянии и дай совет исходя из цели.`,
       },
       {
         headers: { 'Content-Type': 'application/json' },

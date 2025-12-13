@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="overflow-hidden h-[100%]">
     <AIChatContainer></AIChatContainer>
   </div>
 </template>
