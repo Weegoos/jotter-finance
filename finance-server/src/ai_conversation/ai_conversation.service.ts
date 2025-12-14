@@ -1,13 +1,21 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { AIConversation } from './ai_conversation.model';
 import { IAIConversation } from './interface/ai_conversation.interface';
+import { AIMessage } from 'src/ai_message/ai_message.model';
 
 @Injectable()
 export class AIConversationService {
   constructor(
     @InjectModel(AIConversation)
     private readonly aiConversationModel: typeof AIConversation,
+
+    @InjectModel(AIMessage)
+    private readonly aiMessageModel: typeof AIMessage,
   ) {}
 
   async create(
@@ -41,5 +49,20 @@ export class AIConversationService {
       },
       order: [['createdAt', 'DESC']],
     });
+  }
+
+  async destroy(id: string, userId: string) {
+    const conversation = await this.aiConversationModel.findByPk(id);
+
+    if (!conversation) throw new NotFoundException('Conversation not found');
+    if (conversation.dataValues.user_id !== Number(userId)) {
+      throw new UnauthorizedException('User not authorized');
+    }
+
+    await this.aiMessageModel.destroy({
+      where: { conversationId: id },
+    });
+
+    await conversation.destroy();
   }
 }

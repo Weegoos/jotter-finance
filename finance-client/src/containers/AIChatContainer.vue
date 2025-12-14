@@ -9,7 +9,14 @@
       class="bg-white shadow-md flex flex-col"
     >
       <div class="p-2 flex-none">
-        <Button flat dense icon="mdi-folder-plus" label="Новый чат" class="w-full justify-start" />
+        <Button
+          flat
+          dense
+          icon="mdi-folder-plus"
+          label="Новый чат"
+          class="w-full justify-start"
+          @click="createChat"
+        />
       </div>
 
       <q-list class="flex-1">
@@ -181,7 +188,6 @@ const checkChatID = () => {
   if (!chatId || chatId.trim().length === 0) {
     isSystem.value = true
     messages.value = []
-    console.log('There is no chatId')
   } else {
     isSystem.value = false
   }
@@ -192,6 +198,7 @@ const getAllConversations = async () => {
   try {
     const data = await conversationStore.getAllConversation($q)
     topics.value = data
+    console.log('Все чаты получены')
   } catch {
     //
   }
@@ -201,16 +208,26 @@ const messages = ref([])
 const getAllMessagesByChatID = async () => {
   const chatId = route.params.id
   if (!chatId) {
-    checkChatID()
+    // Нет чата — показываем системный экран
     isSystem.value = true
-  } else {
-    isSystem.value = false
+    messages.value = []
+    return
   }
 
   try {
     const data = await messageStore.getAllMessages($q, chatId)
-    messages.value = data
-    scrollToBottom()
+
+    if (data.length === 0) {
+      isSystem.value = true
+      messages.value = []
+    } else {
+      // Есть сообщения — отображаем их
+      isSystem.value = false
+      messages.value = data
+      scrollToBottom()
+    }
+
+    console.log('Количество сообщений:', data.length)
   } catch (err) {
     console.error('Error loading messages:', err)
   }
@@ -272,74 +289,79 @@ function selectSuggestion(s) {
   input.value = s
 }
 
+const createChat = async () => {
+  const payload = {
+    title: 'New чат',
+  }
+
+  const res = await postMethod(financeServerURL, 'conversation', payload, $q, 'Чат Создан')
+  console.log(res)
+
+  getAllConversations()
+  router.push(`/chat/${res.id}`)
+}
+
 async function sendMessage() {
-  if (!input.value.trim()) return
-
-  isSystem.value = false
   const content = input.value.trim()
-  const chatId = route.params.id
+  if (!content) return
 
-  // user message
+  // если chatId нет, создаём новый чат
+  let chatId = route.params.id
+
+  // После того как isSystem сброшен, пушим сообщение
   messages.value.push({ role: 'user', content })
-  await postMethod(
-    financeServerURL,
-    'message',
-    {
-      conversationId: chatId,
-      role: 'user',
-      content,
-    },
-    $q,
-  )
-
-  input.value = ''
   scrollToBottom()
-
+  input.value = ''
   loading.value = true
   thinkingSteps.value = []
   currentStepIndex.value = 0
 
-  const type = detectQueryType(content)
-  let answer = ''
-
   try {
+    // Сохраняем сообщение пользователя на сервер
+    await postMethod(
+      financeServerURL,
+      'message',
+      {
+        conversationId: chatId,
+        role: 'user',
+        content,
+      },
+      $q,
+    )
+    getAllMessagesByChatID()
+
+    // Генерация ответа ИИ
+    let answer = ''
+    const type = detectQueryType(content)
+
     if (type === 'finance') {
       const res = await axios.post(
         `${financeServerURL}ai/advice`,
         { question: content },
         {
-          headers: {
-            Authorization: `Bearer ${Cookies.get('access_token')}`,
-          },
+          headers: { Authorization: `Bearer ${Cookies.get('access_token')}` },
         },
       )
-
       answer = res.data?.data?.trim() || '⚠️ Нет ответа от ассистента.'
     } else {
-      const res = await axios.post('http://localhost:2500/llm/smart-chat', {
+      const body = {
         message: content,
-        conversation_history: messages.value
-          .filter((m) => m.role !== 'system')
-          .map((m) => ({
-            role: m.role,
-            content: String(m.content),
-          })),
+        conversation_history: messages.value.filter((m) => m.role !== 'system'),
         model: 'alemllm',
         temperature: 0.7,
-      })
+      }
+      const res = await axios.post('http://localhost:2500/llm/smart-chat', body)
 
       if (res.data?.thinking_steps?.length) {
         playThinkingSteps(res.data.thinking_steps)
-
-        await new Promise((resolve) => setTimeout(resolve, res.data.thinking_steps.length * 1200))
+        await new Promise((r) => setTimeout(r, res.data.thinking_steps.length * 1200))
       }
 
       answer = res.data?.message?.trim() || '⚠️ Пустой ответ от LLM'
     }
 
-    // 👉 сначала показываем ответ
+    // Пушим ответ ИИ в UI и на сервер
     messages.value.push({ role: 'assistant', content: answer })
-
     await postMethod(
       financeServerURL,
       'message',
@@ -352,12 +374,8 @@ async function sendMessage() {
     )
   } catch (err) {
     console.error(err)
-    messages.value.push({
-      role: 'assistant',
-      content: 'Ошибка запроса к серверу.',
-    })
+    messages.value.push({ role: 'assistant', content: 'Ошибка запроса к серверу.' })
   } finally {
-    // 👉 только В САМОМ КОНЦЕ
     loading.value = false
     thinkingSteps.value = []
     scrollToBottom()
@@ -386,7 +404,6 @@ onMounted(() => {
   getAllConversations()
   checkChatID()
   getAllMessagesByChatID()
-  console.log(isSystem.value)
 })
 </script>
 
