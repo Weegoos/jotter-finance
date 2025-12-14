@@ -19,20 +19,22 @@
         />
       </div>
 
-      <q-list class="flex-1">
-        <q-item
-          clickable
-          v-ripple
-          v-for="topic in topics"
-          :key="topic.id"
-          @click="openChat(topic.id)"
-        >
-          <q-item-section avatar>
-            <q-icon name="mdi-database" />
-          </q-item-section>
-          <q-item-section>{{ topic.title }}</q-item-section>
-        </q-item>
-      </q-list>
+      <div class="flex-1 overflow-y-auto">
+        <q-list>
+          <q-item
+            clickable
+            v-ripple
+            v-for="topic in topics"
+            :key="topic.id"
+            @click="openChat(topic.id)"
+          >
+            <q-item-section avatar>
+              <q-icon name="mdi-database" />
+            </q-item-section>
+            <q-item-section>{{ topic.title }}</q-item-section>
+          </q-item>
+        </q-list>
+      </div>
     </q-drawer>
 
     <!-- Main chat -->
@@ -61,6 +63,49 @@
               </div>
               <p class="text-gray-600 mt-4 font-medium">Чем могу помочь сегодня?</p>
             </div>
+          </div>
+          <div
+            v-if="!isVisibleChatID"
+            class="mt-6 bg-gray-50 border border-gray-200 rounded-xl p-4 text-gray-700 text-sm space-y-2"
+          >
+            <p>
+              💡 Добро пожаловать! Вот несколько шагов, которые помогут вам эффективно управлять
+              финансами:
+            </p>
+            <ol class="list-decimal list-inside space-y-1">
+              <li>
+                📊 Анализируйте свои доходы и расходы: записывайте все транзакции и ищите
+                возможности для оптимизации.
+              </li>
+              <li>
+                💰 Планируйте бюджет: устанавливайте лимиты на категории расходов и следите за их
+                выполнением.
+              </li>
+              <li>
+                🎯 Ставьте финансовые цели: например, накопить резервный фонд, купить недвижимость
+                или инвестировать в образование.
+              </li>
+              <li>
+                📈 Инвестируйте с умом: изучайте разные инструменты, диверсифицируйте активы,
+                минимизируйте риски.
+              </li>
+              <li>
+                💡 Оптимизируйте повседневные расходы: ищите выгодные тарифы, подписки и скидки,
+                чтобы больше сберегать.
+              </li>
+              <li>
+                🌱 Развивайтесь финансово: читайте книги, проходите курсы и следите за новостями
+                экономики.
+              </li>
+              <li>
+                📝 Регулярно анализируйте прогресс: проверяйте, насколько вы приближаетесь к целям,
+                корректируйте стратегию при необходимости.
+              </li>
+            </ol>
+            <p>
+              Следуя этим рекомендациям, вы сможете увеличить доход, контролировать расходы и
+              постепенно достигнуть финансовой независимости.
+            </p>
           </div>
         </div>
 
@@ -105,7 +150,7 @@
         </div>
 
         <!-- Input -->
-        <div class="sticky bottom-0 bg-gray-50 border-t p-4 z-10">
+        <div v-if="isVisibleChatID" class="sticky bottom-0 bg-gray-50 border-t p-4 z-10">
           <div class="flex gap-2">
             <q-input
               dense
@@ -116,6 +161,7 @@
               class="flex-1"
               @keyup.enter="sendMessage"
             />
+            <q-btn round color="red" icon="mdi-delete" @click="deleteChat" />
             <q-btn
               round
               color="black"
@@ -155,6 +201,8 @@ import { conversationApiStore } from 'src/stores/conversation-api'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessageApiStore } from 'src/stores/message-api'
 import { postMethod } from 'src/composables/api-method/post'
+import { putMethod } from 'src/composables/api-method/put'
+import { deleteMethod } from 'src/composables/api-method/delete'
 
 // global variables
 const userStore = useApiStore()
@@ -183,13 +231,16 @@ function playThinkingSteps(steps) {
   }, 1200)
 }
 
+const isVisibleChatID = ref(false)
 const checkChatID = () => {
   const chatId = route.params.id
   if (!chatId || chatId.trim().length === 0) {
     isSystem.value = true
     messages.value = []
+    isVisibleChatID.value = false
   } else {
     isSystem.value = false
+    isVisibleChatID.value = true
   }
 }
 
@@ -279,10 +330,11 @@ const parseMarkdown = (text) => (text ? marked(text) : '')
 const input = ref('')
 const suggestions = ref([
   'Сделай отчет по финансам (доход, расход, транзакция)',
-  'Сколько я потратил на еду за месяц?',
-  'Помоги составить бюджет на следующий месяц',
-  'Какие инвестиции лучше сейчас?',
-  'Сделай прогноз по расходам на месяц',
+  'Сколько я заработал за месяц?',
+  'Какие основные расходы у меня за месяц?',
+  'Помоги составить план сбережений',
+  'Как оптимизировать расходы на жилье?',
+  'Какие варианты инвестиций подходят для новичка?',
 ])
 
 function selectSuggestion(s) {
@@ -357,8 +409,11 @@ async function sendMessage() {
         playThinkingSteps(res.data.thinking_steps)
         await new Promise((r) => setTimeout(r, res.data.thinking_steps.length * 1200))
       }
-      console.log(res.data.generated_topic)
-
+      const payload = {
+        title: res.data.generated_topic,
+      }
+      await putMethod(financeServerURL, `conversation/${chatId}`, payload, $q, {})
+      getAllConversations()
       answer = res.data?.message?.trim() || '⚠️ Пустой ответ от LLM'
     }
 
@@ -388,6 +443,17 @@ function resetThinkingState() {
   loading.value = false
   thinkingSteps.value = []
   currentStepIndex.value = 0
+}
+
+const deleteChat = async () => {
+  const chatId = route.params.id
+  try {
+    await deleteMethod(financeServerURL, 'conversation', chatId)
+    getAllConversations()
+    router.push('/chat')
+  } catch {
+    //
+  }
 }
 
 watch(
