@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -74,5 +75,30 @@ export class AIConversationController {
   @ApiParam({ name: 'id', type: String, description: 'Conversation UUID' }) // ✅
   async delete(@Req() req: any, @Param('id') id: string): Promise<void> {
     return this.aiConversationService.destroy(id, req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Put(':id')
+  @ApiOperation({ summary: 'Update an conversation by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Conversation updated successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Conversation not found' })
+  async update(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() updates: CreateAIConversationDto,
+  ): Promise<IAIConversation> {
+    const updatedConversation = await this.aiConversationService.update(
+      id,
+      req.user.id,
+      updates,
+    );
+
+    return updatedConversation;
   }
 }

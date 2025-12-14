@@ -65,4 +65,20 @@ export class AIConversationService {
 
     await conversation.destroy();
   }
+
+  async update(
+    id: string,
+    userId: number,
+    updates: Partial<IAIConversation>,
+  ): Promise<AIConversation> {
+    const conversation = await this.aiConversationModel.findByPk(id);
+
+    if (!conversation) throw new NotFoundException('Conversation not found');
+    if (conversation.dataValues.user_id !== Number(userId)) {
+      throw new UnauthorizedException('User not authorized');
+    }
+
+    const updatedConversation = await conversation.update(updates);
+    return updatedConversation;
+  }
 }

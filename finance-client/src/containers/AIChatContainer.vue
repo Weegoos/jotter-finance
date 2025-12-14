@@ -346,7 +346,8 @@ async function sendMessage() {
     } else {
       const body = {
         message: content,
-        conversation_history: messages.value.filter((m) => m.role !== 'system'),
+        conversation_history: [],
+        conversation_id: '',
         model: 'alemllm',
         temperature: 0.7,
       }
@@ -356,6 +357,7 @@ async function sendMessage() {
         playThinkingSteps(res.data.thinking_steps)
         await new Promise((r) => setTimeout(r, res.data.thinking_steps.length * 1200))
       }
+      console.log(res.data.generated_topic)
 
       answer = res.data?.message?.trim() || '⚠️ Пустой ответ от LLM'
     }
