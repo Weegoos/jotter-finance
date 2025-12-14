@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { Cookies } from 'quasar'
-import { errorMessage } from '../notify/errorMessage'
+// import { errorMessage } from '../notify/errorMessage'
 
 export async function getMethod(serverURL, url, $q) {
   try {
@@ -24,7 +24,7 @@ export async function getMethod(serverURL, url, $q) {
       return null
     } else {
       console.error('Ошибка:', message)
-      errorMessage($q, `Ошибка: ${message}`)
+      // errorMessage($q, `Ошибка: ${message}`)
     }
   } finally {
     $q.loading.hide()

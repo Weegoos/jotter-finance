@@ -11,7 +11,12 @@ from pydantic import BaseModel, Field
 
 from config import Settings, get_settings
 from llm_client import AlemLLMClient
-from prompts import PAIDA_SYSTEM_PROMPT, PAIDA_WELCOME_MESSAGE, TOPIC_GENERATION_PROMPT
+from prompts import (
+    PAIDA_SYSTEM_PROMPT,
+    PAIDA_WELCOME_MESSAGE,
+    THINKING_STEPS_PROMPT,
+    CHAT_TOPIC_PROMPT,
+)
 from schemas import ChatMessage
 
 
@@ -28,6 +33,10 @@ class ChatRequest(BaseModel):
         default=None,
         description="История диалога для контекста",
     )
+    conversation_id: Optional[str] = Field(
+        default=None,
+        description="UUID существующего чата (None = новый чат, топик сгенерируется автоматически)",
+    )
     model: Optional[str] = Field(default=None, description="Модель LLM")
     temperature: float = Field(default=0.7, ge=0, le=2)
 
@@ -40,6 +49,14 @@ class ChatResponse(BaseModel):
     )
     message: str = Field(..., description="Ответ ассистента")
     model: str = Field(..., description="Использованная модель")
+    conversation_id: Optional[str] = Field(
+        default=None,
+        description="UUID чата (передаётся обратно для удобства)",
+    )
+    generated_topic: Optional[str] = Field(
+        default=None,
+        description="Сгенерированное название топика (если generate_topic=True)",
+    )
 
 
 class KeyVerifyResponse(BaseModel):
@@ -76,6 +93,14 @@ class StreamEventContent(BaseModel):
 
     type: str = "content"
     delta: str
+
+
+class StreamEventTopic(BaseModel):
+    """Сгенерированный топик чата."""
+
+    type: str = "topic"
+    topic: str = Field(..., description="Название топика")
+    conversation_id: Optional[str] = Field(default=None, description="UUID чата")
 
 
 class StreamEventDone(BaseModel):
@@ -188,7 +213,7 @@ async def generate_thinking_steps(
     """
     fallback = get_fallback_steps(user_message)
 
-    topic_prompt = TOPIC_GENERATION_PROMPT.format(user_message=user_message)
+    topic_prompt = THINKING_STEPS_PROMPT.format(user_message=user_message)
 
     messages = [
         ChatMessage(role="user", content=topic_prompt),
@@ -221,6 +246,43 @@ async def generate_thinking_steps(
 
     except Exception:
         return fallback
+
+
+async def generate_chat_topic(
+    client: AlemLLMClient,
+    user_message: str,
+    model: str,
+) -> Optional[str]:
+    """
+    Генерирует короткое название (топик) для чата на основе первого сообщения.
+    Возвращает строку 2-5 слов или None при ошибке.
+    """
+    prompt = CHAT_TOPIC_PROMPT.format(message=user_message)
+
+    messages = [
+        ChatMessage(role="user", content=prompt),
+    ]
+
+    try:
+        result = await client.chat(
+            messages,
+            model=model,
+            temperature=0.5,  # Ниже температура для более стабильных названий
+        )
+        topic = result.get("message", "").strip()
+
+        # Очистка от лишних символов
+        topic = topic.strip('"\'`«»„"')
+        topic = topic.rstrip(".")
+
+        # Валидация: 2-50 символов
+        if topic and 2 <= len(topic) <= 50:
+            return topic
+
+        return None
+
+    except Exception:
+        return None
 
 
 # ============================================================================
@@ -260,6 +322,14 @@ async def chat_endpoint(
     # Генерируем шаги мышления
     thinking_steps = await generate_thinking_steps(client, request.message, model)
 
+    # Генерируем топик для первого сообщения (нет истории)
+    generated_topic = None
+    is_first_message = (
+        not request.conversation_history or len(request.conversation_history) == 0
+    )
+    if is_first_message:
+        generated_topic = await generate_chat_topic(client, request.message, model)
+
     messages = build_messages(request.message, request.conversation_history)
 
     try:
@@ -275,6 +345,8 @@ async def chat_endpoint(
         thinking_steps=thinking_steps,
         message=result.get("message", ""),
         model=result.get("model", model),
+        conversation_id=request.conversation_id,
+        generated_topic=generated_topic,
     )
 
 
@@ -295,6 +367,14 @@ async def chat_stream_endpoint(
     # Сначала генерируем шаги мышления
     thinking_steps = await generate_thinking_steps(client, request.message, model)
 
+    # Генерируем топик для первого сообщения (нет истории)
+    generated_topic = None
+    is_first_message = (
+        not request.conversation_history or len(request.conversation_history) == 0
+    )
+    if is_first_message:
+        generated_topic = await generate_chat_topic(client, request.message, model)
+
     messages = build_messages(request.message, request.conversation_history)
 
     async def generate():
@@ -303,7 +383,15 @@ async def chat_stream_endpoint(
             thinking_event = StreamEventThinking(steps=thinking_steps)
             yield f"data: {thinking_event.model_dump_json()}\n\n"
 
-            # 2. Стримим основной контент
+            # 2. Отправляем топик если был сгенерирован
+            if generated_topic:
+                topic_event = StreamEventTopic(
+                    topic=generated_topic,
+                    conversation_id=request.conversation_id,
+                )
+                yield f"data: {topic_event.model_dump_json()}\n\n"
+
+            # 3. Стримим основной контент
             async for chunk in client.chat_stream(
                 messages,
                 model=model,
@@ -324,7 +412,7 @@ async def chat_stream_endpoint(
                         event = StreamEventContent(delta=chunk)
                         yield f"data: {event.model_dump_json()}\n\n"
 
-            # 3. Завершение
+            # 4. Завершение
             done = StreamEventDone()
             yield f"data: {done.model_dump_json()}\n\n"
 

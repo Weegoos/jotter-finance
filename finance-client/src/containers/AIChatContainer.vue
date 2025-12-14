@@ -1,33 +1,32 @@
 <template>
-  <section>
-    <div>
-      <q-drawer
-        side="left"
-        v-model="drawerLeft"
-        :width="250"
-        :breakpoint="500"
-        class="bg-white p-2 m-0 h-full shadow-md flex flex-col"
-        content-class="bg-grey-3"
-      >
-        <!-- Верхняя панель с кнопкой -->
-        <div class="flex-none mb-2">
-          <Button
-            flat
-            dense
-            icon="mdi-folder-plus"
-            label="Новый чат"
-            class="w-full text-black flex justify-start items-center px-3 py-2 rounded shadow-sm bg-white hover:bg-grey-2 transition-colors"
-          />
-        </div>
+  <section class="flex min-h-screen bg-gray-100">
+    <!-- Drawer -->
+    <q-drawer
+      side="left"
+      v-model="drawerLeft"
+      :width="250"
+      :breakpoint="500"
+      class="bg-white shadow-md flex flex-col"
+    >
+      <div class="p-2 flex-none">
+        <Button
+          flat
+          dense
+          icon="mdi-folder-plus"
+          label="Новый чат"
+          class="w-full justify-start"
+          @click="createChat"
+        />
+      </div>
 
-        <!-- Список чатов -->
+      <div class="flex-1 overflow-y-auto">
         <q-list>
           <q-item
             clickable
             v-ripple
             v-for="topic in topics"
             :key="topic.id"
-            @click="$router.push(`/chat/${topic.id}`)"
+            @click="openChat(topic.id)"
           >
             <q-item-section avatar>
               <q-icon name="mdi-database" />
@@ -35,42 +34,15 @@
             <q-item-section>{{ topic.title }}</q-item-section>
           </q-item>
         </q-list>
-      </q-drawer>
-    </div>
-    <div
-      :class="{
-        'fixed fixed-center w-[50%]': isSystem,
-        'w-[80%] flex flex-col justify-self-center': !isSystem,
-      }"
-      class="rounded-xl shadow-md overflow-hidden"
-    >
-      <!-- Сообщения с прокруткой -->
-      <div ref="chatWindow" class="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
-        <div
-          v-for="(msg, idx) in messages"
-          :key="idx"
-          class="flex"
-          :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
-        >
-          <q-chat-message
-            v-if="msg.role !== 'system'"
-            :name="msg.role === 'user' ? name : 'Paida AI-Ассистент'"
-            :sent="msg.role === 'user'"
-            :avatar-color="msg.role === 'user' ? 'primary' : 'blue-grey-5'"
-            class="mb-2 max-w-[70%]"
-            :bg-color="msg.role === 'user' ? 'grey-3' : 'grey-3'"
-            :text-color="msg.role === 'user' ? 'black' : 'black'"
-          >
-            <TypingChat
-              v-if="msg.role !== 'user' && isTyping"
-              :text="parseMarkdown(msg.content)"
-              @update="scrollToBottom"
-            />
-            <div v-else v-html="parseMarkdown(msg.content)"></div>
-          </q-chat-message>
+      </div>
+    </q-drawer>
 
-          <!-- Системное приветствие -->
-          <div v-if="isSystem" class="w-full flex justify-center">
+    <!-- Main chat -->
+    <main class="flex-1 flex justify-center px-6 py-4">
+      <div class="w-full max-w-5xl bg-white rounded-xl shadow-md flex flex-col">
+        <!-- System screen -->
+        <div v-if="isSystem" class="p-10 flex justify-center">
+          <div class="max-w-md text-center">
             <div
               class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 max-w-md text-center animate-fadeIn"
             >
@@ -92,66 +64,128 @@
               <p class="text-gray-600 mt-4 font-medium">Чем могу помочь сегодня?</p>
             </div>
           </div>
-        </div>
-
-        <!-- Индикатор печати -->
-        <div v-if="loading && !thinkingSteps.length" class="flex justify-start mt-2">
-          <div class="bg-gray-200 text-gray-600 px-4 py-2 rounded-xl animate-pulse">
-            Печатает...
-          </div>
-        </div>
-
-        <!-- Thinking Steps вместо "Печатает..." -->
-        <div v-if="!loading && thinkingSteps.length" class="flex flex-col gap-2 mt-2">
           <div
-            v-for="(step, i) in thinkingSteps"
-            :key="i"
-            v-show="i <= currentStepIndex"
-            class="bg-gray-200 text-gray-700 px-4 py-2 rounded-xl shadow-sm animate-fadeIn"
+            v-if="!isVisibleChatID"
+            class="mt-6 bg-gray-50 border border-gray-200 rounded-xl p-4 text-gray-700 text-sm space-y-2"
           >
-            {{ step }}
+            <p>
+              💡 Добро пожаловать! Вот несколько шагов, которые помогут вам эффективно управлять
+              финансами:
+            </p>
+            <ol class="list-decimal list-inside space-y-1">
+              <li>
+                📊 Анализируйте свои доходы и расходы: записывайте все транзакции и ищите
+                возможности для оптимизации.
+              </li>
+              <li>
+                💰 Планируйте бюджет: устанавливайте лимиты на категории расходов и следите за их
+                выполнением.
+              </li>
+              <li>
+                🎯 Ставьте финансовые цели: например, накопить резервный фонд, купить недвижимость
+                или инвестировать в образование.
+              </li>
+              <li>
+                📈 Инвестируйте с умом: изучайте разные инструменты, диверсифицируйте активы,
+                минимизируйте риски.
+              </li>
+              <li>
+                💡 Оптимизируйте повседневные расходы: ищите выгодные тарифы, подписки и скидки,
+                чтобы больше сберегать.
+              </li>
+              <li>
+                🌱 Развивайтесь финансово: читайте книги, проходите курсы и следите за новостями
+                экономики.
+              </li>
+              <li>
+                📝 Регулярно анализируйте прогресс: проверяйте, насколько вы приближаетесь к целям,
+                корректируйте стратегию при необходимости.
+              </li>
+            </ol>
+            <p>
+              Следуя этим рекомендациям, вы сможете увеличить доход, контролировать расходы и
+              постепенно достигнуть финансовой независимости.
+            </p>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="flex-1 p-4 space-y-4">
+          <div
+            v-for="(msg, idx) in messages"
+            :key="idx"
+            class="flex"
+            :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
+          >
+            <q-chat-message
+              v-if="msg.role !== 'system'"
+              :name="msg.role === 'user' ? name : 'Paida AI-Ассистент'"
+              :sent="msg.role === 'user'"
+              class="max-w-[70%]"
+              bg-color="grey-3"
+              text-color="black"
+            >
+              <div v-html="parseMarkdown(msg.content)" />
+            </q-chat-message>
+          </div>
+
+          <!-- Thinking Steps -->
+          <div v-if="loading && thinkingSteps.length" class="flex flex-col gap-2 mt-2">
+            <div
+              v-for="(step, i) in thinkingSteps"
+              :key="i"
+              v-show="i <= currentStepIndex"
+              class="bg-gray-200 text-gray-700 px-4 py-2 rounded-xl shadow-sm animate-fadeIn"
+            >
+              {{ step }}
+            </div>
+          </div>
+
+          <!-- Fallback: печатает -->
+          <div v-else-if="loading" class="flex justify-start mt-2">
+            <div class="bg-gray-200 text-gray-600 px-4 py-2 rounded-xl animate-pulse">
+              Формирую ответ...
+            </div>
+          </div>
+        </div>
+
+        <!-- Input -->
+        <div v-if="isVisibleChatID" class="sticky bottom-0 bg-gray-50 border-t p-4 z-10">
+          <div class="flex gap-2">
+            <q-input
+              dense
+              outlined
+              rounded
+              v-model="input"
+              placeholder="Введите сообщение…"
+              class="flex-1"
+              @keyup.enter="sendMessage"
+            />
+            <q-btn round color="red" icon="mdi-delete" @click="deleteChat" />
+            <q-btn
+              round
+              color="black"
+              icon="send"
+              @click="sendMessage"
+              :disable="loading || !input.trim()"
+            />
+          </div>
+
+          <!-- Suggestions -->
+          <div v-if="!input.trim() && suggestions.length" class="mt-2 border rounded bg-white">
+            <div
+              v-for="(s, i) in suggestions"
+              :key="i"
+              class="p-2 hover:bg-gray-100 cursor-pointer flex gap-2"
+              @click="selectSuggestion(s)"
+            >
+              <q-icon name="search" size="16px" />
+              {{ s }}
+            </div>
           </div>
         </div>
       </div>
-
-      <!-- Input box -->
-      <div class="p-4 bg-gray-50 border-t rounded-lg border-gray-200 flex flex-col space-y-2">
-        <div class="flex space-x-2 relative">
-          <q-input
-            dense
-            rounded
-            outlined
-            v-model="input"
-            placeholder="Введите сообщение..."
-            class="flex-1"
-            @keyup.enter="sendMessage"
-          />
-          <q-btn
-            round
-            color="black"
-            icon="send"
-            @click="sendMessage"
-            :disable="loading || input.trim() === ''"
-          />
-        </div>
-      </div>
-
-      <!-- Подсказки -->
-      <div
-        v-if="input.trim() === '' && suggestions.length"
-        class="mt-2 bg-white border border-gray-200 rounded shadow-md"
-      >
-        <div
-          v-for="(s, i) in suggestions"
-          :key="i"
-          class="flex items-center gap-2 p-2 rounded hover:bg-gray-100 cursor-pointer"
-          @click="selectSuggestion(s)"
-        >
-          <q-icon name="search" size="16px" />
-          <span class="text-gray-700">{{ s }}</span>
-        </div>
-      </div>
-    </div>
+    </main>
   </section>
 </template>
 
@@ -162,12 +196,13 @@ import { marked } from 'marked'
 import { useApiStore } from 'src/stores/user-api'
 import { Cookies, useQuasar } from 'quasar'
 import { financeServerURL, userServerURL } from 'src/boot/config'
-import { TypingChat } from 'src/components/molecules'
 import { Button } from 'src/components/atoms'
 import { conversationApiStore } from 'src/stores/conversation-api'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useMessageApiStore } from 'src/stores/message-api'
 import { postMethod } from 'src/composables/api-method/post'
+import { putMethod } from 'src/composables/api-method/put'
+import { deleteMethod } from 'src/composables/api-method/delete'
 
 // global variables
 const userStore = useApiStore()
@@ -182,6 +217,7 @@ const name = ref('')
 const thinkingSteps = ref([])
 const currentStepIndex = ref(0)
 const drawerLeft = ref(true)
+const router = useRouter()
 
 function playThinkingSteps(steps) {
   thinkingSteps.value = steps
@@ -195,15 +231,17 @@ function playThinkingSteps(steps) {
   }, 1200)
 }
 
-watch(
-  () => route.params.id,
-  () => {
-    checkChatID()
-  },
-)
+const isVisibleChatID = ref(false)
 const checkChatID = () => {
   const chatId = route.params.id
-  isSystem.value = !chatId || chatId.trim().length === 0
+  if (!chatId || chatId.trim().length === 0) {
+    isSystem.value = true
+    messages.value = []
+    isVisibleChatID.value = false
+  } else {
+    isSystem.value = false
+    isVisibleChatID.value = true
+  }
 }
 
 const topics = ref([])
@@ -211,36 +249,68 @@ const getAllConversations = async () => {
   try {
     const data = await conversationStore.getAllConversation($q)
     topics.value = data
+    console.log('Все чаты получены')
   } catch {
     //
   }
 }
 
 const messages = ref([])
-const isTyping = ref(true)
 const getAllMessagesByChatID = async () => {
   const chatId = route.params.id
   if (!chatId) {
+    // Нет чата — показываем системный экран
     isSystem.value = true
+    messages.value = []
     return
   }
-  isSystem.value = false
 
   try {
     const data = await messageStore.getAllMessages($q, chatId)
-    messages.value = data // <- подставляем в reactive
-    scrollToBottom()
+
+    if (data.length === 0) {
+      isSystem.value = true
+      messages.value = []
+    } else {
+      // Есть сообщения — отображаем их
+      isSystem.value = false
+      messages.value = data
+      scrollToBottom()
+    }
+
+    console.log('Количество сообщений:', data.length)
   } catch (err) {
     console.error('Error loading messages:', err)
   }
 }
 
 const scrollToBottom = () => {
+  const chatId = route.params.id
+  if (!chatId || isSystem.value) return
+
   nextTick(() => {
-    const el = chatWindow.value
-    if (el) el.scrollTop = el.scrollHeight
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: 'smooth',
+    })
   })
 }
+
+const openChat = async (id) => {
+  await router.push(`/chat/${id}`)
+  await nextTick()
+  scrollToBottom()
+}
+
+watch(
+  () => messages.value.length,
+  async () => {
+    await nextTick()
+    const el = chatWindow.value
+    if (!el) return
+    el.scrollTop = el.scrollHeight
+  },
+)
 
 const financeKeywords = ['доход', 'расход', 'бюджет', 'финансы', 'транзакция']
 
@@ -260,133 +330,141 @@ const parseMarkdown = (text) => (text ? marked(text) : '')
 const input = ref('')
 const suggestions = ref([
   'Сделай отчет по финансам (доход, расход, транзакция)',
-  'Сколько я потратил на еду за месяц?',
-  'Помоги составить бюджет на следующий месяц',
-  'Какие инвестиции лучше сейчас?',
-  'Сделай прогноз по расходам на месяц',
+  'Сколько я заработал за месяц?',
+  'Какие основные расходы у меня за месяц?',
+  'Помоги составить план сбережений',
+  'Как оптимизировать расходы на жилье?',
+  'Какие варианты инвестиций подходят для новичка?',
 ])
 
 function selectSuggestion(s) {
   input.value = s
 }
 
-async function sendMessage() {
-  if (!input.value.trim()) return
-  isSystem.value = false
-
-  const content = input.value.trim()
-  const chatId = route.params.id
-  messages.value.push({ role: 'user', content})
+const createChat = async () => {
   const payload = {
-    conversationId: chatId,
-    role: 'user',
-    content: content,
+    title: 'New чат',
   }
-  await postMethod(financeServerURL, 'message', payload, $q, 'Сообщение от пользователя отправлено')
-  input.value = ''
+
+  const res = await postMethod(financeServerURL, 'conversation', payload, $q, 'Чат Создан')
+  console.log(res)
+
+  getAllConversations()
+  router.push(`/chat/${res.id}`)
+}
+
+async function sendMessage() {
+  const content = input.value.trim()
+  if (!content) return
+
+  // если chatId нет, создаём новый чат
+  let chatId = route.params.id
+
+  // После того как isSystem сброшен, пушим сообщение
+  messages.value.push({ role: 'user', content })
   scrollToBottom()
+  input.value = ''
   loading.value = true
-  isTyping.value = true
   thinkingSteps.value = []
   currentStepIndex.value = 0
 
-  const type = detectQueryType(content)
-
   try {
+    // Сохраняем сообщение пользователя на сервер
+    await postMethod(
+      financeServerURL,
+      'message',
+      {
+        conversationId: chatId,
+        role: 'user',
+        content,
+      },
+      $q,
+    )
+    getAllMessagesByChatID()
+
+    // Генерация ответа ИИ
     let answer = ''
+    const type = detectQueryType(content)
 
     if (type === 'finance') {
       const res = await axios.post(
         `${financeServerURL}ai/advice`,
         { question: content },
         {
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            Authorization: `Bearer ${Cookies.get('access_token')}`,
-          },
+          headers: { Authorization: `Bearer ${Cookies.get('access_token')}` },
         },
       )
-      answer = res.data?.data?.trim() || '⚠️ Нет ответа от финансового ассистента.'
-      const payload = {
-        conversationId: chatId,
-        role: 'assistant',
-        content: answer,
-      }
-      await postMethod(
-        financeServerURL,
-        'message',
-        payload,
-        $q,
-        'Сообщение от ИИ отправлено',
-      )
-      console.log(answer)
+      answer = res.data?.data?.trim() || '⚠️ Нет ответа от ассистента.'
     } else {
       const body = {
         message: content,
-        conversation_history: messages.value
-          .filter((m) => m.role !== 'system')
-          .map((m) => ({
-            role: m.role,
-            content: String(m.content),
-          })),
+        conversation_history: [],
+        conversation_id: '',
         model: 'alemllm',
         temperature: 0.7,
       }
-
       const res = await axios.post('http://localhost:2500/llm/smart-chat', body)
 
-      if (res.data?.thinking_steps) {
+      if (res.data?.thinking_steps?.length) {
         playThinkingSteps(res.data.thinking_steps)
+        await new Promise((r) => setTimeout(r, res.data.thinking_steps.length * 1200))
       }
-
-      answer = res.data?.message?.trim() || '⚠️ Пустой ответ от LLM'
       const payload = {
+        title: res.data.generated_topic,
+      }
+      await putMethod(financeServerURL, `conversation/${chatId}`, payload, $q, {})
+      getAllConversations()
+      answer = res.data?.message?.trim() || '⚠️ Пустой ответ от LLM'
+    }
+
+    // Пушим ответ ИИ в UI и на сервер
+    messages.value.push({ role: 'assistant', content: answer })
+    await postMethod(
+      financeServerURL,
+      'message',
+      {
         conversationId: chatId,
         role: 'assistant',
         content: answer,
-      }
-       await postMethod(
-        financeServerURL,
-        'message',
-        payload,
-        $q,
-        'Сообщение от ИИ отправлено',
-      )
-      console.log(answer)
-    }
-
-    loading.value = false
-
-    await nextTick()
-
-    setTimeout(
-      () => {
-        messages.value.push({ role: 'assistant', content: answer })
-        thinkingSteps.value = []
-        scrollToBottom()
       },
-      thinkingSteps.value.length * 1200 + 300,
+      $q,
     )
-    return
   } catch (err) {
     console.error(err)
-    messages.value.push({
-      role: 'assistant',
-      content: 'Ошибка запроса к серверу.',
-    })
+    messages.value.push({ role: 'assistant', content: 'Ошибка запроса к серверу.' })
+  } finally {
+    loading.value = false
+    thinkingSteps.value = []
+    scrollToBottom()
   }
+}
 
+function resetThinkingState() {
   loading.value = false
-  scrollToBottom()
+  thinkingSteps.value = []
+  currentStepIndex.value = 0
+}
+
+const deleteChat = async () => {
+  const chatId = route.params.id
+  try {
+    await deleteMethod(financeServerURL, 'conversation', chatId)
+    getAllConversations()
+    router.push('/chat')
+  } catch {
+    //
+  }
 }
 
 watch(
   () => route.params.id,
-  () => {
-    getAllMessagesByChatID()
-    isTyping.value = false
+  async () => {
+    resetThinkingState()
+    checkChatID()
+    await getAllMessagesByChatID()
+    scrollToBottom()
   },
+  { immediate: true },
 )
 
 onMounted(() => {

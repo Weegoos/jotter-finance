@@ -30,7 +30,9 @@ export class AIMessage extends Model {
   })
   declare conversationId: string;
 
-  @BelongsTo(() => AIConversation)
+  @BelongsTo(() => AIConversation, {
+    onDelete: 'CASCADE',
+  })
   declare conversation: AIConversation;
 
   @Column({
