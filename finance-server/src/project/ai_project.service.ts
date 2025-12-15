@@ -34,4 +34,17 @@ export class AIProjectService {
 
     return created;
   }
+
+  async findAll(user_id: number): Promise<any> {
+    if (!user_id) {
+      throw new UnauthorizedException('User not authorized');
+    }
+
+    return await this.aiProjectModel.findAll({
+      where: {
+        user_id: user_id,
+      },
+      order: [['createdAt', 'DESC']],
+    });
+  }
 }

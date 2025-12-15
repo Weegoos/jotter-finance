@@ -52,7 +52,7 @@ export class AIConversationController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get()
-  @ApiOperation({ summary: 'Get all convesations for a user' })
+  @ApiOperation({ summary: 'Get all conversations for a user' })
   @ApiResponse({
     status: 200,
     description: 'Conversations retrieved successfully',

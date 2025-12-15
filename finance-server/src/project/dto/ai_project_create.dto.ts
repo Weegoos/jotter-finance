@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsOptional, IsEnum } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString, IsEnum } from 'class-validator';
 import { ProjectType } from 'src/project/ai_project.model';
 
 export class CreateAIProjectDto {
@@ -12,12 +12,4 @@ export class CreateAIProjectDto {
   @IsNotEmpty()
   @IsEnum(ProjectType)
   type: ProjectType;
-
-  @ApiPropertyOptional({
-    description: 'Optional description of the project',
-    example: 'My finance tracking project',
-  })
-  @IsOptional()
-  @IsString()
-  description?: string | null;
 }
