@@ -275,8 +275,8 @@ async def generate_chat_topic(
         topic = topic.strip('"\'`«»„"')
         topic = topic.rstrip(".")
 
-        # Валидация: 2-50 символов
-        if topic and 2 <= len(topic) <= 50:
+        # Валидация: 2-80 символов
+        if topic and 2 <= len(topic) <= 100:
             return topic
 
         return None
