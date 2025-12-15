@@ -2,8 +2,31 @@
   <main class="flex-1 flex justify-center px-6 py-4">
     <div class="w-full max-w-5xl bg-white rounded-xl shadow-md flex flex-col">
       <!-- System screen -->
-      <div  v-if="props.isVisibleProjectId">Project ID</div>
-      <div v-else-if="!props.isVisibleChatID && !props.isVisibleProjectId" class="p-10 flex justify-center">
+      <div v-if="props.isVisibleProjectId" class="flex justify-center items-center p-10">
+        <div
+          class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 max-w-md w-full text-center animate-fadeIn"
+        >
+          <h1 class="text-3xl font-bold text-gray-800 mb-4">Текущий проект</h1>
+          <p class="text-gray-600 mb-6">Вы просматриваете текущий проект.</p>
+
+          <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-gray-700 text-sm mb-6">
+            <p class="font-medium mb-1">Project ID:</p>
+            <p class="text-xl font-bold text-black">{{ props.projectId || 'Не задан' }}</p>
+          </div>
+
+          <Button
+            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-full shadow-md transition-colors duration-200"
+            @click="startProject"
+          >
+            Начать проект
+          </Button>
+        </div>
+      </div>
+
+      <div
+        v-else-if="!props.isVisibleChatID && !props.isVisibleProjectId"
+        class="p-10 flex justify-center"
+      >
         <div class="max-w-md text-center" v-if="!props.isVisibleProjectId">
           <div
             class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 max-w-md text-center animate-fadeIn"
@@ -182,7 +205,7 @@ function selectSuggestion(s) {
   input.value = s
 }
 
-const emit = defineEmits(['sendMessage', 'deleteChat'])
+const emit = defineEmits(['sendMessage', 'deleteChat', 'startProject'])
 
 const sendMessage = () => {
   emit('sendMessage', input.value)
@@ -191,6 +214,10 @@ const sendMessage = () => {
 
 const deleteChat = () => {
   emit('deleteChat')
+}
+
+const startProject = () => {
+  emit('startProject')
 }
 </script>
 

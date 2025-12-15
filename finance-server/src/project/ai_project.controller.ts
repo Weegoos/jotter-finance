@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -47,5 +55,20 @@ export class AIProjectController {
   async findAll(@Req() req: any): Promise<any> {
     const projects = await this.aiProjectService.findAll(req.user.id);
     return projects;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get(':projectId')
+  @ApiOperation({ summary: 'Get project by id' })
+  @ApiResponse({
+    status: 200,
+    description: 'Conversations retrieved successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async findAllByProjectId(
+    @Param('projectId') projectId: string,
+  ): Promise<any> {
+    return this.aiProjectService.findAllByProjectId(projectId);
   }
 }

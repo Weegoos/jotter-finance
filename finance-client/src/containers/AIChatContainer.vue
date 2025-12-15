@@ -13,6 +13,7 @@
     <AIChat
       @sendMessage="sendMessage"
       @deleteChat="deleteChat"
+      @startProject="startProject"
       :isSystem="isSystem"
       :isVisibleChatID="isVisibleChatID"
       :messages="messages"
@@ -161,6 +162,18 @@ const createProject = async () => {
   await postMethod(financeServerURL, 'project', payload, $q, 'Проект создан')
   getAllProjects()
   isCreateProject.value = false
+}
+
+const startProject = async () => {
+  const projectId = route.params.projectId
+  if (projectId) {
+    const payload = {
+      title: 'New chat',
+      project_id: projectId,
+    }
+
+    console.log(payload)
+  }
 }
 
 // the end of project
@@ -359,9 +372,8 @@ watch(
     checkRoute()
     resetThinkingState()
   },
-  { immediate: true }
+  { immediate: true },
 )
-
 
 onMounted(() => {
   getUserInformation()

@@ -54,7 +54,9 @@
                 }"
               />
             </q-item-section>
-            <q-item-section>{{ project.title }}</q-item-section>
+            <q-item-section>
+              <p>{{ project.title }}</p>
+            </q-item-section>
           </q-item>
         </q-expansion-item>
       </q-list>
@@ -66,7 +68,7 @@
           <q-item
             clickable
             v-ripple
-            v-for="topic in props.topics"
+            v-for="topic in props.topics.filter((t) => !t.project_id)"
             :key="topic.id"
             @click="openChat(topic.id)"
           >

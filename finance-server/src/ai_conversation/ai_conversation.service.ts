@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -33,6 +34,7 @@ export class AIConversationService {
     const created = await this.aiConversationModel.create({
       user_id: user_id,
       title: conversation.title,
+      project_id: conversation.project_id,
     });
 
     return created;
@@ -48,6 +50,19 @@ export class AIConversationService {
         user_id: user_id,
       },
       order: [['createdAt', 'DESC']],
+    });
+  }
+
+  async findAllByProjectId(project_id: string): Promise<any> {
+    if (!project_id) {
+      throw new BadRequestException('Project not found');
+    }
+
+    return await this.aiConversationModel.findAll({
+      where: {
+        project_id: project_id,
+      },
+      order: [['createdAt', 'ASC']],
     });
   }
 

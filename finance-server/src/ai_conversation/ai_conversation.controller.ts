@@ -65,6 +65,21 @@ export class AIConversationController {
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
+  @Get(':projectId')
+  @ApiOperation({ summary: 'Get all conversations for a project' })
+  @ApiResponse({
+    status: 200,
+    description: 'Conversations retrieved successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async findAllByProjectId(
+    @Param('projectId') projectId: string,
+  ): Promise<any> {
+    return this.aiConversationService.findAllByProjectId(projectId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a conversation by UUID' })
   @ApiResponse({
