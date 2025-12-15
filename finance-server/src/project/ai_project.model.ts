@@ -11,7 +11,6 @@ export interface AIProjectAttributes {
   user_id: number;
   title: string;
   type: ProjectType;
-  description?: string;
 }
 
 @Table({ tableName: 'Project' })

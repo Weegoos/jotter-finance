@@ -1,0 +1,37 @@
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { CreateAIProjectDto } from './dto/ai_project_create.dto';
+import { IAIProject } from './interface/ai_project.interface';
+import { AIProjectService } from './ai_project.service';
+
+@ApiTags('ai_project')
+@Controller('project')
+export class AIProjectController {
+  constructor(private readonly aiProjectService: AIProjectService) {}
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Post()
+  @ApiOperation({ summary: 'Create a project' })
+  @ApiResponse({
+    status: 201,
+    description: 'Project created successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async create(
+    @Req() req: any,
+    @Body() project: CreateAIProjectDto,
+  ): Promise<IAIProject> {
+    const newProject = await this.aiProjectService.create(req.user.id, project);
+
+    return newProject;
+  }
+}
