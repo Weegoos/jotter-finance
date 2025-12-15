@@ -129,7 +129,6 @@ const getAllMessagesByChatID = async () => {
 
   try {
     const data = await messageStore.getAllMessages($q, chatId)
-
     if (data.length === 0) {
       isSystem.value = true
       messages.value = []
@@ -202,13 +201,11 @@ const createChat = async () => {
 async function sendMessage(inputContent) {
   const content = inputContent?.trim()
   if (!content) return
-
-  console.log(content)
-
   const chatId = route.params.id
 
   // пушим сообщение пользователя
   messages.value.push({ role: 'user', content })
+  isSystem.value = false
   scrollToBottom()
 
   loading.value = true
