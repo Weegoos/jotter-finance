@@ -3,3 +3,4 @@ export { default as TransactionOverview } from './dashboard/OrganismDashboardTra
 export { default as Payment } from './dashboard/OrganismDashboardPayment.vue'
 export { default as DashboardGraphs } from './dashboard/OrganismDashboardGraphs.vue'
 export { default as ViewBudget } from './budget/OrganismViewBudget.vue'
+export { default as AIChat } from './aiChat/OrganismAIChat.vue'
