@@ -162,7 +162,7 @@ const props = defineProps({
   loading: Boolean,
   thinkingSteps: Array,
   name: String,
-  currentStepIndex: Number
+  currentStepIndex: Number,
 })
 const input = ref('')
 watch(

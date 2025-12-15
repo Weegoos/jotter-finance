@@ -1,42 +1,7 @@
 <template>
   <section class="flex min-h-screen bg-gray-100">
     <!-- Drawer -->
-    <q-drawer
-      side="left"
-      v-model="drawerLeft"
-      :width="250"
-      :breakpoint="500"
-      class="bg-white shadow-md flex flex-col"
-    >
-      <div class="p-2 flex-none">
-        <Button
-          flat
-          dense
-          icon="mdi-folder-plus"
-          label="Новый чат"
-          class="w-full justify-start"
-          @click="createChat"
-        />
-      </div>
-
-      <div class="flex-1 overflow-y-auto">
-        <q-list>
-          <q-item
-            clickable
-            v-ripple
-            v-for="topic in topics"
-            :key="topic.id"
-            @click="openChat(topic.id)"
-          >
-            <q-item-section avatar>
-              <q-icon name="mdi-database" />
-            </q-item-section>
-            <q-item-section>{{ topic.title }}</q-item-section>
-          </q-item>
-        </q-list>
-      </div>
-    </q-drawer>
-
+    <AIChatDrawer @openChat="openChat" @createChat="createChat" :topics="topics"></AIChatDrawer>
     <!-- Main chat -->
     <AIChat
       @sendMessage="sendMessage"
@@ -58,14 +23,13 @@ import axios from 'axios'
 import { useApiStore } from 'src/stores/user-api'
 import { Cookies, useQuasar } from 'quasar'
 import { financeServerURL, userServerURL } from 'src/boot/config'
-import { Button } from 'src/components/atoms'
 import { conversationApiStore } from 'src/stores/conversation-api'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessageApiStore } from 'src/stores/message-api'
 import { postMethod } from 'src/composables/api-method/post'
 import { putMethod } from 'src/composables/api-method/put'
 import { deleteMethod } from 'src/composables/api-method/delete'
-import { AIChat } from 'src/components/organisms'
+import { AIChat, AIChatDrawer } from 'src/components/organisms'
 // global variables
 const userStore = useApiStore()
 const conversationStore = conversationApiStore()
@@ -73,12 +37,10 @@ const messageStore = useMessageApiStore()
 const $q = useQuasar()
 const route = useRoute()
 const loading = ref(false)
-const chatWindow = ref(null)
 const isSystem = ref(true)
 const name = ref('')
 const thinkingSteps = ref([])
 const currentStepIndex = ref(0)
-const drawerLeft = ref(true)
 const router = useRouter()
 
 function playThinkingSteps(steps) {
@@ -162,16 +124,6 @@ const openChat = async (id) => {
   await nextTick()
   scrollToBottom()
 }
-
-watch(
-  () => messages.value.length,
-  async () => {
-    await nextTick()
-    const el = chatWindow.value
-    if (!el) return
-    el.scrollTop = el.scrollHeight
-  },
-)
 
 const financeKeywords = ['доход', 'расход', 'бюджет', 'финансы', 'транзакция']
 
