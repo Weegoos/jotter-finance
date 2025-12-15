@@ -4,6 +4,7 @@
     <AIChatDrawer
       @openChat="openChat"
       @createChat="createChat"
+      @openProject="openProject"
       :topics="topics"
       :projects="projects"
     ></AIChatDrawer>
@@ -19,6 +20,28 @@
       :name="name"
       :currentStepIndex="currentStepIndex"
     ></AIChat>
+    <Dialog :modelValue="isCreateProject">
+      <template #content>
+        <Close :section-name="'Создать проект'" @emit-click="isCreateProject = false"></Close>
+        <Select
+          class="q-my-sm"
+          :options="projectOptions"
+          v-model="projectName"
+          option-label="name"
+          option-value="value"
+          label="Название проекта"
+        >
+        </Select>
+      </template>
+      <template #actions>
+        <Button
+          label="Создать проект"
+          :disable="!projectName"
+          class="text-black rounded-full w-[150px]"
+          @click="createProject"
+        ></Button>
+      </template>
+    </Dialog>
   </section>
 </template>
 
@@ -36,7 +59,8 @@ import { putMethod } from 'src/composables/api-method/put'
 import { deleteMethod } from 'src/composables/api-method/delete'
 import { AIChat, AIChatDrawer } from 'src/components/organisms'
 import { useProjectApiStore } from 'src/stores/project-api'
-
+import { Close, Dialog } from 'src/components/molecules'
+import { Button, Select } from 'src/components/atoms'
 // global variables
 const userStore = useApiStore()
 const conversationStore = conversationApiStore()
@@ -88,6 +112,8 @@ const getAllConversations = async () => {
   }
 }
 
+// project
+const isCreateProject = ref(false)
 const projects = ref([])
 const getAllProjects = async () => {
   try {
@@ -97,6 +123,26 @@ const getAllProjects = async () => {
   } catch {
     //
   }
+}
+
+const projectName = ref(null)
+const projectOptions = [
+  { name: 'Финансы', value: 'finance', icon: 'mdi-cash' },
+  { name: 'Промокоды', value: 'promocodes', icon: 'mdi-ticket-percent' },
+]
+
+const openProject = () => {
+  isCreateProject.value = true
+}
+
+const createProject = async () => {
+  const payload = {
+    title: projectName.value.name,
+    type: projectName.value.value,
+  }
+  await postMethod(financeServerURL, 'project', payload, $q, 'Проект создан')
+  getAllProjects()
+   isCreateProject.value = false
 }
 
 const messages = ref([])
