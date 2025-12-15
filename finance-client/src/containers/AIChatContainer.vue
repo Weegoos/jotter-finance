@@ -1,7 +1,12 @@
 <template>
   <section class="flex min-h-screen bg-gray-100">
     <!-- Drawer -->
-    <AIChatDrawer @openChat="openChat" @createChat="createChat" :topics="topics"></AIChatDrawer>
+    <AIChatDrawer
+      @openChat="openChat"
+      @createChat="createChat"
+      :topics="topics"
+      :projects="projects"
+    ></AIChatDrawer>
     <!-- Main chat -->
     <AIChat
       @sendMessage="sendMessage"
@@ -30,18 +35,22 @@ import { postMethod } from 'src/composables/api-method/post'
 import { putMethod } from 'src/composables/api-method/put'
 import { deleteMethod } from 'src/composables/api-method/delete'
 import { AIChat, AIChatDrawer } from 'src/components/organisms'
+import { useProjectApiStore } from 'src/stores/project-api'
+
 // global variables
 const userStore = useApiStore()
 const conversationStore = conversationApiStore()
 const messageStore = useMessageApiStore()
+const projectStore = useProjectApiStore()
 const $q = useQuasar()
 const route = useRoute()
+const router = useRouter()
+
 const loading = ref(false)
 const isSystem = ref(true)
 const name = ref('')
 const thinkingSteps = ref([])
 const currentStepIndex = ref(0)
-const router = useRouter()
 
 function playThinkingSteps(steps) {
   thinkingSteps.value = steps
@@ -74,6 +83,17 @@ const getAllConversations = async () => {
     const data = await conversationStore.getAllConversation($q)
     topics.value = data
     console.log('Все чаты получены')
+  } catch {
+    //
+  }
+}
+
+const projects = ref([])
+const getAllProjects = async () => {
+  try {
+    const data = await projectStore.getAllProjects($q)
+    projects.value = data
+    console.log('Все проекты получены')
   } catch {
     //
   }
@@ -274,5 +294,6 @@ onMounted(() => {
   getAllConversations()
   checkChatID()
   getAllMessagesByChatID()
+  getAllProjects()
 })
 </script>

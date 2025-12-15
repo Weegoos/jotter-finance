@@ -17,15 +17,47 @@
       />
     </div>
 
-    <div class="p-2 flex-none">
-      <Button
-        flat
-        dense
-        icon="mdi-folder-plus"
-        label="Новый проект"
-        class="w-full justify-start"
-        @click="createChat"
-      />
+    <div class="q-mb-md flex-none">
+      <q-list>
+        <q-expansion-item expand-separator label="Проекты" default-opened>
+          <Button
+            flat
+            dense
+            icon="mdi-folder-plus"
+            label="Новый проект"
+            class="w-full justify-start"
+            @click="createProject"
+          />
+          <q-item
+            clickable
+            v-ripple
+            v-for="project in props.projects"
+            :key="project.id"
+            @click="openProject(project.id)"
+          >
+            <q-item-section avatar>
+              <q-icon
+                :name="
+                  project.type === 'finance'
+                    ? 'mdi-currency-usd'
+                    : project.type === 'promocodes'
+                      ? 'mdi-tag-multiple'
+                      : 'mdi-folder'
+                "
+                :style="{
+                  color:
+                    project.type === 'finance'
+                      ? '#18A13C'
+                      : project.type === 'promocodes'
+                        ? '#FF9800'
+                        : '#607D8B',
+                }"
+              />
+            </q-item-section>
+            <q-item-section>{{ project.title }}</q-item-section>
+          </q-item>
+        </q-expansion-item>
+      </q-list>
     </div>
 
     <div class="flex-1 overflow-y-auto">
@@ -54,16 +86,21 @@ import { Button } from 'src/components/atoms'
 import { ref } from 'vue'
 const props = defineProps({
   topics: Object,
+  projects: Object,
 })
 const drawerLeft = ref(true)
 
-const emit = defineEmits(['openChat', 'createChat'])
+const emit = defineEmits(['openChat', 'createChat', 'createProject'])
 const openChat = async (id) => {
   emit('openChat', id)
 }
 
 const createChat = async () => {
   emit('createChat')
+}
+
+const createProject = async () => {
+  emit('createProject')
 }
 </script>
 

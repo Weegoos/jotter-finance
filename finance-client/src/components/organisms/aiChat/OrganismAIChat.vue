@@ -104,12 +104,9 @@
 
         <!-- Fallback: печатает -->
         <div v-else-if="props.loading" class="flex justify-start mt-2">
-        <div class="bg-gray-200 italic text-gray-600 px-4 py-2 rounded-xl flex items-center gap-1">
-  <span>Paida формирует ответ</span>
-  <span class="dots">
-    <span>.</span><span>.</span><span>.</span>
-  </span>
-</div>
+          <div class="bg-gray-200 italic text-gray-600 px-4 py-2 rounded-xl animate-pulse">
+            Paida формирует ответ...
+          </div>
         </div>
       </div>
 
@@ -216,19 +213,5 @@ const deleteChat = () => {
 
 .animate-fadeIn {
   animation: fadeIn 0.4s ease-out;
-}
-
-.dots span {
-  animation: blink 1.4s infinite;
-  opacity: 0;
-}
-
-.dots span:nth-child(1) { animation-delay: 0s; }
-.dots span:nth-child(2) { animation-delay: 0.2s; }
-.dots span:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes blink {
-  0%, 20% { opacity: 0; }
-  50%, 100% { opacity: 1; }
 }
 </style>
