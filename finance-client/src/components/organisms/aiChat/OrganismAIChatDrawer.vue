@@ -26,9 +26,15 @@
             icon="mdi-folder-plus"
             label="Новый проект"
             class="w-full justify-start"
-            @click="openProject"
+            @click="openModalWindow"
           />
-          <q-item clickable v-ripple v-for="project in props.projects" :key="project.id">
+          <q-item
+            clickable
+            v-ripple
+            v-for="project in props.projects"
+            :key="project.id"
+            @click="openProject(project.id)"
+          >
             <q-item-section avatar>
               <q-icon
                 :name="
@@ -84,7 +90,7 @@ const props = defineProps({
 })
 const drawerLeft = ref(true)
 
-const emit = defineEmits(['openChat', 'createChat', 'openProject'])
+const emit = defineEmits(['openChat', 'createChat', 'openModalWindow', 'openProject'])
 const openChat = async (id) => {
   emit('openChat', id)
 }
@@ -93,8 +99,12 @@ const createChat = async () => {
   emit('createChat')
 }
 
-const openProject = async () => {
-  emit('openProject')
+const openModalWindow = async () => {
+  emit('openModalWindow')
+}
+
+const openProject = async (id) => {
+  emit('openProject', id)
 }
 </script>
 

@@ -4,6 +4,7 @@
     <AIChatDrawer
       @openChat="openChat"
       @createChat="createChat"
+      @openModalWindow="openModalWindow"
       @openProject="openProject"
       :topics="topics"
       :projects="projects"
@@ -19,6 +20,7 @@
       :thinkingSteps="thinkingSteps"
       :name="name"
       :currentStepIndex="currentStepIndex"
+      :isVisibleProjectId="isVisibleProjectId"
     ></AIChat>
     <Dialog :modelValue="isCreateProject">
       <template #content>
@@ -89,18 +91,30 @@ function playThinkingSteps(steps) {
 }
 
 const isVisibleChatID = ref(false)
-const checkChatID = () => {
-  const chatId = route.params.id
-  if (!chatId || chatId.trim().length === 0) {
-    isSystem.value = true
-    messages.value = []
-    isVisibleChatID.value = false
-  } else {
+
+const isVisibleProjectId = ref(false)
+const checkRoute = () => {
+  const chatId = route.params.chatId
+  const projectId = route.params.projectId
+
+  if (chatId) {
     isSystem.value = false
     isVisibleChatID.value = true
+    isVisibleProjectId.value = false
+    messages.value = []
+  } else if (projectId) {
+    isSystem.value = false
+    isVisibleChatID.value = false
+    isVisibleProjectId.value = true
+    messages.value = [] // project-specific данные
+  } else {
+    // системный экран
+    isSystem.value = true
+    isVisibleChatID.value = false
+    isVisibleProjectId.value = false
+    messages.value = []
   }
 }
-
 const topics = ref([])
 const getAllConversations = async () => {
   try {
@@ -131,8 +145,12 @@ const projectOptions = [
   { name: 'Промокоды', value: 'promocodes', icon: 'mdi-ticket-percent' },
 ]
 
-const openProject = () => {
+const openModalWindow = () => {
   isCreateProject.value = true
+}
+
+const openProject = async (id) => {
+  await router.push(`/project/${id}`)
 }
 
 const createProject = async () => {
@@ -142,39 +160,50 @@ const createProject = async () => {
   }
   await postMethod(financeServerURL, 'project', payload, $q, 'Проект создан')
   getAllProjects()
-   isCreateProject.value = false
+  isCreateProject.value = false
 }
+
+// the end of project
 
 const messages = ref([])
-const getAllMessagesByChatID = async () => {
-  const chatId = route.params.id
-  if (!chatId) {
-    // Нет чата — показываем системный экран
-    isSystem.value = true
-    messages.value = []
-    return
-  }
-
-  try {
-    const data = await messageStore.getAllMessages($q, chatId)
-    if (data.length === 0) {
+watch(
+  () => [route.params.chatId, route.params.projectId],
+  async ([chatId, projectId]) => {
+    if (chatId) {
+      checkRoute()
+      // Загрузка сообщений чата
+      try {
+        const data = await messageStore.getAllMessages($q, chatId)
+        if (!data || data.length === 0) {
+          isSystem.value = true
+          messages.value = []
+        } else {
+          isSystem.value = false
+          messages.value = data
+          scrollToBottom()
+        }
+        console.log('Chat messages loaded:', data.length)
+      } catch (err) {
+        console.error('Error loading chat messages:', err)
+        isSystem.value = true
+        messages.value = []
+      }
+    } else if (projectId) {
+      checkRoute()
+      isSystem.value = false
+      messages.value = [] // или project-specific данные
+      console.log('Project route:', projectId)
+    } else {
+      // Системный экран
       isSystem.value = true
       messages.value = []
-    } else {
-      // Есть сообщения — отображаем их
-      isSystem.value = false
-      messages.value = data
-      scrollToBottom()
     }
-
-    console.log('Количество сообщений:', data.length)
-  } catch (err) {
-    console.error('Error loading messages:', err)
-  }
-}
+  },
+  { immediate: true },
+)
 
 const scrollToBottom = () => {
-  const chatId = route.params.id
+  const chatId = route.params.chatId
   if (!chatId || isSystem.value) return
 
   nextTick(() => {
@@ -219,7 +248,7 @@ const createChat = async () => {
 async function sendMessage(inputContent) {
   const content = inputContent?.trim()
   if (!content) return
-  const chatId = route.params.id
+  const chatId = route.params.chatId
 
   // пушим сообщение пользователя
   messages.value.push({ role: 'user', content })
@@ -314,7 +343,7 @@ function resetThinkingState() {
 }
 
 const deleteChat = async () => {
-  const chatId = route.params.id
+  const chatId = route.params.chatId
   try {
     await deleteMethod(financeServerURL, 'conversation', chatId)
     getAllConversations()
@@ -325,21 +354,19 @@ const deleteChat = async () => {
 }
 
 watch(
-  () => route.params.id,
-  async () => {
+  () => [route.params.chatId, route.params.projectId],
+  () => {
+    checkRoute()
     resetThinkingState()
-    checkChatID()
-    await getAllMessagesByChatID()
-    scrollToBottom()
   },
-  { immediate: true },
+  { immediate: true }
 )
+
 
 onMounted(() => {
   getUserInformation()
   getAllConversations()
-  checkChatID()
-  getAllMessagesByChatID()
+  checkRoute()
   getAllProjects()
 })
 </script>

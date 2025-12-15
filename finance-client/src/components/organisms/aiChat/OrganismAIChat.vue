@@ -2,8 +2,9 @@
   <main class="flex-1 flex justify-center px-6 py-4">
     <div class="w-full max-w-5xl bg-white rounded-xl shadow-md flex flex-col">
       <!-- System screen -->
-      <div v-if="props.isSystem" class="p-10 flex justify-center">
-        <div class="max-w-md text-center">
+      <div  v-if="props.isVisibleProjectId">Project ID</div>
+      <div v-else-if="!props.isVisibleChatID && !props.isVisibleProjectId" class="p-10 flex justify-center">
+        <div class="max-w-md text-center" v-if="!props.isVisibleProjectId">
           <div
             class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 max-w-md text-center animate-fadeIn"
           >
@@ -26,7 +27,7 @@
           </div>
         </div>
         <div
-          v-if="!props.isVisibleChatID"
+          v-if="!props.isVisibleChatID && !props.isVisibleProjectId"
           class="mt-6 bg-gray-50 border border-gray-200 rounded-xl p-4 text-gray-700 text-sm space-y-2"
         >
           <p>
@@ -153,7 +154,7 @@
 <script setup>
 import { marked } from 'marked'
 import { Button, Input } from 'src/components/atoms'
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 
 const props = defineProps({
   isSystem: Boolean,
@@ -163,15 +164,9 @@ const props = defineProps({
   thinkingSteps: Array,
   name: String,
   currentStepIndex: Number,
+  isVisibleProjectId: Boolean,
 })
 const input = ref('')
-watch(
-  () => props.isSystem,
-  (newVal) => {
-    console.log(newVal)
-  },
-)
-
 const parseMarkdown = (text) => (text ? marked(text) : '')
 
 const suggestions = ref([
