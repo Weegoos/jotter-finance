@@ -56,8 +56,15 @@
               </div>
 
               <!-- ПОДПРОЕКТ -->
-              <div class="q-ml-lg cursor-pointer subproject text-grey-7" @click.stop="console.log(888)">
-                {{ project.title }}
+              <div
+                v-for="conversation in project.conversations"
+                :key="conversation.id"
+                class="q-ml-lg cursor-pointer subproject text-grey-7"
+                @click.stop="console.log(888)"
+              >
+                <p @click="$router.push(`/project/${project.id}/chat/${conversation.id}`)">
+                  {{ conversation.title }}
+                </p>
               </div>
             </q-item-section>
           </q-item>

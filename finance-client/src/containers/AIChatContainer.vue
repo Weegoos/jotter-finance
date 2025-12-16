@@ -98,17 +98,23 @@ const isVisibleProjectId = ref(false)
 const checkRoute = () => {
   const chatId = route.params.chatId
   const projectId = route.params.projectId
+  const chatIdByProjectId = route.params.chatIdByProjectId
 
   if (chatId) {
     isSystem.value = false
     isVisibleChatID.value = true
     isVisibleProjectId.value = false
     messages.value = []
-  } else if (projectId) {
+  } else if (projectId && !chatIdByProjectId) {
     isSystem.value = false
     isVisibleChatID.value = false
     isVisibleProjectId.value = true
     messages.value = [] // project-specific данные
+  } else if (projectId && chatIdByProjectId) {
+    isSystem.value = false
+    isVisibleChatID.value = true
+    isVisibleProjectId.value = false
+    messages.value = []
   } else {
     // системный экран
     isSystem.value = true
@@ -135,7 +141,7 @@ const getAllProjects = async () => {
   try {
     const data = await projectStore.getAllProjects($q)
     projects.value = data
-    console.log('Все проекты получены')
+    console.log('Все проекты получены', data)
   } catch {
     //
   }
@@ -159,7 +165,7 @@ const openModalWindow = () => {
 }
 
 const openProject = async (id) => {
-  await router.push(`/project/${id}`)
+  await router.push(`/project/${id}/chat`)
 }
 
 const createProject = async () => {
@@ -188,8 +194,8 @@ const startProject = async () => {
 
 const messages = ref([])
 watch(
-  () => [route.params.chatId, route.params.projectId],
-  async ([chatId, projectId]) => {
+  () => [route.params.chatId, route.params.projectId, route.params.chatIdByProjectId],
+  async ([chatId, projectId, chatIdByProjectId]) => {
     if (chatId) {
       checkRoute()
       // Загрузка сообщений чата
@@ -210,14 +216,32 @@ watch(
         isSystem.value = true
         messages.value = []
       }
-    } else if (projectId) {
+    } else if (projectId && !chatIdByProjectId) {
       checkRoute()
       isSystem.value = false
       messages.value = [] // или project-specific данные
       console.log('Project route:', projectId)
       getProjectBydId(projectId)
+    } else if (chatIdByProjectId && projectId) {
+      checkRoute()
+      try {
+        const data = await messageStore.getAllMessages($q, chatIdByProjectId)
+        if (!data || data.length === 0) {
+          isSystem.value = true
+          messages.value = []
+        } else {
+          isSystem.value = false
+          messages.value = data
+          isVisibleChatID.value = true
+          scrollToBottom()
+        }
+        console.log('Chat messages loaded:', data.length)
+      } catch (err) {
+        console.error('Error loading chat messages:', err)
+        isSystem.value = true
+        messages.value = []
+      }
     } else {
-      // Системный экран
       isSystem.value = true
       messages.value = []
     }

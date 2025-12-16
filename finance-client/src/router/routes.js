@@ -37,7 +37,7 @@ const routes = [
   },
 
   {
-    path: '/project/:projectId?', // знак вопроса делает параметр необязательным
+    path: '/project/:projectId?/chat/:chatIdByProjectId?', // знак вопроса делает параметр необязательным
     component: () => import('pages/AIChatPage.vue'),
   },
 

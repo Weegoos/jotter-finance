@@ -49,6 +49,11 @@ export class AIProjectService {
         user_id: user_id,
       },
       order: [['createdAt', 'DESC']],
+      include: [
+        {
+          model: this.aiConversationModel,
+        },
+      ],
     });
   }
 
