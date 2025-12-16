@@ -6,8 +6,14 @@
         <div
           class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 max-w-md w-full text-center animate-fadeIn"
         >
-          <h1 class="text-3xl font-bold text-gray-800 mb-4">Текущий проект</h1>
-          <p class="text-gray-600 mb-6">Вы просматриваете текущий проект.</p>
+          <h1
+            class="text-3xl font-bold text-gray-800 mb-4"
+            v-for="(topic, index) in props.projectData"
+            :key="index"
+          >
+            {{ topic.title }}
+          </h1>
+          <p class="text-gray-600 mb-6">Вы просматриваете текущий проект</p>
 
           <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-gray-700 text-sm mb-6">
             <p class="font-medium mb-1">Project ID:</p>
@@ -23,10 +29,7 @@
         </div>
       </div>
 
-      <div
-        v-else-if="!props.isVisibleChatID && !props.isVisibleProjectId"
-        class="p-10 flex justify-center"
-      >
+      <div v-else-if="props.isSystem" class="p-10 flex justify-center">
         <div class="max-w-md text-center" v-if="!props.isVisibleProjectId">
           <div
             class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 max-w-md text-center animate-fadeIn"
@@ -188,6 +191,7 @@ const props = defineProps({
   name: String,
   currentStepIndex: Number,
   isVisibleProjectId: Boolean,
+  projectData: Object,
 })
 const input = ref('')
 const parseMarkdown = (text) => (text ? marked(text) : '')

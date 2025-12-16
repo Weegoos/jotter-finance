@@ -22,6 +22,7 @@
       :name="name"
       :currentStepIndex="currentStepIndex"
       :isVisibleProjectId="isVisibleProjectId"
+      :projectData="projectData"
     ></AIChat>
     <Dialog :modelValue="isCreateProject">
       <template #content>
@@ -140,6 +141,13 @@ const getAllProjects = async () => {
   }
 }
 
+const projectData = ref([])
+const getProjectBydId = async (id) => {
+  const data = await projectStore.getAllProjectById($q, id)
+  projectData.value = data
+  console.log(projectData.value)
+}
+
 const projectName = ref(null)
 const projectOptions = [
   { name: 'Финансы', value: 'finance', icon: 'mdi-cash' },
@@ -193,6 +201,7 @@ watch(
         } else {
           isSystem.value = false
           messages.value = data
+          isVisibleChatID.value = true
           scrollToBottom()
         }
         console.log('Chat messages loaded:', data.length)
@@ -206,6 +215,7 @@ watch(
       isSystem.value = false
       messages.value = [] // или project-specific данные
       console.log('Project route:', projectId)
+      getProjectBydId(projectId)
     } else {
       // Системный экран
       isSystem.value = true
