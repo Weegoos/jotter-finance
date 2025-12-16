@@ -6,6 +6,7 @@
       @createChat="createChat"
       @openModalWindow="openModalWindow"
       @openProject="openProject"
+      @openChatByProjectId="openChatByProjectId"
       :topics="topics"
       :projects="projects"
     ></AIChatDrawer>
@@ -251,7 +252,9 @@ watch(
 
 const scrollToBottom = () => {
   const chatId = route.params.chatId
-  if (!chatId || isSystem.value) return
+  const chatIdByProjectId = route.params.chatIdByProjectId
+  if (isSystem.value) return
+  if (!chatId && !chatIdByProjectId) return
 
   nextTick(() => {
     window.scrollTo({
@@ -267,11 +270,10 @@ const openChat = async (id) => {
   scrollToBottom()
 }
 
-const financeKeywords = ['доход', 'расход', 'бюджет', 'финансы', 'транзакция']
-
-function detectQueryType(question) {
-  const lower = question.toLowerCase()
-  return financeKeywords.some((k) => lower.includes(k)) ? 'finance' : 'general'
+const openChatByProjectId = async (id, projectId) => {
+  await router.push(`/project/${projectId}/chat/${id}`)
+  await nextTick()
+  scrollToBottom()
 }
 
 const getUserInformation = async () => {
@@ -296,6 +298,7 @@ async function sendMessage(inputContent) {
   const content = inputContent?.trim()
   if (!content) return
   const chatId = route.params.chatId
+  const chatIdByProjectId = route.params.chatIdByProjectId
 
   // пушим сообщение пользователя
   messages.value.push({ role: 'user', content })
@@ -307,23 +310,19 @@ async function sendMessage(inputContent) {
   currentStepIndex.value = 0
 
   try {
-    // сохраняем сообщение пользователя
-    await postMethod(
-      financeServerURL,
-      'message',
-      {
-        conversationId: chatId,
-        role: 'user',
-        content,
-      },
-      $q,
-    )
-
-    // Генерация ответа
     let answer = ''
-    const type = detectQueryType(content)
 
-    if (type === 'finance') {
+    if (chatIdByProjectId) {
+      await postMethod(
+        financeServerURL,
+        'message',
+        {
+          conversationId: chatIdByProjectId,
+          role: 'user',
+          content,
+        },
+        $q,
+      )
       const res = await axios.post(
         `${financeServerURL}ai/advice`,
         { question: content },
@@ -332,7 +331,29 @@ async function sendMessage(inputContent) {
         },
       )
       answer = res.data?.data?.trim() || '⚠️ Нет ответа от ассистента.'
-    } else {
+      messages.value.push({ role: 'assistant', content: answer })
+
+      await postMethod(
+        financeServerURL,
+        'message',
+        {
+          conversationId: chatIdByProjectId,
+          role: 'assistant',
+          content: answer,
+        },
+        $q,
+      )
+    } else if (chatId) {
+      await postMethod(
+        financeServerURL,
+        'message',
+        {
+          conversationId: chatId,
+          role: 'user',
+          content,
+        },
+        $q,
+      )
       const res = await axios.post('http://localhost:2500/llm/smart-chat', {
         message: content,
         conversation_history: [],
@@ -355,21 +376,20 @@ async function sendMessage(inputContent) {
 
       getAllConversations()
       answer = res.data?.message?.trim() || '⚠️ Пустой ответ от LLM'
+
+      messages.value.push({ role: 'assistant', content: answer })
+
+      await postMethod(
+        financeServerURL,
+        'message',
+        {
+          conversationId: chatId,
+          role: 'assistant',
+          content: answer,
+        },
+        $q,
+      )
     }
-
-    // пушим ответ ассистента
-    messages.value.push({ role: 'assistant', content: answer })
-
-    await postMethod(
-      financeServerURL,
-      'message',
-      {
-        conversationId: chatId,
-        role: 'assistant',
-        content: answer,
-      },
-      $q,
-    )
   } catch (err) {
     console.error(err)
     messages.value.push({

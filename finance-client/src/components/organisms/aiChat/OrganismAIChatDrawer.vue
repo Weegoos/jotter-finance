@@ -62,7 +62,8 @@
                 class="q-ml-lg cursor-pointer subproject text-grey-7"
                 @click.stop="console.log(888)"
               >
-                <p @click="$router.push(`/project/${project.id}/chat/${conversation.id}`)">
+                <!-- $router.push(`/project/${project.id}/chat/${conversation.id}`) -->
+                <p @click="openChatByProjectId(conversation.id, project.id)">
                   {{ conversation.title }}
                 </p>
               </div>
@@ -102,7 +103,13 @@ const props = defineProps({
 })
 const drawerLeft = ref(true)
 
-const emit = defineEmits(['openChat', 'createChat', 'openModalWindow', 'openProject'])
+const emit = defineEmits([
+  'openChat',
+  'createChat',
+  'openModalWindow',
+  'openProject',
+  'openChatByProjectId',
+])
 const openChat = async (id) => {
   emit('openChat', id)
 }
@@ -117,6 +124,10 @@ const openModalWindow = async () => {
 
 const openProject = async (id) => {
   emit('openProject', id)
+}
+
+const openChatByProjectId = async (id, projectId) => {
+  emit('openChatByProjectId', id, projectId)
 }
 </script>
 
