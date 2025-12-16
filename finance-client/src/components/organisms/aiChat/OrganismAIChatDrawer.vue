@@ -28,13 +28,7 @@
             class="w-full justify-start"
             @click="openModalWindow"
           />
-          <q-item
-            clickable
-            v-ripple
-            v-for="project in props.projects"
-            :key="project.id"
-            @click="openProject(project.id)"
-          >
+          <q-item v-for="project in props.projects" :key="project.id" class="no-hover">
             <q-item-section avatar>
               <q-icon
                 :name="
@@ -54,8 +48,17 @@
                 }"
               />
             </q-item-section>
+
             <q-item-section>
-              <p>{{ project.title }}</p>
+              <!-- КЛИКАБЕЛЬНЫЙ ТОЛЬКО TITLE -->
+              <div class="cursor-pointer project-title" @click="openProject(project.id)">
+                {{ project.title }}
+              </div>
+
+              <!-- ПОДПРОЕКТ -->
+              <div class="q-ml-lg cursor-pointer subproject text-grey-7" @click.stop="console.log(888)">
+                {{ project.title }}
+              </div>
             </q-item-section>
           </q-item>
         </q-expansion-item>
@@ -110,4 +113,20 @@ const openProject = async (id) => {
 }
 </script>
 
-<style></style>
+<style scoped>
+.no-hover:hover {
+  background: transparent !important;
+}
+
+.project-title {
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.project-title:hover {
+  background: rgba(25, 118, 210, 0.08); /* или любой цвет */
+}
+.subproject:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+</style>
