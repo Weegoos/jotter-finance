@@ -15,11 +15,6 @@
           </h1>
           <p class="text-gray-600 mb-6">Вы просматриваете текущий проект</p>
 
-          <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-gray-700 text-sm mb-6">
-            <p class="font-medium mb-1">Project ID:</p>
-            <p class="text-xl font-bold text-black">{{ props.projectId || 'Не задан' }}</p>
-          </div>
-
           <Button
             class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-full shadow-md transition-colors duration-200"
             @click="startProject"
