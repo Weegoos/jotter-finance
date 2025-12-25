@@ -62,7 +62,7 @@ export class AIConversationService {
       where: {
         project_id: project_id,
       },
-      order: [['createdAt', 'ASC']],
+      order: [['updatedAt', 'DESC']],
     });
   }
 

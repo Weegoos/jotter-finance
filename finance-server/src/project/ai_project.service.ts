@@ -53,10 +53,12 @@ export class AIProjectService {
       where: {
         user_id: user_id,
       },
-      order: [['createdAt', 'DESC']],
+      order: [['updatedAt', 'DESC']],
       include: [
         {
           model: this.aiConversationModel,
+          separate: true,
+          order: [['updatedAt', 'DESC']],
         },
       ],
     });
@@ -71,7 +73,7 @@ export class AIProjectService {
       where: {
         id: id,
       },
-      order: [['createdAt', 'ASC']],
+      order: [['updatedAt', 'DESC']],
     });
   }
 
