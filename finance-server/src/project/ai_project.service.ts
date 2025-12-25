@@ -1,12 +1,14 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { AIProject, ProjectType } from './ai_project.model';
 import { AIConversation } from 'src/ai_conversation/ai_conversation.model';
 import { IAIProject } from './interface/ai_project.interface';
+import { AIMessage } from 'src/ai_message/ai_message.model';
 
 @Injectable()
 export class AIProjectService {
@@ -16,6 +18,9 @@ export class AIProjectService {
 
     @InjectModel(AIConversation)
     private readonly aiConversationModel: typeof AIConversation,
+
+    @InjectModel(AIMessage)
+    private readonly aiMessage: typeof AIMessage,
   ) {}
 
   async create(
@@ -68,5 +73,33 @@ export class AIProjectService {
       },
       order: [['createdAt', 'ASC']],
     });
+  }
+
+  async destroy(id: string, userId: number) {
+    const project = await this.aiProjectModel.findByPk(id);
+    if (!project) throw new NotFoundException('Project not found');
+
+    if (project.dataValues.user_id !== Number(userId)) {
+      throw new UnauthorizedException('User not authorized');
+    }
+
+    const conversations = await this.aiConversationModel.findAll({
+      where: { project_id: id },
+      attributes: ['id'],
+    });
+
+    const conversationIds = conversations.map((c) => c.id);
+    console.log(conversationIds);
+
+    await this.aiMessage.destroy({
+      where: {
+        conversation_id: conversationIds,
+      },
+    });
+    await this.aiConversationModel.destroy({
+      where: { project_id: id },
+    });
+
+    await project.destroy();
   }
 }

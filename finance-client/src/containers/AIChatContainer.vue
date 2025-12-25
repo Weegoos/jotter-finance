@@ -54,7 +54,7 @@
 import { ref, nextTick, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { useApiStore } from 'src/stores/user-api'
-import { Cookies, useQuasar } from 'quasar'
+import { useQuasar } from 'quasar'
 import { financeServerURL, userServerURL } from 'src/boot/config'
 import { conversationApiStore } from 'src/stores/conversation-api'
 import { useRoute, useRouter } from 'vue-router'
@@ -294,6 +294,50 @@ const createChat = async () => {
   router.push(`/chat/${res.id}`)
 }
 
+const identifyIdAndSendMessage = async (id, content, answer) => {
+  await postMethod(
+    financeServerURL,
+    'message',
+    {
+      conversationId: id,
+      role: 'user',
+      content,
+    },
+    $q,
+  )
+
+  const res = await axios.post('http://localhost:2500/llm/smart-chat', {
+    message: content,
+    conversation_history: [],
+    conversation_id: '',
+    model: 'alemllm',
+    temperature: 0.7,
+  })
+
+  if (res.data?.thinking_steps?.length) {
+    playThinkingSteps(res.data.thinking_steps)
+    await new Promise((r) => setTimeout(r, res.data.thinking_steps.length * 1200))
+  }
+
+  await putMethod(financeServerURL, `conversation/${id}`, { title: res.data.generated_topic }, $q)
+
+  getAllConversations()
+  answer = res.data?.message?.trim() || '⚠️ Пустой ответ от LLM'
+
+  messages.value.push({ role: 'assistant', content: answer })
+
+  await postMethod(
+    financeServerURL,
+    'message',
+    {
+      conversationId: id,
+      role: 'assistant',
+      content: answer,
+    },
+    $q,
+  )
+}
+
 async function sendMessage(inputContent) {
   const content = inputContent?.trim()
   if (!content) return
@@ -311,84 +355,10 @@ async function sendMessage(inputContent) {
 
   try {
     let answer = ''
-
     if (chatIdByProjectId) {
-      await postMethod(
-        financeServerURL,
-        'message',
-        {
-          conversationId: chatIdByProjectId,
-          role: 'user',
-          content,
-        },
-        $q,
-      )
-      const res = await axios.post(
-        `${financeServerURL}ai/advice`,
-        { question: content },
-        {
-          headers: { Authorization: `Bearer ${Cookies.get('access_token')}` },
-        },
-      )
-      answer = res.data?.data?.trim() || '⚠️ Нет ответа от ассистента.'
-      messages.value.push({ role: 'assistant', content: answer })
-
-      await postMethod(
-        financeServerURL,
-        'message',
-        {
-          conversationId: chatIdByProjectId,
-          role: 'assistant',
-          content: answer,
-        },
-        $q,
-      )
+      await identifyIdAndSendMessage(chatIdByProjectId, content, answer)
     } else if (chatId) {
-      await postMethod(
-        financeServerURL,
-        'message',
-        {
-          conversationId: chatId,
-          role: 'user',
-          content,
-        },
-        $q,
-      )
-      const res = await axios.post('http://localhost:2500/llm/smart-chat', {
-        message: content,
-        conversation_history: [],
-        conversation_id: '',
-        model: 'alemllm',
-        temperature: 0.7,
-      })
-
-      if (res.data?.thinking_steps?.length) {
-        playThinkingSteps(res.data.thinking_steps)
-        await new Promise((r) => setTimeout(r, res.data.thinking_steps.length * 1200))
-      }
-
-      await putMethod(
-        financeServerURL,
-        `conversation/${chatId}`,
-        { title: res.data.generated_topic },
-        $q,
-      )
-
-      getAllConversations()
-      answer = res.data?.message?.trim() || '⚠️ Пустой ответ от LLM'
-
-      messages.value.push({ role: 'assistant', content: answer })
-
-      await postMethod(
-        financeServerURL,
-        'message',
-        {
-          conversationId: chatId,
-          role: 'assistant',
-          content: answer,
-        },
-        $q,
-      )
+      await identifyIdAndSendMessage(chatId, content, answer)
     }
   } catch (err) {
     console.error(err)

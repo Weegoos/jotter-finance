@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -10,6 +11,7 @@ import {
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiParam,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -70,5 +72,19 @@ export class AIProjectController {
     @Param('projectId') projectId: string,
   ): Promise<any> {
     return this.aiProjectService.findAllByProjectId(projectId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a project by UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Project deleted successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiParam({ name: 'id', type: String, description: 'Project UUID' })
+  async delete(@Req() req: any, @Param('id') id: string): Promise<void> {
+    return this.aiProjectService.destroy(id, req.user.id);
   }
 }

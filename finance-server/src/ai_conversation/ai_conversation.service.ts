@@ -49,7 +49,7 @@ export class AIConversationService {
       where: {
         user_id: user_id,
       },
-      order: [['createdAt', 'DESC']],
+      order: [['updatedAt', 'DESC']],
     });
   }
 
@@ -66,7 +66,7 @@ export class AIConversationService {
     });
   }
 
-  async destroy(id: string, userId: string) {
+  async destroy(id: string, userId: number) {
     const conversation = await this.aiConversationModel.findByPk(id);
 
     if (!conversation) throw new NotFoundException('Conversation not found');

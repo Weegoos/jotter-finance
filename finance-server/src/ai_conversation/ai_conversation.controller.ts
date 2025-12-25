@@ -87,7 +87,7 @@ export class AIConversationController {
     description: 'Conversation deleted successfully',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiParam({ name: 'id', type: String, description: 'Conversation UUID' }) // ✅
+  @ApiParam({ name: 'id', type: String, description: 'Conversation UUID' })
   async delete(@Req() req: any, @Param('id') id: string): Promise<void> {
     return this.aiConversationService.destroy(id, req.user.id);
   }

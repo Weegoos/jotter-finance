@@ -30,23 +30,7 @@
           />
           <q-item v-for="project in props.projects" :key="project.id" class="no-hover">
             <q-item-section avatar>
-              <q-icon
-                :name="
-                  project.type === 'finance'
-                    ? 'mdi-currency-usd'
-                    : project.type === 'promocodes'
-                      ? 'mdi-tag-multiple'
-                      : 'mdi-folder'
-                "
-                :style="{
-                  color:
-                    project.type === 'finance'
-                      ? '#18A13C'
-                      : project.type === 'promocodes'
-                        ? '#FF9800'
-                        : '#607D8B',
-                }"
-              />
+              <q-icon name="mdi-folder" />
             </q-item-section>
 
             <q-item-section>
