@@ -9,7 +9,7 @@
           <!-- Project title -->
           <h1
             class="text-3xl font-bold text-gray-800 mb-2 text-center"
-            v-for="(topic, index) in props.projects"
+            v-for="(topic, index) in props.projectData"
             :key="index"
           >
             {{ topic.title }}
@@ -18,12 +18,11 @@
           <p class="text-gray-600 mb-6 text-center">Вы просматриваете текущий проект</p>
 
           <!-- Conversations -->
-          <div v-for="(project, index) in props.projects" :key="index" class="mt-6 text-left">
+          <div v-if="props.conversationsByProjectID?.length" class="mt-6 text-left">
             <h2 class="text-lg font-semibold text-gray-700 mb-3">Conversations</h2>
-
             <ul class="space-y-2">
               <li
-                v-for="conversation in project.conversations"
+                v-for="conversation in props.conversationsByProjectID"
                 :key="conversation.id"
                 class="p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition"
                 @click="openConversation(conversation.id)"
@@ -36,7 +35,7 @@
           </div>
 
           <!-- Empty state -->
-          <!-- <div v-else class="mt-6 text-center text-gray-500">В этом проекте пока нет диалогов</div> -->
+          <div v-else class="mt-6 text-center text-gray-500">В этом проекте пока нет диалогов</div>
 
           <!-- Action -->
           <Button
@@ -44,6 +43,13 @@
             @click="startProject"
           >
             Начать проект
+          </Button>
+
+          <Button
+            class="mt-3 w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-full shadow-md transition-colors duration-200"
+            @click="deleteProject"
+          >
+            Удалить проект
           </Button>
         </div>
       </div>
@@ -211,7 +217,8 @@ const props = defineProps({
   name: String,
   currentStepIndex: Number,
   isVisibleProjectId: Boolean,
-  projects: Object,
+  conversationsByProjectID: Object,
+  projectData: Object,
 })
 const input = ref('')
 const parseMarkdown = (text) => (text ? marked(text) : '')
@@ -231,7 +238,7 @@ function selectSuggestion(s) {
   input.value = s
 }
 
-const emit = defineEmits(['sendMessage', 'deleteChat', 'startProject'])
+const emit = defineEmits(['sendMessage', 'deleteChat', 'startProject', 'deleteProject'])
 
 const sendMessage = () => {
   emit('sendMessage', input.value)
@@ -244,6 +251,10 @@ const deleteChat = () => {
 
 const startProject = () => {
   emit('startProject')
+}
+
+const deleteProject = () => {
+  emit('deleteProject')
 }
 
 const openConversation = (id) => {

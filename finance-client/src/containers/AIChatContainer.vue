@@ -15,6 +15,7 @@
       @sendMessage="sendMessage"
       @deleteChat="deleteChat"
       @startProject="startProject"
+      @deleteProject="deleteProject"
       :isSystem="isSystem"
       :isVisibleChatID="isVisibleChatID"
       :messages="messages"
@@ -23,7 +24,8 @@
       :name="name"
       :currentStepIndex="currentStepIndex"
       :isVisibleProjectId="isVisibleProjectId"
-      :projects="projects"
+      :conversationsByProjectID="conversationsByProjectID"
+      :projectData="projectData"
     ></AIChat>
     <Dialog :modelValue="isCreateProject">
       <template #content>
@@ -151,7 +153,6 @@ const projectData = ref([])
 const getProjectById = async (id) => {
   const data = await projectStore.getAllProjectById($q, id)
   projectData.value = data
-  console.log(projectData.value)
 }
 
 const projectName = ref(null)
@@ -190,6 +191,17 @@ const startProject = async () => {
 
 // the end of project
 
+// conversation
+const conversationsByProjectID = ref([])
+const getAllConversationsByProjectID = async () => {
+  const projectId = route.params.projectId
+  const data = await conversationStore.getAllConversationsByProjectID($q, projectId)
+  conversationsByProjectID.value = data
+  console.log(data)
+}
+
+// the end of conversation
+
 const messages = ref([])
 watch(
   () => [route.params.chatId, route.params.projectId, route.params.chatIdByProjectId],
@@ -216,6 +228,7 @@ watch(
       }
     } else if (projectId && !chatIdByProjectId) {
       checkRoute()
+      getAllConversationsByProjectID()
       isSystem.value = false
       messages.value = [] // или project-specific данные
       console.log('Project route:', projectId)
@@ -320,6 +333,7 @@ const identifyIdAndSendMessage = async (id, content, answer) => {
 
   getAllConversations()
   getAllProjects()
+  getAllConversationsByProjectID()
   answer = res.data?.message?.trim() || '⚠️ Пустой ответ от LLM'
 
   messages.value.push({ role: 'assistant', content: answer })
@@ -384,11 +398,21 @@ const deleteChat = async () => {
     if (chatId) {
       await deleteMethod(financeServerURL, 'conversation', chatId)
     } else if (chatIdByProjectId) {
-       await deleteMethod(financeServerURL, 'conversation', chatIdByProjectId)
+      await deleteMethod(financeServerURL, 'conversation', chatIdByProjectId)
     }
     getAllConversations()
+    getAllConversationsByProjectID()
     getAllProjects()
     router.push('/chat')
+  } catch {
+    //
+  }
+}
+
+const deleteProject = async () => {
+  // const projectId = route.params.projectId
+  try {
+    await deleteMethod(financeServerURL, '')
   } catch {
     //
   }
@@ -408,5 +432,6 @@ onMounted(() => {
   getAllConversations()
   checkRoute()
   getAllProjects()
+  getAllConversationsByProjectID()
 })
 </script>
