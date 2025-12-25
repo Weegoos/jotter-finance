@@ -165,6 +165,32 @@
       <!-- Input -->
       <div v-if="props.isVisibleChatID" class="sticky bottom-0 bg-gray-50 border-t p-4 z-10">
         <div class="flex gap-2">
+          <Dialog :modelValue="isEditProject">
+            <template #content>
+              <Close :section-name="'Изменить чат'" @emit-click="isEditProject = false"></Close>
+              <Select
+                v-model="selectProject"
+                :options="props.projects"
+                option-label="title"
+                option-value="id"
+                label="Выберите проект"
+              />
+            </template>
+            <template #actions>
+              <Button
+                :label="'Изменить'"
+                class="text-black rounded-full"
+                @emit-click="editChat"
+              ></Button>
+            </template>
+          </Dialog>
+          <Button
+            v-if="!$route.params.projectId"
+            round
+            color="orange"
+            icon="mdi-pencil"
+            @click="isEditProject = true"
+          />
           <Input
             dense
             outlined
@@ -204,10 +230,10 @@
 
 <script setup>
 import { marked } from 'marked'
-import { Button, Input } from 'src/components/atoms'
+import { Button, Input, Select } from 'src/components/atoms'
+import { Close, Dialog } from 'src/components/molecules'
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-
 const props = defineProps({
   isSystem: Boolean,
   isVisibleChatID: Boolean,
@@ -219,26 +245,28 @@ const props = defineProps({
   isVisibleProjectId: Boolean,
   conversationsByProjectID: Object,
   projectData: Object,
+  projects: Object,
 })
+
 const input = ref('')
+const isEditProject = ref(false)
+const selectProject = ref(null)
 const parseMarkdown = (text) => (text ? marked(text) : '')
 const router = useRouter()
 const route = useRoute()
 
 const suggestions = ref([
-  'Сделай отчет по финансам (доход, расход, транзакция)',
-  'Сколько я заработал за месяц?',
-  'Какие основные расходы у меня за месяц?',
-  'Помоги составить план сбережений',
-  'Как оптимизировать расходы на жилье?',
-  'Какие варианты инвестиций подходят для новичка?',
+  'Как правильно планировать бюджет?',
+  'Какие бывают финансовые цели?',
+  'Что такое финансовая подушка безопасности?',
+  'С чего начать управление деньгами?',
 ])
 
 function selectSuggestion(s) {
   input.value = s
 }
 
-const emit = defineEmits(['sendMessage', 'deleteChat', 'startProject', 'deleteProject'])
+const emit = defineEmits(['sendMessage', 'deleteChat', 'editChat', 'startProject', 'deleteProject'])
 
 const sendMessage = () => {
   emit('sendMessage', input.value)
@@ -247,6 +275,10 @@ const sendMessage = () => {
 
 const deleteChat = () => {
   emit('deleteChat')
+}
+
+const editChat = () => {
+  emit('editChat', selectProject.value)
 }
 
 const startProject = () => {

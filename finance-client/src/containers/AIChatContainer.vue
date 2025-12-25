@@ -14,6 +14,7 @@
     <AIChat
       @sendMessage="sendMessage"
       @deleteChat="deleteChat"
+      @editChat="editChat"
       @startProject="startProject"
       @deleteProject="deleteProject"
       :isSystem="isSystem"
@@ -26,6 +27,7 @@
       :isVisibleProjectId="isVisibleProjectId"
       :conversationsByProjectID="conversationsByProjectID"
       :projectData="projectData"
+      :projects="projects"
     ></AIChat>
     <Dialog :modelValue="isCreateProject">
       <template #content>
@@ -205,9 +207,11 @@ const deleteProject = async () => {
 const conversationsByProjectID = ref([])
 const getAllConversationsByProjectID = async () => {
   const projectId = route.params.projectId
-  const data = await conversationStore.getAllConversationsByProjectID($q, projectId)
-  conversationsByProjectID.value = data
-  console.log(data)
+  if (projectId) {
+    const data = await conversationStore.getAllConversationsByProjectID($q, projectId)
+    conversationsByProjectID.value = data
+    console.log(data)
+  }
 }
 
 // the end of conversation
@@ -399,6 +403,18 @@ function resetThinkingState() {
   loading.value = false
   thinkingSteps.value = []
   currentStepIndex.value = 0
+}
+
+const editChat = async (projectInfo) => {
+  const chatId = route.params.chatId
+  const payload = {
+    project_id: projectInfo.id,
+  }
+
+  await putMethod(financeServerURL, `conversation/${chatId}`, payload, $q, {})
+  getAllConversations()
+  getAllConversationsByProjectID()
+  getAllProjects()
 }
 
 const deleteChat = async () => {

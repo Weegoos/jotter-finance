@@ -49,6 +49,7 @@
                 <!-- $router.push(`/project/${project.id}/chat/${conversation.id}`) -->
                 <p @click="openChatByProjectId(conversation.id, project.id)">
                   {{ conversation.title }}
+                  <q-separator spaced dark />
                 </p>
               </div>
             </q-item-section>
