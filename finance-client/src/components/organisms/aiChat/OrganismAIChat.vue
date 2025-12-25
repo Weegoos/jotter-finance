@@ -4,19 +4,43 @@
       <!-- System screen -->
       <div v-if="props.isVisibleProjectId" class="flex justify-center items-center p-10">
         <div
-          class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 max-w-md w-full text-center animate-fadeIn"
+          class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 max-w-md w-full animate-fadeIn"
         >
+          <!-- Project title -->
           <h1
-            class="text-3xl font-bold text-gray-800 mb-4"
-            v-for="(topic, index) in props.projectData"
+            class="text-3xl font-bold text-gray-800 mb-2 text-center"
+            v-for="(topic, index) in props.projects"
             :key="index"
           >
             {{ topic.title }}
           </h1>
-          <p class="text-gray-600 mb-6">Вы просматриваете текущий проект</p>
 
+          <p class="text-gray-600 mb-6 text-center">Вы просматриваете текущий проект</p>
+
+          <!-- Conversations -->
+          <div v-for="(project, index) in props.projects" :key="index" class="mt-6 text-left">
+            <h2 class="text-lg font-semibold text-gray-700 mb-3">Conversations</h2>
+
+            <ul class="space-y-2">
+              <li
+                v-for="conversation in project.conversations"
+                :key="conversation.id"
+                class="p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition"
+                @click="openConversation(conversation.id)"
+              >
+                <div class="font-medium text-gray-800">
+                  {{ conversation.title || 'Conversation' }}
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Empty state -->
+          <!-- <div v-else class="mt-6 text-center text-gray-500">В этом проекте пока нет диалогов</div> -->
+
+          <!-- Action -->
           <Button
-            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-full shadow-md transition-colors duration-200"
+            class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-full shadow-md transition-colors duration-200"
             @click="startProject"
           >
             Начать проект
@@ -176,6 +200,7 @@
 import { marked } from 'marked'
 import { Button, Input } from 'src/components/atoms'
 import { ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 const props = defineProps({
   isSystem: Boolean,
@@ -186,10 +211,12 @@ const props = defineProps({
   name: String,
   currentStepIndex: Number,
   isVisibleProjectId: Boolean,
-  projectData: Object,
+  projects: Object,
 })
 const input = ref('')
 const parseMarkdown = (text) => (text ? marked(text) : '')
+const router = useRouter()
+const route = useRoute()
 
 const suggestions = ref([
   'Сделай отчет по финансам (доход, расход, транзакция)',
@@ -217,6 +244,11 @@ const deleteChat = () => {
 
 const startProject = () => {
   emit('startProject')
+}
+
+const openConversation = (id) => {
+  const projectId = route.params.projectId
+  router.push(`/project/${projectId}/chat/${id}`)
 }
 </script>
 

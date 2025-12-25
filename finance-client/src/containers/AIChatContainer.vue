@@ -23,20 +23,19 @@
       :name="name"
       :currentStepIndex="currentStepIndex"
       :isVisibleProjectId="isVisibleProjectId"
-      :projectData="projectData"
+      :projects="projects"
     ></AIChat>
     <Dialog :modelValue="isCreateProject">
       <template #content>
         <Close :section-name="'Создать проект'" @emit-click="isCreateProject = false"></Close>
-        <Select
+        <Input
           class="q-my-sm"
-          :options="projectOptions"
           v-model="projectName"
           option-label="name"
           option-value="value"
           label="Название проекта"
         >
-        </Select>
+        </Input>
       </template>
       <template #actions>
         <Button
@@ -65,7 +64,7 @@ import { deleteMethod } from 'src/composables/api-method/delete'
 import { AIChat, AIChatDrawer } from 'src/components/organisms'
 import { useProjectApiStore } from 'src/stores/project-api'
 import { Close, Dialog } from 'src/components/molecules'
-import { Button, Select } from 'src/components/atoms'
+import { Button, Input } from 'src/components/atoms'
 // global variables
 const userStore = useApiStore()
 const conversationStore = conversationApiStore()
@@ -149,18 +148,13 @@ const getAllProjects = async () => {
 }
 
 const projectData = ref([])
-const getProjectBydId = async (id) => {
+const getProjectById = async (id) => {
   const data = await projectStore.getAllProjectById($q, id)
   projectData.value = data
   console.log(projectData.value)
 }
 
 const projectName = ref(null)
-const projectOptions = [
-  { name: 'Финансы', value: 'finance', icon: 'mdi-cash' },
-  { name: 'Промокоды', value: 'promocodes', icon: 'mdi-ticket-percent' },
-]
-
 const openModalWindow = () => {
   isCreateProject.value = true
 }
@@ -171,12 +165,13 @@ const openProject = async (id) => {
 
 const createProject = async () => {
   const payload = {
-    title: projectName.value.name,
-    type: projectName.value.value,
+    title: projectName.value,
+    type: 'finance',
   }
   await postMethod(financeServerURL, 'project', payload, $q, 'Проект создан')
   getAllProjects()
   isCreateProject.value = false
+  projectName.value = ''
 }
 
 const startProject = async () => {
@@ -222,7 +217,7 @@ watch(
       isSystem.value = false
       messages.value = [] // или project-specific данные
       console.log('Project route:', projectId)
-      getProjectBydId(projectId)
+      getProjectById(projectId)
     } else if (chatIdByProjectId && projectId) {
       checkRoute()
       try {
@@ -322,6 +317,7 @@ const identifyIdAndSendMessage = async (id, content, answer) => {
   await putMethod(financeServerURL, `conversation/${id}`, { title: res.data.generated_topic }, $q)
 
   getAllConversations()
+  getAllProjects()
   answer = res.data?.message?.trim() || '⚠️ Пустой ответ от LLM'
 
   messages.value.push({ role: 'assistant', content: answer })
@@ -381,9 +377,15 @@ function resetThinkingState() {
 
 const deleteChat = async () => {
   const chatId = route.params.chatId
+  const chatIdByProjectId = route.params.chatIdByProjectId
   try {
-    await deleteMethod(financeServerURL, 'conversation', chatId)
+    if (chatId) {
+      await deleteMethod(financeServerURL, 'conversation', chatId)
+    } else if (chatIdByProjectId) {
+       await deleteMethod(financeServerURL, 'conversation', chatIdByProjectId)
+    }
     getAllConversations()
+    getAllProjects()
     router.push('/chat')
   } catch {
     //
