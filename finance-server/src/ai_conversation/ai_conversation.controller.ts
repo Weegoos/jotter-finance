@@ -52,7 +52,7 @@ export class AIConversationController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get()
-  @ApiOperation({ summary: 'Get all convesations for a user' })
+  @ApiOperation({ summary: 'Get all conversations for a user' })
   @ApiResponse({
     status: 200,
     description: 'Conversations retrieved successfully',
@@ -65,6 +65,21 @@ export class AIConversationController {
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
+  @Get(':projectId')
+  @ApiOperation({ summary: 'Get all conversations for a project' })
+  @ApiResponse({
+    status: 200,
+    description: 'Conversations retrieved successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async findAllByProjectId(
+    @Param('projectId') projectId: string,
+  ): Promise<any> {
+    return this.aiConversationService.findAllByProjectId(projectId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a conversation by UUID' })
   @ApiResponse({
@@ -72,7 +87,7 @@ export class AIConversationController {
     description: 'Conversation deleted successfully',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiParam({ name: 'id', type: String, description: 'Conversation UUID' }) // ✅
+  @ApiParam({ name: 'id', type: String, description: 'Conversation UUID' })
   async delete(@Req() req: any, @Param('id') id: string): Promise<void> {
     return this.aiConversationService.destroy(id, req.user.id);
   }

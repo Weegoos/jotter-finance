@@ -21,6 +21,8 @@ import { AIConversationModule } from './ai_conversation/ai_conversation.module';
 import { AIConversation } from './ai_conversation/ai_conversation.model';
 import { AIMessage } from './ai_message/ai_message.model';
 import { AIMessageModule } from './ai_message/ai_message.module';
+import { AIProject } from './project/ai_project.model';
+import { AIProjectModule } from './project/ai_project.module';
 
 @Module({
   imports: [
@@ -43,6 +45,7 @@ import { AIMessageModule } from './ai_message/ai_message.module';
           PromoCodes,
           AIConversation,
           AIMessage,
+          AIProject,
         ] as const,
         autoLoadModels: true,
         synchronize: true,
@@ -58,6 +61,7 @@ import { AIMessageModule } from './ai_message/ai_message.module';
     PromoCodesModule,
     AIConversationModule,
     AIMessageModule,
+    AIProjectModule,
   ],
   providers: [AppService, ChatGateway],
 })

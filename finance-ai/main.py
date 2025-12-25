@@ -179,10 +179,115 @@ def build_messages(
 
 def get_fallback_steps(user_message: str) -> List[str]:
     """Генерирует fallback шаги мышления на основе языка сообщения."""
-    has_cyrillic = any("\u0400" <= c <= "\u04ff" for c in user_message)
-    has_kazakh = any(c in "әғқңөұүһі" for c in user_message.lower())
+    text = user_message.strip()
+    lower = text.lower()
+    has_cyrillic = any("\u0400" <= c <= "\u04ff" for c in lower)
+    has_kazakh_letters = any(c in "әғқңөұүһі" for c in lower)
 
-    if has_kazakh:
+    # Lightweight heuristic to better detect KZ written without diacritics / in mixed text.
+    # Goal: reduce false positives; if unsure, prefer RU over KZ.
+    kz_strong = {
+        "менің",
+        "менин",
+        "менім",
+        "меним",
+        "menin",
+        "menim",
+        "сенің",
+        "сенин",
+        "сіз",
+        "сиз",
+        "siz",
+        "маған",
+        "маган",
+        "magan",
+        "саған",
+        "саган",
+        "sagan",
+        "қалай",
+        "калай",
+        "kalay",
+        "қанша",
+        "канша",
+        "kancha",
+        "жалақы",
+        "жалакы",
+        "jalaky",
+        "айлық",
+        "айлык",
+        "ailyk",
+        "табыс",
+        "tabys",
+        "кіріс",
+        "кирис",
+        "kiris",
+        "шығын",
+        "шыгын",
+        "shygyn",
+        "ақша",
+        "акша",
+        "aqsha",
+        "aksha",
+        "қаржы",
+        "каржы",
+        "qarjy",
+        "karjy",
+        "үнемдеу",
+        "унемдеу",
+        "unemdeu",
+        "аударым",
+        "audarym",
+        "бола ма",
+        "болама",
+    }
+    kz_weak = {
+        "керек",
+        "неге",
+        "емес",
+        "жоқ",
+        "жок",
+        "ғой",
+        "гой",
+        "бар",
+        "бол",
+        "несие",
+        "салым",
+        "шот",
+    }
+    ru_triggers = {
+        "как",
+        "что",
+        "где",
+        "почему",
+        "сколько",
+        "хочу",
+        "могу",
+        "нужно",
+        "посчитай",
+        "покажи",
+        "сделай",
+    }
+
+    # Tokenize: keep only letters/digits/spaces, then split.
+    cleaned = "".join(ch if (ch.isalnum() or ch.isspace()) else " " for ch in lower)
+    tokens = [t for t in cleaned.split() if t]
+    bigrams = {f"{a} {b}" for a, b in zip(tokens, tokens[1:])}
+
+    kz_strong_hits = sum(1 for t in tokens if t in kz_strong) + sum(
+        1 for bg in bigrams if bg in kz_strong
+    )
+    kz_weak_hits = sum(1 for t in tokens if t in kz_weak)
+    ru_hits = sum(1 for t in tokens if t in ru_triggers)
+
+    is_kz = False
+    if has_kazakh_letters:
+        is_kz = True
+    elif kz_strong_hits >= 1 and (kz_strong_hits + kz_weak_hits) >= 2 and ru_hits <= 1:
+        is_kz = True
+    elif (kz_strong_hits + kz_weak_hits) >= 3 and ru_hits == 0:
+        is_kz = True
+
+    if is_kz:
         return [
             "Сұрақты талдап жатырмын",
             "Қажетті ақпаратты іздеп жатырмын",
@@ -275,8 +380,8 @@ async def generate_chat_topic(
         topic = topic.strip('"\'`«»„"')
         topic = topic.rstrip(".")
 
-        # Валидация: 2-50 символов
-        if topic and 2 <= len(topic) <= 50:
+        # Валидация: 2-80 символов
+        if topic and 2 <= len(topic) <= 100:
             return topic
 
         return None
