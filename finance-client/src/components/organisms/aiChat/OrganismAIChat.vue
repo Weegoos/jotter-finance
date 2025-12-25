@@ -13,6 +13,22 @@
             :key="index"
           >
             {{ topic.title }}
+            <q-popup-edit v-model="topic.title" class="bg-black text-white" v-slot="scope">
+              <q-input
+                dark
+                color="white"
+                v-model="scope.value"
+                dense
+                autofocus
+                counter
+                @keyup.enter="onEditProject(topic, scope)"
+              >
+                <template v-slot:append>
+                  <q-icon name="mdi-pencil" />
+                </template>
+              </q-input>
+            </q-popup-edit>
+            <q-icon class="ml-[10px]" size="24px" name="mdi-pencil" />
           </h1>
 
           <p class="text-gray-600 mb-6 text-center">Вы просматриваете текущий проект</p>
@@ -266,7 +282,14 @@ function selectSuggestion(s) {
   input.value = s
 }
 
-const emit = defineEmits(['sendMessage', 'deleteChat', 'editChat', 'startProject', 'deleteProject'])
+const emit = defineEmits([
+  'sendMessage',
+  'deleteChat',
+  'editChat',
+  'startProject',
+  'deleteProject',
+  'editProject',
+])
 
 const sendMessage = () => {
   emit('sendMessage', input.value)
@@ -288,6 +311,12 @@ const startProject = () => {
 const deleteProject = () => {
   emit('deleteProject')
 }
+
+const onEditProject = (topic, scope) => {
+  emit('editProject', topic, scope.value)
+  scope.set()
+}
+
 
 const openConversation = (id) => {
   const projectId = route.params.projectId

@@ -17,6 +17,7 @@
       @editChat="editChat"
       @startProject="startProject"
       @deleteProject="deleteProject"
+      @editProject="editProject"
       :isSystem="isSystem"
       :isVisibleChatID="isVisibleChatID"
       :messages="messages"
@@ -200,6 +201,16 @@ const deleteProject = async () => {
   } catch {
     //
   }
+}
+
+const editProject = async (topic, value) => {
+  const projectId = route.params.projectId
+  const payload = {
+    title: value,
+    type: 'finance',
+  }
+  await putMethod(financeServerURL, `project/${projectId}`, payload, $q, {})
+  getAllProjects()
 }
 // the end of project
 

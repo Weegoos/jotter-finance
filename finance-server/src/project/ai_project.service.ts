@@ -104,4 +104,20 @@ export class AIProjectService {
 
     await project.destroy();
   }
+
+  async update(
+    id: string,
+    userId: number,
+    updates: Partial<IAIProject>,
+  ): Promise<AIProject> {
+    const project = await this.aiProjectModel.findByPk(id);
+
+    if (!project) throw new NotFoundException('Project not found');
+    if (project.dataValues.user_id !== Number(userId)) {
+      throw new UnauthorizedException('User not authorized');
+    }
+
+    const updatedProject = await project.update(updates);
+    return updatedProject;
+  }
 }
