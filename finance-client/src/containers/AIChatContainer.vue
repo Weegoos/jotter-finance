@@ -181,8 +181,10 @@ const startProject = async () => {
       title: 'New chat',
       project_id: projectId,
     }
-
-    console.log(payload)
+    const res = await postMethod(financeServerURL, 'conversation', payload, $q, 'Чат создан')
+    getAllProjects()
+    console.log(res)
+    router.push(`/project/${projectId}/chat/${res.id}`)
   }
 }
 
