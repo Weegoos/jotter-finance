@@ -189,6 +189,16 @@ const startProject = async () => {
   }
 }
 
+const deleteProject = async () => {
+  const projectId = route.params.projectId
+  try {
+    await deleteMethod(financeServerURL, 'project', projectId)
+    getAllProjects()
+    router.push('/chat')
+  } catch {
+    //
+  }
+}
 // the end of project
 
 // conversation
@@ -404,15 +414,6 @@ const deleteChat = async () => {
     getAllConversationsByProjectID()
     getAllProjects()
     router.push('/chat')
-  } catch {
-    //
-  }
-}
-
-const deleteProject = async () => {
-  // const projectId = route.params.projectId
-  try {
-    await deleteMethod(financeServerURL, '')
   } catch {
     //
   }
